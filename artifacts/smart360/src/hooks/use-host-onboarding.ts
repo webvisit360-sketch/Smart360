@@ -51,6 +51,7 @@ export interface HostOnboardingMedia {
   id: string;
   itemId: string | null;
   kind: "image" | "video";
+  isPanorama?: boolean;
   url: string;
   alt: string;
   position: number;

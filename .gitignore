@@ -54,3 +54,7 @@ Thumbs.db
 /test-recordings/
 /artifacts/smart360/reports/oklch-palette/
 /artifacts/smart360/reports/outline-decouple/
+/reports/panorama/
+/reports/management-mode-e2e-panorama/
+/reports/panorama-final/
+/reports/management-mode-e2e-panorama-final/

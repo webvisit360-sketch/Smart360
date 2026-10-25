@@ -3312,3 +3312,45 @@ mtime_ms = 1792915970486
 storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/cee97a43-66ad-49ca-9339-3290fc2fc9b6/4986a48b-3fef-4852-8c36-9e12c5384396"
 storage_version_token = "1792916051908962"
 content_type = "text/html"
+
+[[outputs]]
+id = "BkP9glOkiWBL8kKwi1VQ1"
+uri = "file://reports/panorama-final/porocilo.html"
+type = "html"
+title = "Panorame — poročilo in meje preverjanja"
+description = "Razvojni rezultati, offline dokaz, čiščenje in 499/499 testov."
+logical_id = "0401263c-ebd7-4934-9321-9cee93493655"
+content_hash = "sha256:100dcd94281f140fe3c678eff24ddcfdb1473d68db1520bab698e1709f9d4027"
+size = 3669
+mtime_ms = 1792931930358
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/0401263c-ebd7-4934-9321-9cee93493655/d08f9dc6-1e16-4d35-b916-82601e724d34"
+storage_version_token = "1792931946342334"
+content_type = "text/html"
+
+[[outputs]]
+id = "pR4aklFzMsvIpOOWeydXP"
+uri = "file://reports/panorama-final/videos/enostaven-pocasi.mp4"
+type = "video"
+title = "Enostaven — panorame, 390 × 844"
+description = "Posnetek dejanskega preizkusa, upočasnjen za pregled: odpiranje, premikanje, naslednja slika in zapiranje."
+logical_id = "c1e7752c-f0ac-4c88-b39b-b4d23f89a058"
+content_hash = "sha256:a816dc58aeade9301a84e37867a22aa77541621f8d7da563d0337b84de07f2f5"
+size = 113850
+mtime_ms = 1792931924846
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/c1e7752c-f0ac-4c88-b39b-b4d23f89a058/32747d51-dcc4-48f6-8c94-6c5f7b10380e"
+storage_version_token = "1792931946994939"
+content_type = "video/mp4"
+
+[[outputs]]
+id = "I06UKNgnWigZ5R6NRM58e"
+uri = "file://reports/panorama-final/videos/trend-pocasi.mp4"
+type = "video"
+title = "Trend — panorame, 390 × 844"
+description = "Posnetek dejanskega preizkusa, upočasnjen za pregled: odpiranje, premikanje, naslednja slika in zapiranje."
+logical_id = "1717d64c-ffe5-4c81-97cf-e97032280aa0"
+content_hash = "sha256:8220e6a84dde67f8cb03a4756808801fe801d6c51ff78a510040977128ac599a"
+size = 118364
+mtime_ms = 1792931923086
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/1717d64c-ffe5-4c81-97cf-e97032280aa0/16bb4b50-54fd-475c-ae6b-8aeb37f9faa9"
+storage_version_token = "1792931947705387"
+content_type = "video/mp4"

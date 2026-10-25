@@ -17,6 +17,7 @@ export interface MediaEntry {
   alt?: string | null;
   position: number;
   kind: string;
+  isPanorama?: boolean;
   /** @nullable */
   posterUrl?: string | null;
   /** @nullable */

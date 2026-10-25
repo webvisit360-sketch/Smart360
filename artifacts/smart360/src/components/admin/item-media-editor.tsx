@@ -3,7 +3,8 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useGetStorageUsage, getGetStorageUsageQueryKey } from "@workspace/api-client-react";
 import { fmtMediaUsage, usagePct } from "@/lib/format-bytes";
 import { refreshTenantAfterAdminWrite } from "@/lib/tenant-publication-state";
-import { Loader2, Plus, Play, RotateCcw, X } from "lucide-react";
+import { Loader2, Plus, Play, RotateCcw, X, GalleryHorizontal } from "lucide-react";
+import { canMarkPanorama, isPanoramaMedia, panoramaUploadFlag } from "@/lib/panorama-media";
 import { AdminButton as Button } from "@/components/ui/button";
 import { useTenantPermissions } from "@/hooks/use-tenant-permissions";
 
@@ -18,6 +19,8 @@ type Media = {
   /** Žariščna točka izreza v odstotkih (izrez-wifi-eposta.md §1a). */
   focusX?: number | null;
   focusY?: number | null;
+  /** Panoramic photo: shown in the guest panorama strip/viewer. Never on video. */
+  isPanorama?: boolean | null;
 };
 
 const VIDEO_EXT = /\.(mp4|webm|mov|m4v)$/i;
@@ -33,6 +36,8 @@ type QueueEntry = {
   permanent?: boolean;
   /** Object URL for the local thumbnail of a not-yet-uploaded file. */
   previewUrl?: string;
+  /** Upload as a panorama (photo files only). */
+  isPanorama?: boolean;
 };
 
 type SerializeMediaWrite = <T>(write: () => Promise<T>) => Promise<T>;
@@ -113,6 +118,7 @@ export const ItemMediaEditor = forwardRef<ItemMediaEditorHandle, {
   const queryClient = useQueryClient();
   const { isOperator } = useTenantPermissions(hostMode ? "" : tenantId);
   const fileRef = useRef<HTMLInputElement>(null);
+  const panoFileRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
   const [dragId, setDragId] = useState<string | null>(null);
   const didDragRef = useRef(false);
@@ -191,6 +197,7 @@ export const ItemMediaEditor = forwardRef<ItemMediaEditorHandle, {
         }
         const fd = new FormData();
         fd.append("file", entry.file);
+        if (entry.isPanorama) fd.append("isPanorama", "true");
         const xhr = new XMLHttpRequest();
         xhr.open("POST", `/api/admin/items/${target}/media/upload`);
         xhr.withCredentials = true;
@@ -272,7 +279,7 @@ export const ItemMediaEditor = forwardRef<ItemMediaEditorHandle, {
     },
   }));
 
-  const enqueue = (files: FileList | File[]) => {
+  const enqueue = (files: FileList | File[], asPanorama = false) => {
     if (quotaFull && tenantUsage) {
       alert(`Prostor za medije je poln (${fmtMediaUsage(tenantUsage.usedBytes, tenantUsage.quotaBytes)}). Novo nalaganje ni mogoče — povečajte kvoto v nastavitvah namestitve.`);
       return;
@@ -291,7 +298,7 @@ export const ItemMediaEditor = forwardRef<ItemMediaEditorHandle, {
         continue;
       }
       const previewUrl = file.type.startsWith("image/") ? URL.createObjectURL(file) : undefined;
-      const entry: QueueEntry = { key, file, pct: 0, status: deferred ? "pending" : "uploading", previewUrl };
+      const entry: QueueEntry = { key, file, pct: 0, status: deferred ? "pending" : "uploading", previewUrl, isPanorama: panoramaUploadFlag(file, asPanorama) };
       setQueueReported(q => [...q, entry]);
       if (!deferred) uploadOne(entry);
     }
@@ -323,6 +330,32 @@ export const ItemMediaEditor = forwardRef<ItemMediaEditorHandle, {
       }
     } catch {
       alert("Brisanje ni uspelo.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const togglePanorama = async (m: Media) => {
+    if (!canMarkPanorama(m)) return;
+    setBusy(true);
+    try {
+      const write = async () => {
+        const res = await fetch(`/api/admin/media/${m.id}`, {
+          method: "PATCH",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ isPanorama: !isPanoramaMedia(m) }),
+        });
+        if (!res.ok) throw new Error();
+        await refresh();
+      };
+      if (serializeWrite) await serializeWrite(write);
+      else {
+        await onBeforeWrite?.();
+        await write();
+      }
+    } catch {
+      alert("Označevanje panorame ni uspelo.");
     } finally {
       setBusy(false);
     }
@@ -429,6 +462,20 @@ export const ItemMediaEditor = forwardRef<ItemMediaEditorHandle, {
                   1 · ploščica
                 </span>
               )}
+              {canMarkPanorama(m) && (
+                <button
+                  type="button"
+                  onClick={(e) => { e.stopPropagation(); if (!busy) void togglePanorama(m); }}
+                  disabled={busy}
+                  className={`absolute bottom-1 left-1 grid place-items-center h-5 px-1 rounded text-[9px] gap-0.5 ${isPanoramaMedia(m) ? "bg-primary text-primary-foreground" : "bg-black/60 text-white hover:bg-black/80"}`}
+                  aria-label={isPanoramaMedia(m) ? "Odznači panoramo" : "Označi kot panoramo"}
+                  aria-pressed={isPanoramaMedia(m)}
+                  title={isPanoramaMedia(m) ? "Panorama — kliknite za odznačitev" : "Označi kot panoramo"}
+                  data-testid={`button-toggle-panorama-${m.id}`}
+                >
+                  <GalleryHorizontal className="w-3 h-3" />
+                </button>
+              )}
               <button
                 type="button"
                 onClick={(e) => { e.stopPropagation(); remove(m.id); }}
@@ -463,6 +510,11 @@ export const ItemMediaEditor = forwardRef<ItemMediaEditorHandle, {
                   ) : (
                     <span className="grid place-items-center w-8 h-8 rounded-full bg-black/55">
                       <Play className="w-4 h-4 text-white fill-white" />
+                    </span>
+                  )}
+                  {q.isPanorama && (
+                    <span className="absolute bottom-1 left-1 grid place-items-center h-5 px-1 rounded bg-primary text-primary-foreground pointer-events-none" title="Panorama">
+                      <GalleryHorizontal className="w-3 h-3" />
                     </span>
                   )}
                   {shown.length === 0 && qi === 0 && (
@@ -532,6 +584,28 @@ export const ItemMediaEditor = forwardRef<ItemMediaEditorHandle, {
           <Plus className="w-5 h-5" />
           <span className="text-[10px] leading-tight">Dodaj</span>
         </Button>
+        <Button
+          type="button"
+          variant="outline"
+          className="h-24 w-24 border-dashed p-0 flex-col gap-1"
+          disabled={busy || quotaFull}
+          title={quotaFull ? "Prostor za medije je poln" : "Široka panoramska fotografija — gost jo odpre na celem zaslonu"}
+          onClick={() => panoFileRef.current?.click()}
+          aria-label="Dodaj panoramsko fotografijo"
+          data-testid="button-add-panorama"
+        >
+          <GalleryHorizontal className="w-5 h-5" />
+          <span className="text-[10px] leading-tight">Panorama</span>
+        </Button>
+        <input
+          ref={panoFileRef}
+          type="file"
+          multiple
+          accept="image/*"
+          className="hidden"
+          data-testid="input-panorama-file"
+          onChange={(e) => { if (e.target.files?.length) enqueue(e.target.files, true); e.target.value = ""; }}
+        />
         <input
           ref={fileRef}
           type="file"
@@ -547,6 +621,9 @@ export const ItemMediaEditor = forwardRef<ItemMediaEditorHandle, {
       </p>
       <p className="text-[11px] text-muted-foreground mt-1">
         Prvi vidni vnos določa fotografijo in barvo ploščice kategorije.
+      </p>
+      <p className="text-[11px] text-muted-foreground mt-1">
+        Panorame (ikona v kotu sličice) gost vidi v ločenem širokem traku in jih odpre na celem zaslonu. Videa ni mogoče označiti kot panoramo.
       </p>
       {tenantUsage && quotaPct >= 80 && (
         <p className={`text-[11px] mt-1 font-medium ${quotaFull ? "text-destructive" : "text-amber-600"}`}>

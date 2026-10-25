@@ -35,6 +35,8 @@ import { SosCard, SosView } from "./sos/SosView";
 import { SosEntryContext } from "./living-guide-sos-context";
 import { FreeTourRecorder, isTourRecordingEnabled } from "./living-guide-free-tour";
 import { TourSummaryContext } from "./living-guide-tour-summary";
+import { PanoramaStrip } from "./living-guide-panorama";
+import { splitPanoramaMedia } from "@/lib/panorama-media";
 import { WeatherCard, WeatherProvider } from "./living-guide-weather";
 import { LivingGuideOfflineBanner, LivingGuideOfflineProvider } from "./living-guide-offline";
 import { tenantWeatherLocation } from "./living-guide-weather-model";
@@ -4166,7 +4168,7 @@ function TemplateA({ category, items, mediaOverride, titleOverride, tenant, show
   return (
     <div className="lg2-screen-scroll lg2-detail-scroll" data-lg-scroll>
       <div className="lg2-detail-sheet-root">
-        <HeroGallery media={media} onBack={onBack} galleryIndex={galleryIndex} onGalleryIndex={onGalleryIndex} t={t} />
+        <HeroGallery media={splitPanoramaMedia(media).regular} onBack={onBack} galleryIndex={galleryIndex} onGalleryIndex={onGalleryIndex} t={t} />
         <article className="lg2-detail-sheet">
           <div className="lg2-grabber" aria-hidden="true" />
           {price ? (
@@ -4209,6 +4211,7 @@ function TemplateA({ category, items, mediaOverride, titleOverride, tenant, show
           )}
           <ItemGpx item={firstItem} t={t} />
           {showHostContacts && <TenantContactRows tenant={tenant} t={t} />}
+          <PanoramaStrip media={splitPanoramaMedia(media).panoramas} />
         </article>
       </div>
     </div>
@@ -4279,7 +4282,7 @@ function TemplateC({ category, items, t, onBack, galleryIndex, onGalleryIndex }:
   return (
     <div className="lg2-screen-scroll lg2-detail-scroll" data-lg-scroll>
       <div className="lg2-detail-sheet-root">
-        <HeroGallery media={media} onBack={onBack} galleryIndex={galleryIndex} onGalleryIndex={onGalleryIndex} t={t} />
+        <HeroGallery media={splitPanoramaMedia(media).regular} onBack={onBack} galleryIndex={galleryIndex} onGalleryIndex={onGalleryIndex} t={t} />
         <article className="lg2-detail-sheet">
           <div className="lg2-grabber" aria-hidden="true" />
           <h1>{category.label}</h1>
@@ -4299,6 +4302,7 @@ function TemplateC({ category, items, t, onBack, galleryIndex, onGalleryIndex }:
                );
              })}
           </div>
+          <PanoramaStrip media={splitPanoramaMedia(media).panoramas} />
         </article>
       </div>
     </div>
@@ -4400,7 +4404,7 @@ function TabbedDetail({
   return (
     <div className={`lg2-screen-scroll lg2-detail-scroll${activeItem.orderEnabled ? " lg2-detail-scroll--orderable" : ""}`} data-lg-scroll>
       <div className="lg2-detail-sheet-root">
-        <HeroGallery media={media} onBack={onBack} galleryIndex={galleryIndex} onGalleryIndex={onGalleryIndex} t={t} />
+        <HeroGallery media={splitPanoramaMedia(media).regular} onBack={onBack} galleryIndex={galleryIndex} onGalleryIndex={onGalleryIndex} t={t} />
         <article className="lg2-detail-sheet">
           <div className="lg2-grabber" aria-hidden="true" />
           <h1>{category.label}</h1>
@@ -4447,6 +4451,7 @@ function TabbedDetail({
                </div>
              ))}
           </div>
+          <PanoramaStrip media={splitPanoramaMedia(media).panoramas} />
         </article>
       </div>
       {activeItem.orderEnabled && (
@@ -4524,7 +4529,7 @@ function TemplateF({ item, category, lang, t, onBack, galleryIndex, onGalleryInd
   return (
     <div className="lg2-screen-scroll lg2-detail-scroll" data-lg-scroll>
       <div className="lg2-detail-sheet-root">
-        <HeroGallery media={media} onBack={onBack} galleryIndex={galleryIndex} onGalleryIndex={onGalleryIndex} t={t} />
+        <HeroGallery media={splitPanoramaMedia(media).regular} onBack={onBack} galleryIndex={galleryIndex} onGalleryIndex={onGalleryIndex} t={t} />
         <article className="lg2-detail-sheet">
            <div className="lg2-grabber" aria-hidden="true" />
            {price ? (
@@ -4552,6 +4557,7 @@ function TemplateF({ item, category, lang, t, onBack, galleryIndex, onGalleryInd
              </div>
            )}
            <ItemGpx item={item} t={t} />
+          <PanoramaStrip media={splitPanoramaMedia(media).panoramas} />
         </article>
       </div>
     </div>
@@ -4568,7 +4574,7 @@ function TemplateG({ item, category, t, onBack, galleryIndex, onGalleryIndex, on
   return (
     <div className="lg2-screen-scroll lg2-detail-scroll" data-lg-scroll>
       <div className="lg2-detail-sheet-root">
-        <HeroGallery media={media} onBack={onBack} galleryIndex={galleryIndex} onGalleryIndex={onGalleryIndex} t={t} />
+        <HeroGallery media={splitPanoramaMedia(media).regular} onBack={onBack} galleryIndex={galleryIndex} onGalleryIndex={onGalleryIndex} t={t} />
         <article className="lg2-detail-sheet">
            <div className="lg2-grabber" aria-hidden="true" />
            <h1><RichInline value={heading} /></h1>
@@ -4581,6 +4587,7 @@ function TemplateG({ item, category, t, onBack, galleryIndex, onGalleryIndex, on
            {itemBodyHtml(item, category) && <div className="lg2-detail-prose" dangerouslySetInnerHTML={{ __html: itemBodyHtml(item, category) }} />}
            <StructuredBulletRows bullets={bullets} />
            <ItemGpx item={item} t={t} />
+          <PanoramaStrip media={splitPanoramaMedia(media).panoramas} />
         </article>
       </div>
     </div>

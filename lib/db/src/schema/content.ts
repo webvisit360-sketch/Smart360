@@ -221,6 +221,7 @@ export const mediaTable = pgTable("media", {
   position: integer("position").notNull().default(0),
   // "image" | "video" — the gallery is ONE ordered list holding both.
   kind: text("kind").notNull().default("image"),
+  isPanorama: boolean("is_panorama").notNull().default(false),
   // Video only: poster frame (JPEG, same variants as photos) and duration.
   posterUrl: text("poster_url"),
   durationSec: doublePrecision("duration_sec"),

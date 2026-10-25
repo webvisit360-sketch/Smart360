@@ -3620,6 +3620,7 @@ components:
         id: { type: string }
         itemId: { type: ["string", "null"] }
         kind: { type: string, enum: [image, video] }
+        isPanorama: { type: boolean }
         url: { type: string }
         alt: { type: string }
         position: { type: number }
@@ -6242,6 +6243,7 @@ components:
         alt: { type: ["string", "null"] }
         position: { type: number }
         kind: { type: string }
+        isPanorama: { type: boolean }
         posterUrl: { type: ["string", "null"] }
         durationSec: { type: ["number", "null"] }
         width:
@@ -6265,11 +6267,13 @@ components:
       type: object
       description: Focal point of the crop, percentages of the image (izrez-wifi-eposta.md §1a)
       properties:
+        isPanorama: { type: boolean }
         focusX: { type: number, minimum: 0, maximum: 100 }
         focusY: { type: number, minimum: 0, maximum: 100 }
     MediaInput:
       type: object
       properties:
+        isPanorama: { type: boolean }
         url: { type: string }
         alt: { type: string }
         position: { type: number }

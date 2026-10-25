@@ -15,9 +15,13 @@ import {
 import { seedTenantContent } from "../src/lib/tenantSeeds";
 import { buildDraftPublication } from "../src/lib/publishedSnapshots";
 
-const REPORT = resolve(import.meta.dirname, "../../../reports/management-mode-e2e");
-const PRIVATE = "/tmp/management-mode-e2e-credentials.json";
-const LEDGER = "/tmp/management-mode-e2e-baseline.json";
+// Isolate repeated, explicitly approved development browser runs.
+const fixtureSuffix = process.env.E2E_FIXTURE_SUFFIX ?? "";
+if (!/^[a-z0-9-]*$/.test(fixtureSuffix)) throw new Error("Invalid fixture suffix");
+const fixtureName = `management-mode-e2e${fixtureSuffix ? `-${fixtureSuffix}` : ""}`;
+const REPORT = resolve(import.meta.dirname, `../../../reports/${fixtureName}`);
+const PRIVATE = `/tmp/${fixtureName}-credentials.json`;
+const LEDGER = `/tmp/${fixtureName}-baseline.json`;
 const MANIFEST = `${REPORT}/fixture-manifest.json`;
 const PREFIX = "mme2e-";
 type Mode = "self_service" | "concierge";

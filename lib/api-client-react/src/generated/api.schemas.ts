@@ -366,6 +366,7 @@ export interface HostOnboardingMedia {
   /** @nullable */
   itemId: string | null;
   kind: HostOnboardingMediaKind;
+  isPanorama?: boolean;
   url: string;
   alt: string;
   position: number;
@@ -2078,6 +2079,7 @@ export interface MediaEntry {
   alt?: string | null;
   position: number;
   kind: string;
+  isPanorama?: boolean;
   /** @nullable */
   posterUrl?: string | null;
   /** @nullable */
@@ -3981,6 +3983,7 @@ export interface OrderAdmin {
  * Focal point of the crop, percentages of the image (izrez-wifi-eposta.md §1a)
  */
 export interface MediaUpdate {
+  isPanorama?: boolean;
   /**
      * @minimum 0
      * @maximum 100
@@ -3994,6 +3997,7 @@ export interface MediaUpdate {
 }
 
 export interface MediaInput {
+  isPanorama?: boolean;
   url: string;
   alt?: string;
   position?: number;

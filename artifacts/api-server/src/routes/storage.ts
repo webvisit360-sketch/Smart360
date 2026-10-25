@@ -434,6 +434,11 @@ router.post(
     const base = mediaBaseName(row.slug, itemTitle ?? null, Number(seq));
 
     const video = isVideoUpload(req.file);
+    const isPanorama = req.body.isPanorama === "true";
+    if (video && isPanorama) {
+      res.status(400).json({ error: "Panorama mora biti fotografija, ne video." });
+      return;
+    }
     let url: string;
     let posterUrl: string | null = null;
     let durationSec: number | null = null;
@@ -504,6 +509,7 @@ router.post(
           kind: video ? "video" : "image",
           posterUrl,
           durationSec,
+          isPanorama,
           width: mediaWidth,
           height: mediaHeight,
           position: sql<number>`(select coalesce(max(${mediaTable.position}), -1) + 1 from ${mediaTable} where ${mediaTable.itemId} = ${itemId})`,

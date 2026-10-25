@@ -1321,6 +1321,10 @@ router.patch("/admin/media/:id", async (req, res): Promise<void> => {
     return;
   }
   const [before] = await db.select().from(mediaTable).where(eq(mediaTable.id, id));
+  if (parsed.data.isPanorama && before && (before.kind !== "image" || before.purpose !== "item")) {
+    res.status(400).json({ error: "Panorama mora biti fotografija vnosa." });
+    return;
+  }
   const [media] = await db
     .update(mediaTable)
     .set(parsed.data)

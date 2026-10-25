@@ -7,6 +7,7 @@
  */
 
 export interface MediaInput {
+  isPanorama?: boolean;
   url: string;
   alt?: string;
   position?: number;

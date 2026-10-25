@@ -146,6 +146,7 @@ export async function readCanonicalHostOnboarding(
       id: row.id,
       itemId: row.itemId,
       kind: row.kind === "video" ? "video" : "image",
+      isPanorama: row.isPanorama,
       url: row.url,
       alt: text(row.alt),
       position: row.position,
@@ -614,6 +615,7 @@ export async function applyCanonicalHostOnboardingPatch(
       await tx.update(mediaTable).set({
         itemId: media.itemId,
         kind: media.kind,
+        isPanorama: media.kind !== "video" && (media.isPanorama ?? current.isPanorama),
         url: media.url,
         alt: media.alt || null,
         position: media.position,

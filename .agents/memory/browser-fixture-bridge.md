@@ -32,3 +32,9 @@ Raw browser-intercepted modules bypass Vite's import rewriting and React Refresh
 **Why:** Source-extracted cosmetic checks failed before rendering when raw fixtures used named ReactDOM exports from Vite's CommonJS prebundle or omitted the Refresh preamble.
 
 **How to apply:** Prefer Vite-transformed fixtures. If serving raw modules through browser interception, initialize Refresh before importing real TSX components and use the prebundle's default React/ReactDOM exports. Clearly label these screenshots as isolated source-backed checks, not authenticated admin or production evidence.
+
+For approved isolated editor tests, prefer a tenant-scoped temporary self-service host over fabricating a global operator session. Keep previous fixture reports intact and use a unique run namespace.
+
+**Why:** The app intentionally has one operator identity; a second account row does not create an independently scoped operator. Existing fixture reports may remain after successful cleanup, so their presence alone does not mean test data still exists.
+
+**How to apply:** Verify the actual editor with the narrower temporary host access, report that scope honestly, and explicitly remove uploaded object-storage derivatives as well as database fixtures. Ordinary media deletion removes references, not immediately the stored files.

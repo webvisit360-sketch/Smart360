@@ -10,6 +10,7 @@
  * Focal point of the crop, percentages of the image (izrez-wifi-eposta.md §1a)
  */
 export interface MediaUpdate {
+  isPanorama?: boolean;
   /**
      * @minimum 0
      * @maximum 100

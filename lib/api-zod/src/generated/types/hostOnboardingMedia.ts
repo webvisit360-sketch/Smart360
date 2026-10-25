@@ -12,6 +12,7 @@ export interface HostOnboardingMedia {
   /** @nullable */
   itemId: string | null;
   kind: HostOnboardingMediaKind;
+  isPanorama?: boolean;
   url: string;
   alt: string;
   position: number;
