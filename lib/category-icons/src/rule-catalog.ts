@@ -56,6 +56,7 @@ export function matchRuleIcon(text: string): { entry: RuleIconEntry; fallback: b
 export function ruleBulletTexts(
   item: { bullets?: unknown; body?: unknown } | null | undefined,
   sanitize: (html: string) => string = (html) => html,
+  preserveInlineHtml = false,
 ): string[] {
   const explicit = Array.isArray(item?.bullets)
     ? item!.bullets.filter((b): b is string => typeof b === "string" && !!b.trim()).map((b) => b.trim())
@@ -74,5 +75,5 @@ export function ruleBulletTexts(
     .replace(new RegExp(`(?:\\s|${emptyParagraph})+$`, "gi"), "");
   if (!/^<ul(?:\s[^>]*)?>[\s\S]*<\/ul>$/i.test(sanitized)) return [];
   return Array.from(sanitized.matchAll(/<li(?:\s[^>]*)?>([\s\S]*?)<\/li>/gi))
-    .map((m) => m[1].replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim()).filter(Boolean);
+    .map((m) => preserveInlineHtml ? m[1].trim() : m[1].replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim()).filter(Boolean);
 }

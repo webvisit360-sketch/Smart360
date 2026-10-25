@@ -16,3 +16,11 @@ test("ordinary prose is not promoted to rule cards", () => {
   assert.deepEqual(ruleBulletTexts({body:"<p>Prosimo, varčujte z vodo.</p>"}),[]);
   assert.deepEqual(ruleBulletTexts({body:"<p></p><p>Pravi odstavek</p><p></p>"}),[]);
 });
+
+test("render extraction preserves authored links and emphasis while icon audit remains plain text", () => {
+  const inline = 'Za ogled cenika <strong>2025</strong> <em>kliknite</em> <a href="https://example.org/cenik?year=2025&amp;lang=sl" target="_blank">Cenik 2025</a>';
+  const item = {body:`<ul><li><p>${inline}</p></li></ul><p></p>`};
+  assert.deepEqual(ruleBulletTexts(item, h=>h, true), [`<p>${inline}</p>`]);
+  assert.deepEqual(ruleBulletTexts(item), ["Za ogled cenika 2025 kliknite Cenik 2025"]);
+  assert.deepEqual(ruleBulletTexts({bullets:[inline]},h=>h,true), [inline]);
+});

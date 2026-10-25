@@ -22,7 +22,7 @@ import {
 } from "@workspace/api-client-react";
 import { useLocation } from "wouter";
 import { getOpenStatus } from "@/lib/hours";
-import { sanitizeHtml } from "@/lib/sanitize";
+import { sanitizeHtml, ruleInlineHtml, ruleInlineText } from "@/lib/sanitize";
 import { resolveTenantMapsUrl } from "@/lib/tenant-maps";
 import { itemMapsHref } from "@/lib/maps-href";
 import { beginGuestActivity, endGuestActivity, isReloadSafe } from "@/lib/bundle-freshness";
@@ -410,7 +410,7 @@ function standaloneBodyBullets(body: unknown): string[] {
 
 function itemBullets(item: any, _category?: any): string[] {
   // Same canonical extraction the server rule-icon audit uses.
-  return ruleBulletTexts(item, sanitizeHtml);
+  return ruleBulletTexts(item, sanitizeHtml, true);
 }
 
 function itemBodyHtml(item: any, category?: any): string {
@@ -433,7 +433,7 @@ function StructuredBulletRows({
         {bullets.map((bullet, index) => (
           <div className="lg2-step" key={`${index}-${bullet}`}>
             <span className="lg2-step-number">{index + 1}</span>
-            <p>{bullet}</p>
+            <p dangerouslySetInnerHTML={{ __html: ruleInlineHtml(bullet) }} />
           </div>
         ))}
       </div>
@@ -442,12 +442,12 @@ function StructuredBulletRows({
   return (
     <RuleCardList>
       {bullets.map((bullet, index) => {
-        const { entry } = matchRuleIcon(bullet);
+        const { entry } = matchRuleIcon(ruleInlineText(bullet));
         return (
           <div className="lg2-rule-row lg2-rule-card" key={`${index}-${bullet}`} data-rule-icon={entry.id} data-testid={`card-rule-${index}`}>
             {/* Trusted, checked-in catalogue SVG only (rule-catalog-data). */}
             <span className="lg2-rule-card-icon" aria-hidden="true" dangerouslySetInnerHTML={{ __html: entry.svg }} />
-            <p>{bullet}</p>
+            <p dangerouslySetInnerHTML={{ __html: ruleInlineHtml(bullet) }} />
           </div>
         );
       })}
