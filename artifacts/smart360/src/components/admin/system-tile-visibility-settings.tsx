@@ -16,6 +16,7 @@ const LABELS: Record<SystemTileKey, { title: string; hint: string }> = {
   contact: { title: "Kontakt", hint: "Telefon, WhatsApp, Viber, e-pošta gostitelja." },
   install: { title: "Namesti aplikacijo", hint: "Dodaj na začetni zaslon. V nameščeni aplikaciji je vedno skrito." },
   about: { title: "O vodniku", hint: "Zasebnost in viri podatkov." },
+  program: { title: "Hišni program", hint: "Ploščica Domov s tedenskim programom. Prikaže se le, ko ima program objavljene prihajajoče termine." },
 };
 
 export function SystemTileVisibilitySettings({ value, onChange, disabled = false }: {

@@ -1,4 +1,4 @@
-import { isProgramCategory, programEventOf, nextOccurrence, programToday } from "./living-guide-program-model";
+import { PROGRAM_ROUTE_ID, isProgramCategory, programEventOf, nextOccurrence, programToday } from "./living-guide-program-model";
 
 export type NavItem = "home" | "stay" | "offer" | "explore" | "program" | "messages";
 
@@ -42,6 +42,8 @@ export function bottomNavScreen(
   category: any,
   section: any,
 ): string {
+  // The house programme is a Domov entry: keep Domov highlighted beneath it.
+  if (screen === "detail" && category?.id === PROGRAM_ROUTE_ID) return baseScreen;
   if (screen === "detail" && category && isProgramCategory(category, section)) return "detail";
   return baseScreen;
 }
@@ -98,9 +100,9 @@ export function getLivingGuideAvailableFeatures(
   ) {
     available.add("explore");
   }
-  if (findDatedEventDestination(visibleSections)) {
-    available.add("program");
-  }
+  // The house programme moved to a dedicated Domov entry (/:slug/program);
+  // it is no longer a bottom-nav / Več destination. Stored "program" slots are
+  // dropped and backfilled by resolveLivingGuideNav.
 
   return available;
 }

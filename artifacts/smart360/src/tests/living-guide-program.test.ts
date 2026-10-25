@@ -1,3 +1,5 @@
+import { buildSimpleSections } from "../pages/living-guide/simple/simple-tiles";
+import { PROGRAM_HOME_LABELS, PROGRAM_ROUTE_ID, houseProgramContext, programHomeLabel } from "../pages/living-guide/living-guide-program-model";
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
@@ -150,7 +152,8 @@ test("nav + home integration with fixture (weekly today included, legacy still d
   try {
     const tenant = programFixtureTenant("sl");
     assert.equal(findDatedEventDestination(tenant.sections)?.category.id, "c-events");
-    assert.ok(getLivingGuideAvailableFeatures(tenant.sections).has("program"));
+    // Programme moved to the Domov entry; never a bottom-nav feature.
+    assert.ok(!getLivingGuideAvailableFeatures(tenant.sections).has("program"));
     const ids = selectHomeTodayEntries(tenant.sections).entries.map((e) => e.item.id);
     assert.deepEqual(ids, ["ev-yoga", "ev-kids", "ev-bike", "ev-beer"]);
     const legacyOnly = [{ key: "events", isVisible: true, categories: [cat([{ id: "l", title: "L", eventStart: "2026-08-20T20:00:00" }])] }];
@@ -218,20 +221,44 @@ test("week without occurrences yields no dots and empty day; legacy-only categor
   assert.equal(programItems(legacy[0]!.categories[0]).length, 1);
 });
 
-test("Program nav requires a visible upcoming occurrence, not an empty or expired category", () => {
+test("House programme entry requires a visible upcoming occurrence; never in bottom nav", () => {
   setProgramTodayOverride("2026-08-20");
   try {
-    const nav = (sections: any[]) => resolveLivingGuideNav(["program"], getLivingGuideAvailableFeatures(sections), false).resolved;
+    const nav = (sections: any[]) => resolveLivingGuideNav(["home", "stay", "explore", "program", "messages"], getLivingGuideAvailableFeatures(sections), false).resolved;
+    const has = (sections: any[]) => findDatedEventDestination(sections) !== null;
     const sections = (items: any[]) => [{ key: "events", categories: [cat(items)] }];
-    assert.ok(!nav([]).includes("program"));
-    assert.ok(!nav(sections([])).includes("program"));
-    assert.ok(!nav(sections([{ eventStart: "2025-01-01T10:00:00" }])).includes("program"));
-    assert.ok(!nav(sections([{ eventSchedule: weekly(["mon"], { validTo: "2026-08-19" }) }])).includes("program"));
-    assert.ok(!nav(sections([{ isVisible: false, eventSchedule: weekly(["mon"]) }])).includes("program"));
-    assert.ok(!nav(sections([{ deletedAt: "2026-08-19", eventSchedule: weekly(["mon"]) }])).includes("program"));
-    assert.ok(!nav([{ ...sections([])[0], isVisible: false, categories: [cat([{ eventSchedule: weekly(["mon"]) }])] }]).includes("program"));
-    assert.ok(nav(sections([{ eventSchedule: weekly(["mon"]) }])).includes("program"));
-    assert.ok(nav(sections([{ eventSchedule: weekly(["mon"], { validFrom: "2029-01-01" }) }])).includes("program"));
-    assert.ok(nav(sections([{ eventStart: "2026-09-01T10:00:00" }])).includes("program"));
+    assert.equal(has([]), false);
+    assert.equal(has(sections([])), false);
+    assert.equal(has(sections([{ eventStart: "2025-01-01T10:00:00" }])), false);
+    assert.equal(has(sections([{ eventSchedule: weekly(["mon"], { validTo: "2026-08-19" }) }])), false);
+    assert.equal(has(sections([{ isVisible: false, eventSchedule: weekly(["mon"]) }])), false);
+    assert.equal(has(sections([{ deletedAt: "2026-08-19", eventSchedule: weekly(["mon"]) }])), false);
+    assert.equal(has([{ ...sections([])[0], isVisible: false, categories: [cat([{ eventSchedule: weekly(["mon"]) }])] }]), false);
+    assert.equal(has(sections([{ eventSchedule: weekly(["mon"]) }])), true);
+    assert.equal(has(sections([{ eventSchedule: weekly(["mon"], { validFrom: "2029-01-01" }) }])), true);
+    assert.equal(has(sections([{ eventStart: "2026-09-01T10:00:00" }])), true);
+    assert.ok(!nav(sections([{ eventSchedule: weekly(["mon"]) }])).includes("program"));
   } finally { setProgramTodayOverride(null); }
+});
+
+test("House programme: 7 exact labels, Domov tile, visibility toggle, Okolica events untouched", () => {
+  assert.deepEqual(PROGRAM_HOME_LABELS, { sl: "Hišni program", en: "Our programme", de: "Unser Programm", it: "Il nostro programma", fr: "Notre programme", nl: "Ons programma", hr: "Naš program" });
+  const sections = [{ key: "explore", categories: [{ id: "loc-ev", key: "events", layout: "events", label: "Dogodki", items: [{ id: "x", title: "Flosarski bal" }] }] }];
+  const rt = { hasWeather: false, hasContact: false, installAvailable: false, hasOrderable: false, recordingEnabled: false, mapHref: null };
+  const homeTiles = (extra: any, lang = "sl") => buildSimpleSections(sections, lang, { ...rt, ...extra }).find((s) => s.key === "home")?.tiles ?? [];
+  assert.ok(!homeTiles({ hasProgram: false }).some((t) => t.id === "program"));
+  const tile = homeTiles({ hasProgram: true }).find((t) => t.id === "program")!;
+  assert.equal(tile.label, "Hišni program");
+  assert.equal(tile.icon, "calendar");
+  assert.deepEqual(tile.action, { kind: "program" });
+  assert.equal(homeTiles({ hasProgram: true }, "hr").find((t) => t.id === "program")?.label, "Naš program");
+  assert.ok(!homeTiles({ hasProgram: true, systemTileVisibility: { program: false } }).some((t) => t.id === "program"));
+  assert.ok(homeTiles({ hasProgram: true, systemTileVisibility: { weather: false } }).some((t) => t.id === "program"));
+  const explore = buildSimpleSections(sections, "sl", { ...rt, hasProgram: true }).find((s) => s.key === "explore")!;
+  assert.deepEqual(explore.tiles.map((t) => [t.label, t.action]), [["Dogodki", { kind: "category", categoryId: "loc-ev" }]]);
+  const ctx = houseProgramContext("en");
+  assert.equal(ctx.category.id, PROGRAM_ROUTE_ID);
+  assert.equal(isProgramCategory(ctx.category, ctx.section), true);
+  assert.equal(programHomeLabel("xx"), "Hišni program");
+  assert.equal(bottomNavScreen("detail", "home", ctx.category, ctx.section), "home");
 });

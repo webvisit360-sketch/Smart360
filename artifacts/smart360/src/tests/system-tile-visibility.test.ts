@@ -10,7 +10,7 @@ const homeIds = (v: unknown, r: Partial<SimpleRuntime> = {}) =>
   buildSimpleSections([], "sl", { ...rt, ...r, systemTileVisibility: v })[0].tiles.map((t) => t.id);
 
 test("absent object or key defaults to visible", () => {
-  assert.deepEqual(normalizeSystemTileVisibility(undefined), { notices: true, weather: true, sos: true, contact: true, install: true, about: true });
+  assert.deepEqual(normalizeSystemTileVisibility(undefined), { notices: true, weather: true, sos: true, contact: true, install: true, about: true, program: true });
   assert.equal(systemTileVisible({}, "sos"), true);
   assert.equal(systemTileVisible({ systemTileVisibility: { weather: false } }, "sos"), true);
   assert.equal(systemTileVisible({ systemTileVisibility: { weather: false } }, "weather"), false);

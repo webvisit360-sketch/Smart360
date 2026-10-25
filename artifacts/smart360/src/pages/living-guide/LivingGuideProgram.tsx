@@ -54,7 +54,7 @@ function bodyText(body: unknown): string {
   return sanitizeHtml(body);
 }
 
-export function ProgramView({ category, tenant, lang, onOpenItem, onBack }: any) {
+export function ProgramView({ category, tenant, lang, onOpenItem, onBack, title }: any) {
   const pullClose = usePullClose(() => onBack?.());
   const rows = useMemo(() => Array.isArray(tenant?.sections)
     ? programEntries(tenant.sections)
@@ -80,7 +80,7 @@ export function ProgramView({ category, tenant, lang, onOpenItem, onBack }: any)
         <div className="lgp-toprow">
           <div className="lgp-small">{tenant?.name}</div>
         </div>
-        <h1 className="lgp-h1" data-lg-detail-title>{programLabel(lang, "title")}</h1>
+        <h1 className="lgp-h1" data-lg-detail-title>{title ?? programLabel(lang, "title")}</h1>
 
         <div className="lgp-weeknav">
           <button type="button" className="lgp-ar" onClick={() => shiftWeek(-1)} aria-label={programLabel(lang, "prevWeek")} data-testid="program-prev-week">&#9664;</button>

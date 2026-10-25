@@ -31,7 +31,6 @@ const NAV_OPTIONS: Array<{ value: NavItem; label: string }> = [
   { value: "stay", label: "Bivanje (Stay)" },
   { value: "offer", label: "Ponudba (Offer)" },
   { value: "explore", label: "Okolica (Explore/Services)" },
-  { value: "program", label: "Program (Events)" },
   { value: "messages", label: "Sporočila (Messages)" },
 ];
 
@@ -235,7 +234,7 @@ export function AdminLivingGuideSettings({ tenant, id }: { tenant: any; id: stri
   const applyPreset = (preset: "meli_pu" | "camp") => {
     const preferred: NavItem[] = preset === "meli_pu"
       ? ["home", "stay", "offer", "explore", "messages"]
-      : ["home", "stay", "explore", "program", "messages"];
+      : ["home", "stay", "offer", "explore", "messages"];
     
     // Check if we can fulfill the preset
     const actualValid = preferred.filter(f => validFeatures.has(f));

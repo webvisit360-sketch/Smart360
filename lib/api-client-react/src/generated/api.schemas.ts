@@ -2355,6 +2355,7 @@ export type TenantBaseSystemTileVisibility = {
   contact?: boolean;
   install?: boolean;
   about?: boolean;
+  program?: boolean;
 };
 
 /**
@@ -2685,6 +2686,7 @@ export type TenantUpdateSystemTileVisibility = {
   contact?: boolean;
   install?: boolean;
   about?: boolean;
+  program?: boolean;
 };
 
 /**

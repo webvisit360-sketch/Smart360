@@ -143,7 +143,7 @@ import { simpleCopy } from "./simple/simple-copy";
 import { systemTileVisible } from "./system-tile-visibility";
 import { buildSimpleSections, type SimpleTile } from "./simple/simple-tiles";
 import { resolveGuestDesign, resolveSimplePalette, simplePaletteStyle } from "./simple/simple-palette";
-import { isProgramCategory, orderPrefillNoteFor, programEventOf, signupNote } from "./living-guide-program-model";
+import { PROGRAM_ROUTE_ID, houseProgramContext, isProgramCategory, orderPrefillNoteFor, programEventOf, programHomeLabel, signupNote } from "./living-guide-program-model";
 
 type GuestRecord = {
   unit: string;
@@ -763,8 +763,14 @@ export default function LivingGuideGuestShell({
     () => buildEmergencyHelpCategory(sections, lang),
     [lang, sections],
   );
+  // House programme: dedicated Domov route, available only with guest-visible
+  // upcoming published occurrences and when the system tile is not hidden.
+  const houseProgramAvailable =
+    Boolean(datedEventDestination(sections)) && systemTileVisible(tenant, "program");
   const categoryContext =
-    pathParts[1] === "help"
+    pathParts[1] === "program"
+      ? houseProgramAvailable ? houseProgramContext(lang) : null
+      : pathParts[1] === "help"
       ? { category: emergencyHelpCategory, section: null }
       : routeCategoryId
         ? allCategories.find((entry: any) => entry.category.id === routeCategoryId) ?? null
@@ -776,6 +782,7 @@ export default function LivingGuideGuestShell({
   else if (pathParts[1] === "messages") screen = "messages";
   else if (pathParts[1] === "site-map") screen = "site-map";
   else if (pathParts[1] === "more") screen = "more";
+  else if (pathParts[1] === "program" && !categoryContext) screen = "home";
   else if (categoryContext) screen = "detail";
   else if (routeSectionKey === "explore") screen = "explore";
   else if (routeSectionKey) screen = "grid";
@@ -2001,6 +2008,7 @@ export default function LivingGuideGuestShell({
         mapHref: resolveTenantMapsUrl(tenant, "search"),
         hasSiteMap: navState.hasSiteMap,
         systemTileVisibility: tenant?.systemTileVisibility,
+        hasProgram: houseProgramAvailable,
       })
     : [];
   const simpleBaseIsHome = isSimple && ["home", "grid", "more"].includes(baseScreen);
@@ -2014,6 +2022,7 @@ export default function LivingGuideGuestShell({
     else if (action.kind === "sos") openEmergencyHelp();
     else if (action.kind === "install") requestGuestInstall(slug);
     else if (action.kind === "about") setShowAbout(true);
+    else if (action.kind === "program") navigateDetail(`/${slug}/program`);
     else if (action.kind === "orders") setShowOrders(true);
     else if (action.kind === "record") { setSimpleRecorderMounted(true); setShowSimpleRecorder(true); }
     else if (action.kind === "messages") navigateDetail(`/${slug}/messages`);
@@ -3976,7 +3985,7 @@ function DetailView({ category, section, itemId, lang, t, galleryIndex, onGaller
       />
     );
   } else if (!activeItem && programSurface) {
-    content = <ProgramView category={category} tenant={tenant} lang={lang} onOpenItem={onOpenItem} onBack={onBack} />;
+    content = <ProgramView category={category} tenant={tenant} lang={lang} onOpenItem={onOpenItem} onBack={onBack} title={category.id === PROGRAM_ROUTE_ID ? programHomeLabel(lang) : undefined} />;
   } else if (activeItem) {
     if (layout === "poi") {
       content = <TemplateF item={activeItem} category={category} lang={lang} t={t} onBack={onBack} onOrderClick={onOrderClick} galleryIndex={galleryIndex} onGalleryIndex={onGalleryIndex} />;
@@ -4723,6 +4732,7 @@ function HomeView({
 }: any) {
   const now = new Date();
   const eventDestination = datedEventDestination(sections);
+  const houseProgramAvailable = Boolean(eventDestination) && systemTileVisible(tenant, "program");
   const staySection = sections.find((section: any) => section.key === "stay");
   const wifiCategory = sections
     .flatMap((section: any) => visible(section.categories))
@@ -4820,6 +4830,17 @@ function HomeView({
             <svg aria-hidden="true"><use href="#lg-i-wifi" /></svg>
             <b>WiFi</b>
           </button>
+          {houseProgramAvailable && (
+            <button
+              className="lg2-q lg2-q--w lg2-q--program"
+              type="button"
+              onClick={() => navigateDetail(`/${slug}/program`)}
+              data-testid="button-home-program"
+            >
+              <svg aria-hidden="true"><use href="#lg-i-cal" /></svg>
+              <b>{programHomeLabel(lang)}</b>
+            </button>
+          )}
           {systemTileVisible(tenant, "notices") && <button
             className="lg2-q"
             type="button"
@@ -4859,12 +4880,10 @@ function HomeView({
           <>
             <div className="lg2-hsect">
               <h3>{t("UI.lg.home.today")}</h3>
-              {eventDestination ? (
+              {houseProgramAvailable ? (
                 <button
                   type="button"
-                  onClick={() =>
-                    navigateDetail(`/${slug}/c/${eventDestination.category.id}`)
-                  }
+                  onClick={() => navigateDetail(`/${slug}/program`)}
                 >
                   {t("UI.lg.home.allProgram")}
                 </button>

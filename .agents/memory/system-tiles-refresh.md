@@ -9,6 +9,15 @@ equivalents in both designs. Install visibility never overrides standalone hidin
 **Why:** The Meli Pu owner requested control of built-in tiles without changing defaults.
 **How to apply:** Gate all entry points, not only the Enostaven tile.
 
+Hišni program is a system entry under Domov in both designs, not a renamed
+Okolica category. It is hidden without upcoming published occurrences even
+when its visibility setting is on. Evidence may use explicitly labelled
+development schedules; never add dates to real tenants just to show the tile.
+**Why:** The owner explicitly confirmed hiding an empty programme and approved
+test schedules for evidence while requiring local event categories unchanged.
+**How to apply:** Keep ordinary categories and original event/signup routes;
+translate the dedicated home entry and programme heading in all seven languages.
+
 Published content refresh must never interrupt an active/paused tour or unsent message.
 This includes existing PWA foreground landing resets and bundle updates, not only
 the publication fetch. A publication identity must come from the same stored

@@ -3298,3 +3298,17 @@ mtime_ms = 1792912395097
 storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/a12148bb-1305-4042-9d0a-4d4c256fa9da/13c2481f-b295-49f7-a169-67339fd784e2"
 storage_version_token = "1792912396097496"
 content_type = "text/html"
+
+[[outputs]]
+id = "4pWBGfwU-HZOMcv5SyV2d"
+uri = "file://artifacts/smart360/reports/house-program/evidence.html"
+type = "html"
+title = "Hišni program — prikaz in preverjanje"
+description = "Meli Pu in Kamp Savinja pri390×844, oba dizajna, sedem jezikov ter preizkus vidnosti. Posnetki z dogovorjenimi razvojnimi termini."
+logical_id = "cee97a43-66ad-49ca-9339-3290fc2fc9b6"
+content_hash = "sha256:eb92e44417c7c5cb9ca7292ca0c4a2ad2dc7d722fea446bafc286c51ee64a36d"
+size = 5579102
+mtime_ms = 1792915970486
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/cee97a43-66ad-49ca-9339-3290fc2fc9b6/4986a48b-3fef-4852-8c36-9e12c5384396"
+storage_version_token = "1792916051908962"
+content_type = "text/html"

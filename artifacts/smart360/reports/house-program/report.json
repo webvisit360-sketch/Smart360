@@ -1,0 +1,946 @@
+{
+  "generatedAt": "2026-10-25T08:09:33.968Z",
+  "base": "http://localhost:80",
+  "provenance": "reports/oklch-palette/icon-v3/prod-{meli-pu,kamp-savinja}.json (unchanged on disk; overrides in-memory only)",
+  "cases": [
+    {
+      "slug": "meli-pu",
+      "design": "simple",
+      "variant": "real-published",
+      "entryPresent": false,
+      "okolicaEventsInSnapshot": [
+        {
+          "id": "6a56aae7-01b0-41c5-b364-14f0a9ad9e75",
+          "label": "Dogodki",
+          "items": 3
+        }
+      ],
+      "simpleCategoryTiles": [
+        "DOBRODOŠLI",
+        "APARTMAJI",
+        "LOKACIJA",
+        "PARKIRIŠČE",
+        "NAVODILA ZA OGRAJO",
+        "NAVODILA ZA OPREMO",
+        "PRIJAVA / ODJAVA",
+        "WIFI",
+        "HIŠNI RED",
+        "BAZEN",
+        "SUP DESKA",
+        "SKUTER",
+        "ZUNANJI FITNES",
+        "ŽAR",
+        "ČOLN S SKIPERJEM",
+        "LADIJSKI PREVOZ",
+        "DRUŽABNE IGRE",
+        "OLJČNO OLJE",
+        "SLADOLED 24/7",
+        "ZAJTRK",
+        "KULINARIKA",
+        "NOČNO ŽIVLJENJE",
+        "PICERIJE",
+        "AKTIVNOSTI",
+        "POHODNIŠTVO",
+        "KOLESARJENJE",
+        "PLAŽE",
+        "KULTURNA DEDIŠČINA",
+        "NARAVNA DEDIŠČINA",
+        "IZLETI",
+        "DOGODKI",
+        "TRGOVINE",
+        "PEKARNE",
+        "BENCINSKE ČRPALKE",
+        "BANKOMATI",
+        "LEKARNE",
+        "ZDRAVSTVO"
+      ],
+      "directProgramRoute": {
+        "url": "/meli-pu/program",
+        "programView": 0
+      }
+    },
+    {
+      "slug": "meli-pu",
+      "design": "simple",
+      "variant": "dev-schedule",
+      "lang": "sl",
+      "expected": "Hišni program",
+      "entry": {
+        "text": "Hišni program",
+        "rendered": "HIŠNI PROGRAM",
+        "icon": "inline-svg",
+        "fontSize": "10px",
+        "lines": 2,
+        "overflowX": false,
+        "overflowY": false,
+        "insideTile": true,
+        "box": {
+          "x": 271,
+          "y": 119,
+          "w": 93,
+          "h": 93
+        }
+      },
+      "labelExact": true,
+      "programRoute": "/meli-pu/program",
+      "detailTitle": "Hišni program",
+      "cardOpensOriginalRoute": "/meli-pu/c/dev-test-program/i/dev-yoga",
+      "signupButton": 4
+    },
+    {
+      "slug": "meli-pu",
+      "design": "simple",
+      "variant": "dev-schedule",
+      "lang": "en",
+      "expected": "Our programme",
+      "entry": {
+        "text": "Our programme",
+        "rendered": "OUR PROGRAMME",
+        "icon": "inline-svg",
+        "fontSize": "10px",
+        "lines": 2,
+        "overflowX": false,
+        "overflowY": false,
+        "insideTile": true,
+        "box": {
+          "x": 271,
+          "y": 119,
+          "w": 93,
+          "h": 93
+        }
+      },
+      "labelExact": true,
+      "programRoute": "/meli-pu/program",
+      "detailTitle": "Our programme",
+      "cardOpensOriginalRoute": "/meli-pu/c/dev-test-program/i/dev-yoga",
+      "signupButton": 4
+    },
+    {
+      "slug": "meli-pu",
+      "design": "simple",
+      "variant": "dev-schedule",
+      "lang": "de",
+      "expected": "Unser Programm",
+      "entry": {
+        "text": "Unser Programm",
+        "rendered": "UNSER PROGRAMM",
+        "icon": "inline-svg",
+        "fontSize": "10px",
+        "lines": 2,
+        "overflowX": false,
+        "overflowY": false,
+        "insideTile": true,
+        "box": {
+          "x": 271,
+          "y": 119,
+          "w": 93,
+          "h": 93
+        }
+      },
+      "labelExact": true
+    },
+    {
+      "slug": "meli-pu",
+      "design": "simple",
+      "variant": "dev-schedule",
+      "lang": "it",
+      "expected": "Il nostro programma",
+      "entry": {
+        "text": "Il nostro programma",
+        "rendered": "IL NOSTRO PROGRAMMA",
+        "icon": "inline-svg",
+        "fontSize": "10px",
+        "lines": 2,
+        "overflowX": false,
+        "overflowY": false,
+        "insideTile": true,
+        "box": {
+          "x": 271,
+          "y": 119,
+          "w": 93,
+          "h": 93
+        }
+      },
+      "labelExact": true
+    },
+    {
+      "slug": "meli-pu",
+      "design": "simple",
+      "variant": "dev-schedule",
+      "lang": "fr",
+      "expected": "Notre programme",
+      "entry": {
+        "text": "Notre programme",
+        "rendered": "NOTRE PROGRAMME",
+        "icon": "inline-svg",
+        "fontSize": "10px",
+        "lines": 2,
+        "overflowX": false,
+        "overflowY": false,
+        "insideTile": true,
+        "box": {
+          "x": 271,
+          "y": 119,
+          "w": 93,
+          "h": 93
+        }
+      },
+      "labelExact": true
+    },
+    {
+      "slug": "meli-pu",
+      "design": "simple",
+      "variant": "dev-schedule",
+      "lang": "nl",
+      "expected": "Ons programma",
+      "entry": {
+        "text": "Ons programma",
+        "rendered": "ONS PROGRAMMA",
+        "icon": "inline-svg",
+        "fontSize": "10px",
+        "lines": 2,
+        "overflowX": false,
+        "overflowY": false,
+        "insideTile": true,
+        "box": {
+          "x": 271,
+          "y": 119,
+          "w": 93,
+          "h": 93
+        }
+      },
+      "labelExact": true
+    },
+    {
+      "slug": "meli-pu",
+      "design": "simple",
+      "variant": "dev-schedule",
+      "lang": "hr",
+      "expected": "Naš program",
+      "entry": {
+        "text": "Naš program",
+        "rendered": "NAŠ PROGRAM",
+        "icon": "inline-svg",
+        "fontSize": "10px",
+        "lines": 1,
+        "overflowX": false,
+        "overflowY": false,
+        "insideTile": true,
+        "box": {
+          "x": 271,
+          "y": 119,
+          "w": 93,
+          "h": 93
+        }
+      },
+      "labelExact": true
+    },
+    {
+      "slug": "meli-pu",
+      "design": "simple",
+      "variant": "toggle",
+      "visibility": {
+        "program": false
+      },
+      "entryPresent": false,
+      "routePath": "/meli-pu/program",
+      "programView": 0
+    },
+    {
+      "slug": "meli-pu",
+      "design": "simple",
+      "variant": "toggle",
+      "visibility": {
+        "weather": false
+      },
+      "entryPresent": true,
+      "routePath": "/meli-pu/program",
+      "programView": 1
+    },
+    {
+      "slug": "meli-pu",
+      "design": "trend",
+      "variant": "real-published",
+      "entryPresent": false,
+      "okolicaEventsInSnapshot": [
+        {
+          "id": "6a56aae7-01b0-41c5-b364-14f0a9ad9e75",
+          "label": "Dogodki",
+          "items": 3
+        }
+      ],
+      "simpleCategoryTiles": null,
+      "directProgramRoute": {
+        "url": "/meli-pu/program",
+        "programView": 0
+      }
+    },
+    {
+      "slug": "meli-pu",
+      "design": "trend",
+      "variant": "dev-schedule",
+      "lang": "sl",
+      "expected": "Hišni program",
+      "entry": {
+        "text": "Hišni program",
+        "rendered": "Hišni program",
+        "icon": "#lg-i-cal",
+        "fontSize": "15px",
+        "lines": 1,
+        "overflowX": false,
+        "overflowY": false,
+        "insideTile": true,
+        "box": {
+          "x": 16,
+          "y": 450,
+          "w": 358,
+          "h": 69
+        }
+      },
+      "labelExact": true,
+      "programRoute": "/meli-pu/program",
+      "detailTitle": "Hišni program",
+      "cardOpensOriginalRoute": "/meli-pu/c/dev-test-program/i/dev-yoga",
+      "signupButton": 4
+    },
+    {
+      "slug": "meli-pu",
+      "design": "trend",
+      "variant": "dev-schedule",
+      "lang": "en",
+      "expected": "Our programme",
+      "entry": {
+        "text": "Our programme",
+        "rendered": "Our programme",
+        "icon": "#lg-i-cal",
+        "fontSize": "15px",
+        "lines": 1,
+        "overflowX": false,
+        "overflowY": false,
+        "insideTile": true,
+        "box": {
+          "x": 16,
+          "y": 450,
+          "w": 358,
+          "h": 69
+        }
+      },
+      "labelExact": true,
+      "programRoute": "/meli-pu/program",
+      "detailTitle": "Our programme",
+      "cardOpensOriginalRoute": "/meli-pu/c/dev-test-program/i/dev-yoga",
+      "signupButton": 4
+    },
+    {
+      "slug": "meli-pu",
+      "design": "trend",
+      "variant": "dev-schedule",
+      "lang": "de",
+      "expected": "Unser Programm",
+      "entry": {
+        "text": "Unser Programm",
+        "rendered": "Unser Programm",
+        "icon": "#lg-i-cal",
+        "fontSize": "15px",
+        "lines": 1,
+        "overflowX": false,
+        "overflowY": false,
+        "insideTile": true,
+        "box": {
+          "x": 16,
+          "y": 450,
+          "w": 358,
+          "h": 69
+        }
+      },
+      "labelExact": true
+    },
+    {
+      "slug": "meli-pu",
+      "design": "trend",
+      "variant": "dev-schedule",
+      "lang": "it",
+      "expected": "Il nostro programma",
+      "entry": {
+        "text": "Il nostro programma",
+        "rendered": "Il nostro programma",
+        "icon": "#lg-i-cal",
+        "fontSize": "15px",
+        "lines": 1,
+        "overflowX": false,
+        "overflowY": false,
+        "insideTile": true,
+        "box": {
+          "x": 16,
+          "y": 450,
+          "w": 358,
+          "h": 69
+        }
+      },
+      "labelExact": true
+    },
+    {
+      "slug": "meli-pu",
+      "design": "trend",
+      "variant": "dev-schedule",
+      "lang": "fr",
+      "expected": "Notre programme",
+      "entry": {
+        "text": "Notre programme",
+        "rendered": "Notre programme",
+        "icon": "#lg-i-cal",
+        "fontSize": "15px",
+        "lines": 1,
+        "overflowX": false,
+        "overflowY": false,
+        "insideTile": true,
+        "box": {
+          "x": 16,
+          "y": 450,
+          "w": 358,
+          "h": 69
+        }
+      },
+      "labelExact": true
+    },
+    {
+      "slug": "meli-pu",
+      "design": "trend",
+      "variant": "dev-schedule",
+      "lang": "nl",
+      "expected": "Ons programma",
+      "entry": {
+        "text": "Ons programma",
+        "rendered": "Ons programma",
+        "icon": "#lg-i-cal",
+        "fontSize": "15px",
+        "lines": 1,
+        "overflowX": false,
+        "overflowY": false,
+        "insideTile": true,
+        "box": {
+          "x": 16,
+          "y": 450,
+          "w": 358,
+          "h": 69
+        }
+      },
+      "labelExact": true
+    },
+    {
+      "slug": "meli-pu",
+      "design": "trend",
+      "variant": "dev-schedule",
+      "lang": "hr",
+      "expected": "Naš program",
+      "entry": {
+        "text": "Naš program",
+        "rendered": "Naš program",
+        "icon": "#lg-i-cal",
+        "fontSize": "15px",
+        "lines": 1,
+        "overflowX": false,
+        "overflowY": false,
+        "insideTile": true,
+        "box": {
+          "x": 16,
+          "y": 450,
+          "w": 358,
+          "h": 69
+        }
+      },
+      "labelExact": true
+    },
+    {
+      "slug": "meli-pu",
+      "design": "trend",
+      "variant": "toggle",
+      "visibility": {
+        "program": false
+      },
+      "entryPresent": false,
+      "routePath": "/meli-pu/program",
+      "programView": 0
+    },
+    {
+      "slug": "meli-pu",
+      "design": "trend",
+      "variant": "toggle",
+      "visibility": {
+        "weather": false
+      },
+      "entryPresent": true,
+      "routePath": "/meli-pu/program",
+      "programView": 1
+    },
+    {
+      "slug": "kamp-savinja",
+      "design": "simple",
+      "variant": "real-published",
+      "entryPresent": false,
+      "okolicaEventsInSnapshot": [
+        {
+          "id": "67cd461c-d759-4248-b7a8-548912d6cd12",
+          "label": "Dogodki",
+          "items": 1
+        }
+      ],
+      "simpleCategoryTiles": [
+        "DOBRODOŠLI",
+        "LOKACIJA",
+        "HIŠNI RED",
+        "PRIJAVA / ODJAVA",
+        "BREZŽIČNI INTERNET",
+        "CENIK",
+        "PONUDBA BARA",
+        "KULINARIKA",
+        "POHODNIŠTVO",
+        "KOLESARJENJE",
+        "KULTURNA DEDIŠČINA",
+        "NARAVNA DEDIŠČINA",
+        "IZLETI",
+        "DOGODKI",
+        "POTOVANJA V SLOVENIJO",
+        "POTOVANJA",
+        "ZA DRUŽINE",
+        "VODNI ŠPORTI",
+        "ZIMSKI ŠPORTI",
+        "PEKARNA",
+        "PREVOZ",
+        "TIC",
+        "AVTOSERVISI",
+        "POŠTA",
+        "DEFIBRILATORJI",
+        "BOLNIŠNICE",
+        "POLICIJSKA PISARNA",
+        "TRGOVINE",
+        "PEKARNE",
+        "BENCINSKE ČRPALKE",
+        "BANKOMATI",
+        "LEKARNE",
+        "ZDRAVSTVO",
+        "OCENITE NAS",
+        "KONTAKT",
+        "DELITE SVOJO IZKUŠNJO"
+      ],
+      "directProgramRoute": {
+        "url": "/kamp-savinja/program",
+        "programView": 0
+      }
+    },
+    {
+      "slug": "kamp-savinja",
+      "design": "simple",
+      "variant": "dev-schedule",
+      "lang": "sl",
+      "expected": "Hišni program",
+      "entry": {
+        "text": "Hišni program",
+        "rendered": "HIŠNI PROGRAM",
+        "icon": "inline-svg",
+        "fontSize": "10px",
+        "lines": 2,
+        "overflowX": false,
+        "overflowY": false,
+        "insideTile": true,
+        "box": {
+          "x": 271,
+          "y": 119,
+          "w": 93,
+          "h": 93
+        }
+      },
+      "labelExact": true,
+      "programRoute": "/kamp-savinja/program",
+      "detailTitle": "Hišni program",
+      "cardOpensOriginalRoute": "/kamp-savinja/c/dev-test-program/i/dev-yoga",
+      "signupButton": 4
+    },
+    {
+      "slug": "kamp-savinja",
+      "design": "simple",
+      "variant": "dev-schedule",
+      "lang": "en",
+      "expected": "Our programme",
+      "entry": {
+        "text": "Our programme",
+        "rendered": "OUR PROGRAMME",
+        "icon": "inline-svg",
+        "fontSize": "10px",
+        "lines": 2,
+        "overflowX": false,
+        "overflowY": false,
+        "insideTile": true,
+        "box": {
+          "x": 271,
+          "y": 119,
+          "w": 93,
+          "h": 93
+        }
+      },
+      "labelExact": true,
+      "programRoute": "/kamp-savinja/program",
+      "detailTitle": "Our programme",
+      "cardOpensOriginalRoute": "/kamp-savinja/c/dev-test-program/i/dev-yoga",
+      "signupButton": 4
+    },
+    {
+      "slug": "kamp-savinja",
+      "design": "simple",
+      "variant": "dev-schedule",
+      "lang": "de",
+      "expected": "Unser Programm",
+      "entry": {
+        "text": "Unser Programm",
+        "rendered": "UNSER PROGRAMM",
+        "icon": "inline-svg",
+        "fontSize": "10px",
+        "lines": 2,
+        "overflowX": false,
+        "overflowY": false,
+        "insideTile": true,
+        "box": {
+          "x": 271,
+          "y": 119,
+          "w": 93,
+          "h": 93
+        }
+      },
+      "labelExact": true
+    },
+    {
+      "slug": "kamp-savinja",
+      "design": "simple",
+      "variant": "dev-schedule",
+      "lang": "it",
+      "expected": "Il nostro programma",
+      "entry": {
+        "text": "Il nostro programma",
+        "rendered": "IL NOSTRO PROGRAMMA",
+        "icon": "inline-svg",
+        "fontSize": "10px",
+        "lines": 2,
+        "overflowX": false,
+        "overflowY": false,
+        "insideTile": true,
+        "box": {
+          "x": 271,
+          "y": 119,
+          "w": 93,
+          "h": 93
+        }
+      },
+      "labelExact": true
+    },
+    {
+      "slug": "kamp-savinja",
+      "design": "simple",
+      "variant": "dev-schedule",
+      "lang": "fr",
+      "expected": "Notre programme",
+      "entry": {
+        "text": "Notre programme",
+        "rendered": "NOTRE PROGRAMME",
+        "icon": "inline-svg",
+        "fontSize": "10px",
+        "lines": 2,
+        "overflowX": false,
+        "overflowY": false,
+        "insideTile": true,
+        "box": {
+          "x": 271,
+          "y": 119,
+          "w": 93,
+          "h": 93
+        }
+      },
+      "labelExact": true
+    },
+    {
+      "slug": "kamp-savinja",
+      "design": "simple",
+      "variant": "dev-schedule",
+      "lang": "nl",
+      "expected": "Ons programma",
+      "entry": {
+        "text": "Ons programma",
+        "rendered": "ONS PROGRAMMA",
+        "icon": "inline-svg",
+        "fontSize": "10px",
+        "lines": 2,
+        "overflowX": false,
+        "overflowY": false,
+        "insideTile": true,
+        "box": {
+          "x": 271,
+          "y": 119,
+          "w": 93,
+          "h": 93
+        }
+      },
+      "labelExact": true
+    },
+    {
+      "slug": "kamp-savinja",
+      "design": "simple",
+      "variant": "dev-schedule",
+      "lang": "hr",
+      "expected": "Naš program",
+      "entry": {
+        "text": "Naš program",
+        "rendered": "NAŠ PROGRAM",
+        "icon": "inline-svg",
+        "fontSize": "10px",
+        "lines": 1,
+        "overflowX": false,
+        "overflowY": false,
+        "insideTile": true,
+        "box": {
+          "x": 271,
+          "y": 119,
+          "w": 93,
+          "h": 93
+        }
+      },
+      "labelExact": true
+    },
+    {
+      "slug": "kamp-savinja",
+      "design": "simple",
+      "variant": "toggle",
+      "visibility": {
+        "program": false
+      },
+      "entryPresent": false,
+      "routePath": "/kamp-savinja/program",
+      "programView": 0
+    },
+    {
+      "slug": "kamp-savinja",
+      "design": "simple",
+      "variant": "toggle",
+      "visibility": {
+        "weather": false
+      },
+      "entryPresent": true,
+      "routePath": "/kamp-savinja/program",
+      "programView": 1
+    },
+    {
+      "slug": "kamp-savinja",
+      "design": "trend",
+      "variant": "real-published",
+      "entryPresent": false,
+      "okolicaEventsInSnapshot": [
+        {
+          "id": "67cd461c-d759-4248-b7a8-548912d6cd12",
+          "label": "Dogodki",
+          "items": 1
+        }
+      ],
+      "simpleCategoryTiles": null,
+      "directProgramRoute": {
+        "url": "/kamp-savinja/program",
+        "programView": 0
+      }
+    },
+    {
+      "slug": "kamp-savinja",
+      "design": "trend",
+      "variant": "dev-schedule",
+      "lang": "sl",
+      "expected": "Hišni program",
+      "entry": {
+        "text": "Hišni program",
+        "rendered": "Hišni program",
+        "icon": "#lg-i-cal",
+        "fontSize": "15px",
+        "lines": 1,
+        "overflowX": false,
+        "overflowY": false,
+        "insideTile": true,
+        "box": {
+          "x": 16,
+          "y": 450,
+          "w": 358,
+          "h": 69
+        }
+      },
+      "labelExact": true,
+      "programRoute": "/kamp-savinja/program",
+      "detailTitle": "Hišni program",
+      "cardOpensOriginalRoute": "/kamp-savinja/c/dev-test-program/i/dev-yoga",
+      "signupButton": 4
+    },
+    {
+      "slug": "kamp-savinja",
+      "design": "trend",
+      "variant": "dev-schedule",
+      "lang": "en",
+      "expected": "Our programme",
+      "entry": {
+        "text": "Our programme",
+        "rendered": "Our programme",
+        "icon": "#lg-i-cal",
+        "fontSize": "15px",
+        "lines": 1,
+        "overflowX": false,
+        "overflowY": false,
+        "insideTile": true,
+        "box": {
+          "x": 16,
+          "y": 450,
+          "w": 358,
+          "h": 69
+        }
+      },
+      "labelExact": true,
+      "programRoute": "/kamp-savinja/program",
+      "detailTitle": "Our programme",
+      "cardOpensOriginalRoute": "/kamp-savinja/c/dev-test-program/i/dev-yoga",
+      "signupButton": 4
+    },
+    {
+      "slug": "kamp-savinja",
+      "design": "trend",
+      "variant": "dev-schedule",
+      "lang": "de",
+      "expected": "Unser Programm",
+      "entry": {
+        "text": "Unser Programm",
+        "rendered": "Unser Programm",
+        "icon": "#lg-i-cal",
+        "fontSize": "15px",
+        "lines": 1,
+        "overflowX": false,
+        "overflowY": false,
+        "insideTile": true,
+        "box": {
+          "x": 16,
+          "y": 450,
+          "w": 358,
+          "h": 69
+        }
+      },
+      "labelExact": true
+    },
+    {
+      "slug": "kamp-savinja",
+      "design": "trend",
+      "variant": "dev-schedule",
+      "lang": "it",
+      "expected": "Il nostro programma",
+      "entry": {
+        "text": "Il nostro programma",
+        "rendered": "Il nostro programma",
+        "icon": "#lg-i-cal",
+        "fontSize": "15px",
+        "lines": 1,
+        "overflowX": false,
+        "overflowY": false,
+        "insideTile": true,
+        "box": {
+          "x": 16,
+          "y": 450,
+          "w": 358,
+          "h": 69
+        }
+      },
+      "labelExact": true
+    },
+    {
+      "slug": "kamp-savinja",
+      "design": "trend",
+      "variant": "dev-schedule",
+      "lang": "fr",
+      "expected": "Notre programme",
+      "entry": {
+        "text": "Notre programme",
+        "rendered": "Notre programme",
+        "icon": "#lg-i-cal",
+        "fontSize": "15px",
+        "lines": 1,
+        "overflowX": false,
+        "overflowY": false,
+        "insideTile": true,
+        "box": {
+          "x": 16,
+          "y": 450,
+          "w": 358,
+          "h": 69
+        }
+      },
+      "labelExact": true
+    },
+    {
+      "slug": "kamp-savinja",
+      "design": "trend",
+      "variant": "dev-schedule",
+      "lang": "nl",
+      "expected": "Ons programma",
+      "entry": {
+        "text": "Ons programma",
+        "rendered": "Ons programma",
+        "icon": "#lg-i-cal",
+        "fontSize": "15px",
+        "lines": 1,
+        "overflowX": false,
+        "overflowY": false,
+        "insideTile": true,
+        "box": {
+          "x": 16,
+          "y": 450,
+          "w": 358,
+          "h": 69
+        }
+      },
+      "labelExact": true
+    },
+    {
+      "slug": "kamp-savinja",
+      "design": "trend",
+      "variant": "dev-schedule",
+      "lang": "hr",
+      "expected": "Naš program",
+      "entry": {
+        "text": "Naš program",
+        "rendered": "Naš program",
+        "icon": "#lg-i-cal",
+        "fontSize": "15px",
+        "lines": 1,
+        "overflowX": false,
+        "overflowY": false,
+        "insideTile": true,
+        "box": {
+          "x": 16,
+          "y": 450,
+          "w": 358,
+          "h": 69
+        }
+      },
+      "labelExact": true
+    },
+    {
+      "slug": "kamp-savinja",
+      "design": "trend",
+      "variant": "toggle",
+      "visibility": {
+        "program": false
+      },
+      "entryPresent": false,
+      "routePath": "/kamp-savinja/program",
+      "programView": 0
+    },
+    {
+      "slug": "kamp-savinja",
+      "design": "trend",
+      "variant": "toggle",
+      "visibility": {
+        "weather": false
+      },
+      "entryPresent": true,
+      "routePath": "/kamp-savinja/program",
+      "programView": 1
+    }
+  ]
+}

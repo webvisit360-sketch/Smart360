@@ -2277,7 +2277,8 @@ export const GetPublicTenantResponse = zod.object({
   "sos": zod.boolean().optional(),
   "contact": zod.boolean().optional(),
   "install": zod.boolean().optional(),
-  "about": zod.boolean().optional()
+  "about": zod.boolean().optional(),
+  "program": zod.boolean().optional()
 }).optional(),
   "simpleBaseColor": zod.string().regex(getPublicTenantResponseOneSimpleBaseColorRegExp).nullish(),
   "theme": zod.string(),
@@ -2903,7 +2904,8 @@ export const ListTenantsResponseItem = zod.object({
   "sos": zod.boolean().optional(),
   "contact": zod.boolean().optional(),
   "install": zod.boolean().optional(),
-  "about": zod.boolean().optional()
+  "about": zod.boolean().optional(),
+  "program": zod.boolean().optional()
 }).optional(),
   "simpleBaseColor": zod.string().regex(listTenantsResponseOneSimpleBaseColorRegExp).nullish(),
   "theme": zod.string(),
@@ -3022,7 +3024,8 @@ export const CreateTenantResponse = zod.object({
   "sos": zod.boolean().optional(),
   "contact": zod.boolean().optional(),
   "install": zod.boolean().optional(),
-  "about": zod.boolean().optional()
+  "about": zod.boolean().optional(),
+  "program": zod.boolean().optional()
 }).optional(),
   "simpleBaseColor": zod.string().regex(createTenantResponseOneSimpleBaseColorRegExp).nullish(),
   "theme": zod.string(),
@@ -4453,7 +4456,8 @@ export const GetTenantResponse = zod.object({
   "sos": zod.boolean().optional(),
   "contact": zod.boolean().optional(),
   "install": zod.boolean().optional(),
-  "about": zod.boolean().optional()
+  "about": zod.boolean().optional(),
+  "program": zod.boolean().optional()
 }).optional(),
   "simpleBaseColor": zod.string().regex(getTenantResponseOneOneSimpleBaseColorRegExp).nullish(),
   "theme": zod.string(),
@@ -4699,7 +4703,8 @@ export const UpdateTenantBody = zod.object({
   "sos": zod.boolean().optional(),
   "contact": zod.boolean().optional(),
   "install": zod.boolean().optional(),
-  "about": zod.boolean().optional()
+  "about": zod.boolean().optional(),
+  "program": zod.boolean().optional()
 }).optional(),
   "simpleBaseColor": zod.string().regex(updateTenantBodySimpleBaseColorRegExp).nullish(),
   "renewsAt": zod.string().nullish(),
@@ -4796,7 +4801,8 @@ export const UpdateTenantResponse = zod.object({
   "sos": zod.boolean().optional(),
   "contact": zod.boolean().optional(),
   "install": zod.boolean().optional(),
-  "about": zod.boolean().optional()
+  "about": zod.boolean().optional(),
+  "program": zod.boolean().optional()
 }).optional(),
   "simpleBaseColor": zod.string().regex(updateTenantResponseOneSimpleBaseColorRegExp).nullish(),
   "theme": zod.string(),
@@ -5211,7 +5217,8 @@ export const DuplicateTenantResponse = zod.object({
   "sos": zod.boolean().optional(),
   "contact": zod.boolean().optional(),
   "install": zod.boolean().optional(),
-  "about": zod.boolean().optional()
+  "about": zod.boolean().optional(),
+  "program": zod.boolean().optional()
 }).optional(),
   "simpleBaseColor": zod.string().regex(duplicateTenantResponseTenantOneSimpleBaseColorRegExp).nullish(),
   "theme": zod.string(),
@@ -5336,7 +5343,8 @@ export const RenewTenantResponse = zod.object({
   "sos": zod.boolean().optional(),
   "contact": zod.boolean().optional(),
   "install": zod.boolean().optional(),
-  "about": zod.boolean().optional()
+  "about": zod.boolean().optional(),
+  "program": zod.boolean().optional()
 }).optional(),
   "simpleBaseColor": zod.string().regex(renewTenantResponseOneSimpleBaseColorRegExp).nullish(),
   "theme": zod.string(),

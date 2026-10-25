@@ -5,11 +5,12 @@ import type { SimpleIconKey } from "./simple-icons";
 import { resolveCategoryTileIcon } from "@workspace/category-icons";
 import { simpleCopy, type SimpleCopyKey } from "./simple-copy";
 import { normalizeSystemTileVisibility } from "../system-tile-visibility";
+import { programHomeLabel } from "../living-guide-program-model";
 
 export type SimpleTileAction =
   | { kind: "category"; categoryId: string }
   | { kind: "notices" } | { kind: "weather" } | { kind: "sos" } | { kind: "contact" }
-  | { kind: "install" } | { kind: "about" } | { kind: "orders" } | { kind: "record" }
+  | { kind: "program" } | { kind: "install" } | { kind: "about" } | { kind: "orders" } | { kind: "record" }
   | { kind: "map"; href: string | null; siteMap: boolean } | { kind: "messages" };
 
 export type SimpleTile = { id: string; label: string; icon: SimpleIconKey; action: SimpleTileAction };
@@ -26,6 +27,8 @@ export type SimpleRuntime = {
   hasSiteMap?: boolean;
   /** Per-tenant system tile visibility; absent keys default to visible. */
   systemTileVisibility?: unknown;
+  /** House programme has guest-visible published upcoming occurrences. */
+  hasProgram?: boolean;
 };
 
 /**
@@ -63,6 +66,7 @@ export function buildSimpleSections(sections: any[], lang: string, rt: SimpleRun
   const home: SimpleTile[] = ([
     { id: "notices", label: L("notices"), icon: "bell", action: { kind: "notices" } },
     ...(rt.hasWeather ? [{ id: "weather", label: L("weather"), icon: "weather" as const, action: { kind: "weather" } as const }] : []),
+    ...(rt.hasProgram ? [{ id: "program", label: programHomeLabel(lang), icon: "calendar" as const, action: { kind: "program" } as const }] : []),
     { id: "sos", label: L("sos"), icon: "sos", action: { kind: "sos" } },
     ...(rt.hasContact ? [{ id: "contact", label: L("contact"), icon: "phone" as const, action: { kind: "contact" } as const }] : []),
     ...(rt.installAvailable ? [{ id: "install", label: L("install"), icon: "install" as const, action: { kind: "install" } as const }] : []),

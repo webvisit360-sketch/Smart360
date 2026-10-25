@@ -299,6 +299,23 @@ export const PROGRAM_LABELS = extendCatalog<Record<string, string>>({
   de: { title: "Programm", all: "Alle", in: "Im Camp", out: "In der Umgebung", daily: "täglich", time: "Uhrzeit", where: "Wo", location: "Ort", age: "Alter", price: "Preis", signup: "Anmeldung per Nachricht", empty: "An diesem Tag kein Programm.", emptyFilter: "Keine Veranstaltungen für diesen Filter.", prevWeek: "Vorherige Woche", nextWeek: "Nächste Woche", back: "Zurück", more: "mehr", notePrefix: "Anmeldung" },
   it: { title: "Programma", all: "Tutti", in: "In campeggio", out: "Nei dintorni", daily: "ogni giorno", time: "Ora", where: "Dove", location: "Luogo", age: "Età", price: "Prezzo", signup: "Iscrizione tramite messaggi", empty: "Nessun programma in questo giorno.", emptyFilter: "Nessun evento per questo filtro.", prevWeek: "Settimana precedente", nextWeek: "Settimana successiva", back: "Indietro", more: "altro", notePrefix: "Iscrizione" },
 });
+/** Dedicated Domov entry for the house programme (never a content category). */
+export const PROGRAM_ROUTE_ID = "__house-program";
+export const PROGRAM_HOME_LABELS: Record<string, string> = {
+  sl: "Hišni program", en: "Our programme", de: "Unser Programm", it: "Il nostro programma",
+  fr: "Notre programme", nl: "Ons programma", hr: "Naš program",
+};
+export function programHomeLabel(lang: string): string {
+  return PROGRAM_HOME_LABELS[lang] ?? PROGRAM_HOME_LABELS.sl;
+}
+/** Virtual route context for /:slug/program. Matches the programme surface via
+ * section key "program" without touching any real (e.g. Okolica) category. */
+export function houseProgramContext(lang: string) {
+  return {
+    category: { id: PROGRAM_ROUTE_ID, key: "program", layout: "events", label: programHomeLabel(lang), items: [] },
+    section: { id: PROGRAM_ROUTE_ID, key: "program", categories: [] },
+  };
+}
 export function programLabel(lang: string, key: string): string {
   return PROGRAM_LABELS[programLang(lang)][key] ?? PROGRAM_LABELS.sl[key] ?? key;
 }

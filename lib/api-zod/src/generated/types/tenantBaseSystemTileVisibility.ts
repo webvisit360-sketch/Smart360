@@ -13,4 +13,5 @@ export type TenantBaseSystemTileVisibility = {
   contact?: boolean;
   install?: boolean;
   about?: boolean;
+  program?: boolean;
 };

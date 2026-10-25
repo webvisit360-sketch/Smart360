@@ -5188,6 +5188,7 @@ components:
             contact: { type: boolean }
             install: { type: boolean }
             about: { type: boolean }
+            program: { type: boolean }
         simpleBaseColor: { type: ["string", "null"], pattern: "^#[0-9a-fA-F]{6}$" }
         theme: { type: string }
         guestUiMode:
@@ -5368,6 +5369,7 @@ components:
             contact: { type: boolean }
             install: { type: boolean }
             about: { type: boolean }
+            program: { type: boolean }
         simpleBaseColor: { type: ["string", "null"], pattern: "^#[0-9a-fA-F]{6}$" }
         renewsAt: { type: ["string", "null"] }
         theme: { type: string }
