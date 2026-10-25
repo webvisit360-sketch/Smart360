@@ -76,6 +76,7 @@ export const RULE_ICON_CATALOG = [
       "elektr",
       "luči",
       "ugasn",
+      "energij",
       "electric",
       "light",
       "power",
@@ -131,9 +132,7 @@ export const RULE_ICON_CATALOG = [
     "stems": [
       "vodo",
       "vode",
-      "vodi",
       "voda",
-      "varčuj",
       "water",
       "wasser",
       "acqua",

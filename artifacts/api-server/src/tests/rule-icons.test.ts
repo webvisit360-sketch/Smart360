@@ -33,6 +33,14 @@ test("reference Hišni red sentences map to the reference icons", () => {
 test("audited water stems match the reference sentence", () => {
   assert.equal(id("Prosim, varčujte z vodo."), "rule:varcevanje-z-vodo");
   assert.equal(id("Please save water."), "rule:varcevanje-z-vodo");
+  for (const word of ["voda", "vode", "vodo", "vodu", "vodom"]) {
+    assert.equal(id(word), "rule:varcevanje-z-vodo");
+    assert.equal(matchRuleIcon(`${word}xyz`).fallback, true);
+  }
+  assert.equal(id("Luči in naprave, ki jih ne uporabljate, prosimo ugasnite — skupaj varčujemo z energijo."), "rule:elektrika-in-luci");
+  assert.equal(id("varčujte z energijo"), "rule:elektrika-in-luci");
+  assert.equal(id("Štedite energiju."), "rule:elektrika-in-luci");
+  assert.equal(id("Prosimo, varčujte s toplo vodo in brisač ne odlagajte po prvi uporabi."), "rule:varcevanje-z-vodo");
 });
 
 test("multilingual examples", () => {
@@ -50,15 +58,14 @@ test("multilingual examples", () => {
 });
 
 test("strict policy: no interior substrings, short stems exact, collision guards", () => {
-  // Audited catalogue includes "vodi"; strict prefix policy also matches "vodijo".
-  assert.equal(id("Zaprite vrata, ki vodijo na teraso."), "rule:varcevanje-z-vodo");
+  assert.equal(id("Zaprite vrata, ki vodijo na teraso."), "rule:privzeto-pravilo");
   assert.equal(id("Unsmokeable"), "rule:privzeto-pravilo");
 });
 
 test("audited stems remove previous collisions and missed forms", () => {
   assert.equal(id("Vietato fumare."), "rule:kajenje-prepovedano");
   assert.equal(id("Pets are welcome."), "rule:hisni-ljubljencki");
-  for (const text of ["Bitte dann abschließen.", "Guests are kindly asked to lock the gate.", "vodnik", "sončni zahod", "park", "breakfast", "kindly", "départements"]) {
+  for (const text of ["Bitte dann abschließen.", "Guests are kindly asked to lock the gate.", "vodnik", "vodijo", "varčujte", "Preberite vodnik.", "sončni zahod", "park", "breakfast", "kindly", "départements"]) {
     assert.equal(matchRuleIcon(text).fallback, true, text);
   }
   assert.equal(id("kind"), "rule:nadzor-otrok");

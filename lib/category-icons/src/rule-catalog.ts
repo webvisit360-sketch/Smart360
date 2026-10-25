@@ -19,7 +19,8 @@ const RULE_MATCHES: RuleCandidate[] = RULE_ICON_CATALOG.flatMap((entry) =>
 );
 
 const WHOLE_WORD_STEMS = new Set(
-  ["wc", "pes", "psi", "pet", "dog", "pas", "eau", "feu", "žar", "kind", "départ"].map(normalizeTileLabel),
+  ["wc", "pes", "psi", "pet", "dog", "pas", "eau", "feu", "žar", "kind", "départ",
+    "voda", "vode", "vodo", "vodu", "vodom"].map(normalizeTileLabel),
 );
 // Catalogue's curated ambiguous stems remain whole words regardless of length.
 function wordMatches(stem: string, word: string): boolean {

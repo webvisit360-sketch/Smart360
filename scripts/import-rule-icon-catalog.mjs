@@ -1,7 +1,7 @@
 // Deterministic import of the "Ikone pravil" section of the owner's trusted,
 // checked-in catalogue. Run from the workspace root. Never runtime input.
 import { readFileSync, writeFileSync } from "node:fs";
-const source = "attached_assets/ikone-gumbov_4_1792947492705.html";
+const source = "attached_assets/ikone-gumbov_5_1792948009512.html";
 const html = readFileSync(source, "utf8");
 const section = html.split(/<h2>Ikone pravil[^<]*<\/h2>/)[1]?.split(/<h2>|<\/body>/)[0];
 if (!section) throw new Error("Missing Ikone pravil section");
@@ -11,7 +11,14 @@ const entries = [...section.matchAll(/<div class="card">([\s\S]*?)(?=<div class=
   const name = card.match(/<div class="name">([^<]+)/)?.[1].trim();
   const svg = decode(card.match(/<pre>([\s\S]*?)<\/pre>/)?.[1] ?? "");
   const alias = /badge obst/.test(card);
-  const kw = card.match(/<div class="kw"><b>Ključna debla \(stems\):<\/b>(.*?)<\/div>/)?.[1] ?? "";
+  let kw = card.match(/<div class="kw"><b>Ključna debla \(stems\):<\/b>(.*?)<\/div>/)?.[1] ?? "";
+  // Owner-approved addition beyond the read-only catalogue: SL and HR energy.
+  if (name === "Elektrika in luči") {
+    const languages = kw.split(/\s*\/\s*/);
+    if (languages.length !== 7) throw new Error("Expected seven electricity stem groups");
+    for (const index of [0, 6]) languages[index] += "|energij";
+    kw = languages.join(" / ");
+  }
   const stems = kw.includes("brez debel") ? [] : kw.split(/\s*\/\s*|\|/).map((s) => s.trim()).filter(Boolean);
   if (!name || !svg.startsWith("<svg") || /<script|on\w+=|href=/i.test(svg)) throw new Error("Unexpected rule card");
   return { id: `rule:${slug(name)}`, name, alias, stems: [...new Set(stems)], svg };
