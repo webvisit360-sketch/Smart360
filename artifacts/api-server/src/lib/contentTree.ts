@@ -320,7 +320,8 @@ export async function buildTenantContent(
         ? applyTranslationFields(withFallback, requested)
         : withFallback;
     };
-    tenantOut = apply(tenant);
+    // Postal address is an identity field, never a language override.
+    tenantOut = { ...apply(tenant), address: tenant.address };
     sectionsOut = sections.map(apply);
     categoriesOut = categories.map(apply);
     itemsOut = items.map(apply);

@@ -219,6 +219,7 @@ export default function AdminTenantEdit() {
     orderNotifyEmail: true,
     messageNotifyEmail: true,
     mapQuery: "",
+    address: "",
     mapUrl: "",
     latitude: "",
     longitude: "",
@@ -528,6 +529,7 @@ export default function AdminTenantEdit() {
         orderNotifyEmail: tenant.orderNotifyEmail,
         messageNotifyEmail: tenant.messageNotifyEmail ?? true,
         mapQuery: tenant.mapQuery || "",
+        address: tenant.address || "",
         mapUrl: tenant.mapUrl || "",
         latitude: tenant.latitude?.toString() ?? "",
         longitude: tenant.longitude?.toString() ?? "",
@@ -1724,6 +1726,13 @@ export default function AdminTenantEdit() {
                   <Input type="email" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} placeholder="info@primer.si" />
                 </div>
                 {permissions.canEditIdentity && <div className={"space-y-2 col-span-2" + previewFieldClass("address")} data-preview-field="address">
+                  <Label>Naslov nastanitve (vsi jeziki)</Label>
+                  <Input
+                    value={formData.address}
+                    onChange={e => setFormData({ ...formData, address: e.target.value })}
+                    placeholder="Ulica, hišna številka, poštna številka in kraj"
+                  />
+                  <p className="text-xs text-muted-foreground">Prikazan na naslovnici v vseh sedmih jezikih. Gostje spremembo vidijo po objavi.</p>
                   <Label>Google Maps povezava</Label>
                   <Input
                     type="url"

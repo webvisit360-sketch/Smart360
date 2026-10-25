@@ -69,7 +69,7 @@ export function tenantSavePayload<T extends {
     // Explicit host allowlist: never carry a stale slug, unpublish toggle, quota,
     // review/subscription field, management mode or future operator field into autosave.
     const editableFields = [
-      "name", "subtitle", "customDomain", "theme", "mapQuery", "mapUrl", "tourUrl",
+      "name", "subtitle", "customDomain", "theme", "address", "mapQuery", "mapUrl", "tourUrl",
       "tourRecordingEnabled", "systemTileVisibility", "heroUrl", "logoUrl", "coverTitle", "coverSubtitle",
       "coverTitleSize", "coverTitleOpacity", "coverTextColor", "coverSubSize",
       "coverSubOpacity", "coverMetaSize", "coverMetaOpacity", "coverVeil", "tileVeil",

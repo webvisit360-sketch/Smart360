@@ -72,7 +72,7 @@ router.get(
         field: k.field,
         source: k.source,
         rich: k.rich,
-        value: row?.value ?? null,
+        value: k.model === "tenant" && k.field === "address" ? tenant.address ?? "" : row?.value ?? null,
         stale: row?.stale ?? false,
       };
     });

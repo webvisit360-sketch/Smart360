@@ -4,6 +4,12 @@ description: Translation interchange and operator regeneration pitfalls; see sev
 ---
 
 Design:
+The owner requires the property's postal address to be one canonical value in all seven languages, including country spelling. Map search text is a different field and must not silently become that address.
+
+**Why:** A duplicated guide retained its old postal address while the owner corrected only its map search query; independent language copies made the discrepancy harder to diagnose.
+
+**How to apply:** Keep address edits draft-only until guide publication; do not extend this single-source policy to other fields without approval. Never infer that a corrected map query means the postal-address field was saved.
+
 - Translations stored per (model, recordId, field, lang) with `stale` flag; path-keys (CONFIG.*, DATA.*, UI.*) are only an import/export interchange format, resolved via `buildKeyList(tenant)`.
 - Public tenant JSON carries `ui` (key→string) and `plurals` (key→CLDR-form→template) maps for the requested lang; guest overlays them via `makeT`/`plural` (Intl.PluralRules, never if/else).
 - Historical per-tenant language clamping is superseded by [universal seven-language availability](seven-language-boundary.md). Do not restore it.

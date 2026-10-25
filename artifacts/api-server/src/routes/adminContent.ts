@@ -1471,6 +1471,10 @@ router.put("/admin/translations", async (req, res): Promise<void> => {
     return;
   }
   const { model, recordId, field, lang, value } = parsed.data;
+  if (model === "tenant" && field === "address") {
+    res.status(409).json({ error: "Naslov je enoten za vse jezike. Uredite ga v nastavitvah nastanitve." });
+    return;
+  }
   const existing = await db
     .select()
     .from(translationsTable)

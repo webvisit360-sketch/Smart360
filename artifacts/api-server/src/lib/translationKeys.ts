@@ -259,7 +259,9 @@ export async function importTranslations(
     // Uvožena vrednost gre skozi ISTI sanitizer kot izvorno polje — vrednost
     // z <b> se shrani kot <strong>, da se prevod in slovenski izvirnik nikoli
     // ne razlikujeta samo po zapisu oznak. UI ključi in ostala polja so plain.
-    const value = isRichField(field) ? sanitizeBody(rawValue) : sanitizePlain(rawValue);
+    const value = model === "tenant" && field === "address"
+      ? tenant.address ?? ""
+      : isRichField(field) ? sanitizeBody(rawValue) : sanitizePlain(rawValue);
     if (value === "") {
       report.unchanged++;
       return;
@@ -442,7 +444,8 @@ export async function exportTranslations(
   const content: Record<string, string> = {};
   for (const k of keys) {
     const row = byRef.get(`${k.model}|${k.recordId}|${k.field}`);
-    if (row) content[k.key] = row.value;
+    if (k.model === "tenant" && k.field === "address") content[k.key] = tenant.address ?? "";
+    else if (row) content[k.key] = row.value;
   }
   const ui: Record<string, string> = {};
   for (const r of rows) {

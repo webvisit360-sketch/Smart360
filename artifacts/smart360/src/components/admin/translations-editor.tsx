@@ -201,6 +201,13 @@ function TranslationRow({
 }) {
   const [value, setValue] = useState(entry.value ?? "");
   const dirty = value !== (entry.value ?? "");
+  if (entry.model === "tenant" && entry.field === "address") {
+    return <Card><CardContent className="pt-4 space-y-2">
+      <code className="text-xs">{entry.key}</code>
+      <p>{entry.value ?? entry.source}</p>
+      <p className="text-xs text-muted-foreground">Enoten naslov za vseh sedem jezikov. Uredite ga v nastavitvah nastanitve, v polju »Naslov nastanitve (vsi jeziki)«.</p>
+    </CardContent></Card>;
+  }
 
   return (
     <Card className={entry.stale ? "border-amber-400" : undefined}>

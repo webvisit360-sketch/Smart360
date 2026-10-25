@@ -488,6 +488,13 @@ body[data-t="noc"] .lg2-grid-view {
   opacity: .92;
 }
 
+/* Photo ink is independent of button/palette tokens; no overlay or layout change. */
+.lg2-cover[data-landing-ink="dark"] .lg2-cover-mast,
+.lg2-cover[data-landing-ink="dark"] .lg2-cover-mast h1 {
+  color: #111820;
+  text-shadow: 0 1px 3px #ffffffa6;
+}
+
 .lg2-cbar {
   position: absolute;
   left: 20px;

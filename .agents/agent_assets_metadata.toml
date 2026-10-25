@@ -3424,3 +3424,17 @@ mtime_ms = 1792936021162
 storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/c408d200-9123-41a4-97cd-6928a6a4ceb3/ba389d0c-1442-4422-a124-140e238d5fc6"
 storage_version_token = "1792936077767881"
 content_type = "text/html"
+
+[[outputs]]
+id = "7vOqdWinw0EYKzjN7Pabi"
+uri = "file://reports/landing-address-ink/porocilo.html"
+type = "html"
+title = "Naslovnica — naslov, prilagodljivo besedilo in meje preverjanja"
+description = "Vzroka, izvedeni popravki, meritve obeh dizajnov pri 390 × 844 ter izrecno navedeni neizvedeni produkcijski koraki."
+logical_id = "0570c4cb-2abb-4961-837f-9e47a8f99b56"
+content_hash = "sha256:58bee909c671288e0f66d84dad8ac585d0d7c26019074dba5fa54f3c217f5e1b"
+size = 4208
+mtime_ms = 1792941599680
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/0570c4cb-2abb-4961-837f-9e47a8f99b56/1f821c77-bc6b-4891-8b2d-2b47c01280fa"
+storage_version_token = "1792941653501378"
+content_type = "text/html"

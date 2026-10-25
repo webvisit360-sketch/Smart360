@@ -10,6 +10,7 @@ import { WeatherCard, useLivingGuideWeather } from "../living-guide-weather";
 import { GuideHeaderControls, WalkResetControl } from "./GuideHeaderControls";
 import { weatherSkin } from "../living-guide-weather-model";
 import "./living-guide-simple.css";
+import { useLandingInk } from "../use-landing-ink";
 
 
 export function SimpleCoverView({
@@ -20,8 +21,9 @@ export function SimpleCoverView({
   const hero = simpleHeroUrl(tenant);
   const tourUrl = virtualTourEmbedUrl(tenant.tourUrl);
   const [walkRevision, setWalkRevision] = useState(0);
+  const { rootRef, ink } = useLandingInk(tourUrl ? undefined : hero, ".lgs-small, .lgs-land h1, .lgs-adr", `${lang}:${title}:${tenant.address}:${focus}`);
   return (
-    <section className="lgs-cover" aria-label={title} data-testid="screen-simple-cover">
+    <section ref={rootRef} data-landing-ink={ink} className="lgs-cover" aria-label={title} data-testid="screen-simple-cover">
       <div className="lgs-hero">
         {tourUrl ? <iframe key={`${tourUrl}:${walkRevision}`} src={tourUrl} title={title} scrolling="no" loading="eager" /> : hero && <img src={hero} alt="" fetchPriority="high" decoding="async" style={{ objectPosition: focus }} />}
       </div>

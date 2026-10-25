@@ -1,10 +1,33 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { readFileSync } from "node:fs";
+import ts from "typescript";
 
 const tenant = readFileSync(new URL("../pages/admin/tenant-edit.tsx", import.meta.url), "utf8");
 const content = readFileSync(new URL("../components/admin/content-editor.tsx", import.meta.url), "utf8");
 const translations = readFileSync(new URL("../components/admin/translations-editor.tsx", import.meta.url), "utf8");
+
+function assertIdentityGate(label: string) {
+  const file = ts.createSourceFile("tenant.tsx", tenant, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+  let found = false;
+  const visit = (node: ts.Node) => {
+    if (ts.isJsxElement(node) && node.openingElement.tagName.getText(file) === "Label"
+      && new RegExp(`^${label}(?:\\s|<|$)`).test(node.children.map(c => c.getText(file)).join(""))) {
+      found = true;
+      let parent: ts.Node | undefined = node.parent;
+      let guarded = false;
+      while (parent) {
+        if (ts.isBinaryExpression(parent) && parent.operatorToken.kind === ts.SyntaxKind.AmpersandAmpersandToken
+          && parent.left.getText(file) === "permissions.canEditIdentity") guarded = true;
+        parent = parent.parent;
+      }
+      assert.ok(guarded, `${label} must remain under canEditIdentity`);
+    }
+    ts.forEachChild(node, visit);
+  };
+  visit(file);
+  assert.ok(found, `Missing identity field: ${label}`);
+}
 
 test("concierge retains publication handoff; self-service uses the shared publication action", () => {
   assert.match(tenant, /\{permissions\.canPublish && <Button[\s\S]*?onClick=\{handlePublish\}/);
@@ -15,7 +38,8 @@ test("concierge retains publication handoff; self-service uses the shared public
     assert.match(tenant, new RegExp(`\\{permissions\\.canEditAppearance && <TabsContent value="${value}"`));
   }
   assert.match(tenant, /\{isOwner && <Card data-testid="card-guest-ui-mode">/);
-  assert.match(tenant, /\{permissions\.canEditIdentity && <div className=(?:"[^"]*col-span-2[^"]*"|\{"[^"]*col-span-2[^"]*" \+ previewFieldClass\("[a-z-]+"\)\})(?: data-preview-field="[a-z-]+")?>\s*<Label>Google Maps povezava/);
+  assertIdentityGate("Google Maps povezava");
+  assertIdentityGate("Naslov nastanitve \\(vsi jeziki\\)");
   assert.match(tenant, /<ContentEditor sections=\{tenant\.sections as any\[\] \?\? \[\]\} tenantId=\{tenant\.id\} operatorPlaceCreation=\{permissions\.canManageContent\}/);
 });
 
@@ -48,7 +72,7 @@ test("capabilities expose self-service settings but keep protected operator fiel
   assert.match(tenant, /\{permissions\.canEditAppearance && <div className="space-y-2">\s*<Label>URL naslovnične/);
   assert.match(tenant, /\{permissions\.canManageContent && <div className="col-span-2 space-y-2">\s*<Label>Virtualni sprehod/);
   for (const label of ["Google Maps povezava", "Latitude \\(zemljepisna širina\\)", "Longitude \\(zemljepisna dolžina\\)", "Nadomestna poizvedba za zemljevid \\(Map Query\\)"]) {
-    assert.match(tenant, new RegExp(`\\{permissions\\.canEditIdentity && <div className=(?:"[^"]+"|\\{"[^"]+" \\+ previewFieldClass\\("[a-z-]+"\\)\\})(?: data-preview-field="[a-z-]+")?>\\s*<Label>${label}`));
+    assertIdentityGate(label);
   }
   assert.match(tenant, /\{permissions\.canEditAppearance && <TabsContent value="appearance"/);
   assert.match(tenant, /\{permissions\.canEditAppearance && <TabsContent value="guide"/);

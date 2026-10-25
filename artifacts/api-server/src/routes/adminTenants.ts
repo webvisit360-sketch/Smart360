@@ -3,6 +3,7 @@ import { and, asc, desc, eq, inArray, isNull, sql } from "drizzle-orm";
 import {
   db,
   tenantsTable,
+  translationsTable,
   tenantRenewalsTable,
   sectionsTable,
   categoriesTable,
@@ -913,6 +914,17 @@ router.patch("/admin/tenants/:id", async (req, res): Promise<void> => {
       .set(writeData)
       .where(eq(tenantsTable.id, id))
       .returning();
+    if (updated && Object.prototype.hasOwnProperty.call(writeData, "address")) {
+      await tx.insert(translationsTable).values(
+        ["sl", "en", "de", "it", "fr", "nl", "hr"].map(lang => ({
+          model: "tenant", recordId: id, field: "address", lang,
+          value: updated.address ?? "", stale: false,
+        })),
+      ).onConflictDoUpdate({
+        target: [translationsTable.model, translationsTable.recordId, translationsTable.field, translationsTable.lang],
+        set: { value: updated.address ?? "", stale: false, updatedAt: new Date() },
+      });
+    }
     if (successfulPublish && updated) {
       await runWithDatabase(tx as unknown as Db, () => replacePublishedSnapshot(updated));
     }
