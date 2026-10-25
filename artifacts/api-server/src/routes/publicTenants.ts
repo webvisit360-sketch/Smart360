@@ -27,6 +27,7 @@ import { guestOfflineConfig, renderGuestServiceWorker, renderLegacyGuestServiceW
 import { getTenantWeatherCached } from "../lib/tenantWeather";
 import { makeGuideSticker } from "../lib/guideStickers";
 import { auditCategoryIconFallbacks } from "../lib/categoryIconAudit";
+import { auditRuleIconFallbacks } from "../lib/ruleIconAudit";
 
 function serialize<T>(value: T): unknown {
   return JSON.parse(JSON.stringify(value));
@@ -265,6 +266,7 @@ router.get("/public/tenant-by-domain", async (req, res): Promise<void> => {
   // the browser reuse a cached copy of this JSON.
   res.set("Cache-Control", "no-store");
   if (tree.guestDesign === "simple") auditCategoryIconFallbacks(tenant.id, lang ?? "sl", tree.sections);
+  auditRuleIconFallbacks(tenant.id, lang ?? "sl", tree.sections);
   res.json(payload);
 });
 
@@ -432,6 +434,7 @@ router.get("/public/tenants/:slug", async (req, res): Promise<void> => {
   // the browser reuse a cached copy of this JSON.
   res.set("Cache-Control", "no-store");
   if (tree.guestDesign === "simple") auditCategoryIconFallbacks(tenant.id, lang ?? "sl", tree.sections);
+  auditRuleIconFallbacks(tenant.id, lang ?? "sl", tree.sections);
   res.json(payload);
 });
 

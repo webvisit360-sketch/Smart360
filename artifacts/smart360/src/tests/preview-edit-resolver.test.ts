@@ -155,3 +155,8 @@ test("Enostaven section wrapper does not swallow an entry inside it", () => {
   const r = resolvePreviewTarget([node({ tag: "SPAN" }), node({ ids: ["item-1"] }), node({ testId: "simple-section-stay" })], ctx());
   assert.equal(r?.target.kind, "item");
 });
+
+test("rule cards keep bullet click-to-edit mapping", () => {
+  const r = resolvePreviewTarget([node({ tag: "P" }), node({ className: "lg2-rule-row lg2-rule-card" }), node({ ids: ["item-1"] })], ctx());
+  assert.equal(r?.target.kind === "item" && r.target.field, "bullets");
+});

@@ -3308,3 +3308,69 @@ body[data-t="swipe"] .lg2-order-dock {
   font-size: 13px;
   line-height: 1.4;
 }
+
+/* Rule cards (pravila-dizajn): every entry bullet in its own outlined card
+   with an automatically matched catalogue icon. Anatomy is binding:
+   gap 17, outline 1.3, radius 15, icon column 50 + 14, icon 30, text 15.5/1.5.
+   Trend uses existing theme tokens; Enostaven overrides below. No shadows. */
+.lg2-bullet-rules.lg2-rule-list {
+  --rc-fill: var(--card);
+  --rc-line: var(--tx2);
+  --rc-ink: var(--tx);
+  --rc-txt: var(--tx);
+  display: flex;
+  flex-direction: column;
+  gap: 17px;
+}
+.lg2-detail-sheet .lg2-bullet-rules.lg2-rule-list:not(.lg2-rule-row .lg2-bullet-rules) {
+  /* Sheet pads 20px; the reference places cards 16px from the screen edge. */
+  margin-inline: -4px;
+  width: calc(100% + 8px);
+}
+.lg2-bullet-rules .lg2-rule-row.lg2-rule-card {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  min-height: 64px;
+  padding: 17px 18px 17px 14px;
+  border: 1.3px solid var(--rc-line);
+  border-radius: 15px;
+  background: var(--rc-fill);
+  box-shadow: none;
+  color: var(--rc-txt);
+  font-size: 15.5px;
+  line-height: 1.5;
+  font-weight: 400;
+}
+.lg2-rule-card-icon {
+  flex: none;
+  width: 50px;
+  margin-right: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--rc-ink);
+}
+.lg2-rule-card-icon svg {
+  width: 30px;
+  height: 30px;
+  fill: var(--rc-ink);
+}
+.lg2-bullet-rules .lg2-rule-row.lg2-rule-card > p {
+  min-width: 0;
+  flex: 1;
+  margin: 0;
+  padding: 0;
+  color: var(--rc-txt);
+  font-size: 15.5px;
+  line-height: 1.5;
+  font-weight: 400;
+}
+/* Enostaven: adaptive palette ink for outline, icon and text; fill is a
+   slightly darker tone of the palette background (bordo #4C2545 -> ~#43203D). */
+.lgs-root .lg2-bullet-rules.lg2-rule-list {
+  --rc-fill: color-mix(in srgb, var(--s-bg) 88%, #000);
+  --rc-line: var(--s-ink, var(--s-stroke));
+  --rc-ink: var(--s-ink, var(--s-stroke));
+  --rc-txt: var(--s-txt);
+}

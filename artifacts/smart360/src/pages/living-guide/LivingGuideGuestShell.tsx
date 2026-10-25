@@ -4,6 +4,7 @@ import { startOuterShadowStrip } from "./simple/strip-outer-shadows";
 import {
   type CSSProperties,
   type FormEvent,
+  Fragment,
   createContext,
   useContext,
   useCallback,
@@ -58,7 +59,7 @@ import {
 import { LivingGuideSprite } from "./LivingGuideSprite";
 import { livingGuideInterWoff2 } from "./inter-font-source";
 import { CategoryIcon, isAvailableLucideIcon } from "@/components/category-icon";
-import { AUTOMATIC_TILE_ICON, matchTileCatalog } from "@workspace/category-icons";
+import { AUTOMATIC_TILE_ICON, matchRuleIcon, matchTileCatalog, ruleBulletTexts } from "@workspace/category-icons";
 import {
   isLivingTheme,
   type LivingTheme,
@@ -430,16 +431,9 @@ function standaloneBodyBullets(body: unknown): string[] {
   return items;
 }
 
-function itemBullets(item: any, category?: any): string[] {
-  const explicit = Array.isArray(item?.bullets)
-    ? item.bullets.filter(
-        (bullet: unknown): bullet is string =>
-          typeof bullet === "string" && !!bullet.trim(),
-      )
-    : [];
-  return explicit.length > 0
-    ? explicit.map((bullet: string) => bullet.trim())
-    : standaloneBodyBullets(item?.body);
+function itemBullets(item: any, _category?: any): string[] {
+  // Same canonical extraction the server rule-icon audit uses.
+  return ruleBulletTexts(item, sanitizeHtml);
 }
 
 function itemBodyHtml(item: any, category?: any): string {
@@ -469,15 +463,17 @@ function StructuredBulletRows({
     );
   }
   return (
-    <div className="lg2-rule-list lg2-bullet-rules">
-      {bullets.map((bullet, index) => (
-        <div className="lg2-rule-row" key={`${index}-${bullet}`}>
-          <span className="lg2-rule-icon" aria-hidden="true">
-            <svg><use href="#lg-i-doc" /></svg>
-          </span>
-          <p>{bullet}</p>
-        </div>
-      ))}
+    <div className="lg2-rule-list lg2-bullet-rules" data-testid="list-rule-cards">
+      {bullets.map((bullet, index) => {
+        const { entry } = matchRuleIcon(bullet);
+        return (
+          <div className="lg2-rule-row lg2-rule-card" key={`${index}-${bullet}`} data-rule-icon={entry.id} data-testid={`card-rule-${index}`}>
+            {/* Trusted, checked-in catalogue SVG only (rule-catalog-data). */}
+            <span className="lg2-rule-card-icon" aria-hidden="true" dangerouslySetInnerHTML={{ __html: entry.svg }} />
+            <p>{bullet}</p>
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -4192,15 +4188,21 @@ function TemplateA({ category, items, mediaOverride, titleOverride, tenant, show
           {detailRows.length > 0 && (
             <div className="lg2-rule-list">
               {detailRows.map((item: any) => (
-                <div className={`lg2-rule-row${item.tint ? " lg2-rule-row--warning" : ""}`} key={item.id}>
-                  <span className="lg2-rule-icon" aria-hidden="true"><svg><use href={`#lg-i-${item.tint ? "sos" : "doc"}`} /></svg></span>
-                  <div>
-                    {item.title && <b><RichInline value={item.title} /></b>}
-                    {itemBodyHtml(item, category) && <span dangerouslySetInnerHTML={{ __html: itemBodyHtml(item, category) }} />}
-                    <StructuredBulletRows bullets={itemBullets(item, category)} />
-                    <ItemGpx item={item} t={t} />
-                  </div>
-                </div>
+                // Keyed fragment keeps item identity for preview click-to-edit;
+                // bullet cards sit beside (not inside) the row at full width.
+                <Fragment key={item.id}>
+                  {(item.title || itemBodyHtml(item, category) || item.gpxRoute) && (
+                    <div className={`lg2-rule-row${item.tint ? " lg2-rule-row--warning" : ""}`}>
+                      <span className="lg2-rule-icon" aria-hidden="true"><svg><use href={`#lg-i-${item.tint ? "sos" : "doc"}`} /></svg></span>
+                      <div>
+                        {item.title && <b><RichInline value={item.title} /></b>}
+                        {itemBodyHtml(item, category) && <span dangerouslySetInnerHTML={{ __html: itemBodyHtml(item, category) }} />}
+                        <ItemGpx item={item} t={t} />
+                      </div>
+                    </div>
+                  )}
+                  <StructuredBulletRows bullets={itemBullets(item, category)} />
+                </Fragment>
               ))}
             </div>
           )}
@@ -4273,7 +4275,6 @@ function TemplateB2({ items, initialItemId, category, ...props }: any) {
       category={category}
       items={items}
       initialItemId={initialItemId}
-      numbered
     />
   );
 }
@@ -4292,15 +4293,19 @@ function TemplateC({ category, items, t, onBack, galleryIndex, onGalleryIndex }:
              {items.map((item: any) => {
                const isWarning = !!item.tint;
                return (
-                 <div className={`lg2-rule-row${isWarning ? " lg2-rule-row--warning" : ""}`} key={item.id}>
-                   <span className="lg2-rule-icon" aria-hidden="true"><svg><use href={`#lg-i-${isWarning ? "sos" : "doc"}`}/></svg></span>
-                   <div>
-                     {item.title && <b><RichInline value={item.title} /></b>}
-                     {itemBodyHtml(item, category) && <div dangerouslySetInnerHTML={{ __html: itemBodyHtml(item, category) }} />}
-                     <StructuredBulletRows bullets={itemBullets(item, category)} />
-                     <ItemGpx item={item} t={t} />
-                   </div>
-                 </div>
+                 <Fragment key={item.id}>
+                   {(item.title || itemBodyHtml(item, category) || item.gpxRoute) && (
+                     <div className={`lg2-rule-row${isWarning ? " lg2-rule-row--warning" : ""}`}>
+                       <span className="lg2-rule-icon" aria-hidden="true"><svg><use href={`#lg-i-${isWarning ? "sos" : "doc"}`}/></svg></span>
+                       <div>
+                         {item.title && <b><RichInline value={item.title} /></b>}
+                         {itemBodyHtml(item, category) && <div dangerouslySetInnerHTML={{ __html: itemBodyHtml(item, category) }} />}
+                         <ItemGpx item={item} t={t} />
+                       </div>
+                     </div>
+                   )}
+                   <StructuredBulletRows bullets={itemBullets(item, category)} />
+                 </Fragment>
                );
              })}
           </div>
