@@ -39,7 +39,7 @@ export function usePreviewAnnouncements(iframe: HTMLIFrameElement | null, loadTi
 
 const OVERLAY_ID = "s360-admin-preview-edit-overlay";
 const PROP_KEYS = ["item", "category", "section", "announcement", "row", "entry", "card", "tile", "cat"];
-const ID_PROP_KEYS = ["itemId", "categoryId", "sectionId", "announcementId"];
+const ID_PROP_KEYS = ["itemId", "categoryId", "sectionId", "announcementId", "data-item-id"];
 
 type AnyFiber = { key?: unknown; type?: unknown; memoizedProps?: Record<string, unknown> | null; return?: AnyFiber | null };
 

@@ -40,6 +40,7 @@ import { FreeTourRecorder, isTourRecordingEnabled } from "./living-guide-free-to
 import { TourSummaryContext } from "./living-guide-tour-summary";
 import { PanoramaStrip } from "./living-guide-panorama";
 import { splitPanoramaMedia } from "@/lib/panorama-media";
+import { detailSheetClass } from "@/lib/detail-sheet-layout";
 import { WeatherCard, WeatherProvider } from "./living-guide-weather";
 import { LivingGuideOfflineBanner, LivingGuideOfflineProvider } from "./living-guide-offline";
 import { tenantWeatherLocation } from "./living-guide-weather-model";
@@ -545,7 +546,7 @@ function categoryMedia(category: any): any[] {
       const key = `${media.kind ?? "image"}:${media.url ?? media.posterUrl ?? ""}`;
       if (!key || seen.has(key)) continue;
       seen.add(key);
-      result.push(media);
+      result.push({ ...media, previewItemId: item.id });
     }
   }
   return result;
@@ -3574,7 +3575,7 @@ function HeroGallery({ media, onBack, galleryIndex, onGalleryIndex, singleOnly, 
         data-lg-hero-layout-ready={layoutReady}
       >
         <div className="lg2-gallery-track">
-          <div className="lg2-gallery-slide">
+          <div className="lg2-gallery-slide" data-item-id={entry.previewItemId}>
             <AspectAwareHeroImage
               entry={entry}
               loading="eager"
@@ -3652,7 +3653,7 @@ function HeroGallery({ media, onBack, galleryIndex, onGalleryIndex, singleOnly, 
           const entryKey = String(entry.id ?? entry.url ?? index);
           const expected = stableMediaAspect(entry.width, entry.height);
           return (
-            <div className="lg2-gallery-slide" key={entryKey}>
+            <div className="lg2-gallery-slide" key={entryKey} data-item-id={entry.previewItemId}>
               <AspectAwareHeroImage
                 entry={entry}
                 loading={galleryImageLoading(index, activeIndex, layoutReady)}
@@ -4197,7 +4198,7 @@ function TemplateA({ category, items, mediaOverride, titleOverride, tenant, show
     <div className="lg2-screen-scroll lg2-detail-scroll" data-lg-scroll>
       <div className="lg2-detail-sheet-root">
         <HeroGallery media={splitPanoramaMedia(media).regular} onBack={onBack} galleryIndex={galleryIndex} onGalleryIndex={onGalleryIndex} t={t} />
-        <article className="lg2-detail-sheet">
+        <article className={detailSheetClass(media)}>
           <div className="lg2-grabber" aria-hidden="true" />
           {price ? (
             <div className="lg2-detail-title-row">
@@ -4261,7 +4262,7 @@ function TemplateB({ category, items, t, onBack, onOpenItem, onOrderClick, fullH
         {!fullHeight && (
           <HeroGallery media={media} onBack={onBack} singleOnly={true} t={t} />
         )}
-        <article className={`lg2-detail-sheet${fullHeight ? " lg2-detail-sheet--full-height" : ""}`}>
+        <article className={detailSheetClass(media, fullHeight)}>
            <div className="lg2-grabber" aria-hidden="true" />
            <h1>{category.label}</h1>
            <div className="lg2-subs">
@@ -4327,7 +4328,7 @@ function TemplateC({ category, items, t, onBack, galleryIndex, onGalleryIndex }:
     <div className="lg2-screen-scroll lg2-detail-scroll" data-lg-scroll>
       <div className="lg2-detail-sheet-root">
         <HeroGallery media={splitPanoramaMedia(media).regular} onBack={onBack} galleryIndex={galleryIndex} onGalleryIndex={onGalleryIndex} t={t} />
-        <article className="lg2-detail-sheet">
+        <article className={detailSheetClass(media)}>
           <div className="lg2-grabber" aria-hidden="true" />
           <h1>{category.label}</h1>
           <div className="lg2-rule-list">
@@ -4466,7 +4467,7 @@ function TabbedDetail({
     <div className={`lg2-screen-scroll lg2-detail-scroll${activeItem.orderEnabled ? " lg2-detail-scroll--orderable" : ""}`} data-lg-scroll>
       <div className="lg2-detail-sheet-root">
         <HeroGallery media={splitPanoramaMedia(media).regular} onBack={onBack} galleryIndex={galleryIndex} onGalleryIndex={onGalleryIndex} t={t} />
-        <article className="lg2-detail-sheet">
+        <article className={detailSheetClass(media)}>
           <div className="lg2-grabber" aria-hidden="true" />
           <h1>{category.label}</h1>
           <div className="lg2-seg" role="tablist">
@@ -4542,7 +4543,7 @@ function TemplateE({ category, items, tenant, t, onBack }: any) {
     <div className="lg2-screen-scroll lg2-detail-scroll" data-lg-scroll>
       <div className="lg2-detail-sheet-root">
         <HeroGallery media={media} onBack={onBack} singleOnly={true} t={t} />
-        <article className="lg2-detail-sheet">
+        <article className={detailSheetClass(media)}>
            <div className="lg2-grabber" aria-hidden="true" />
            <h1>{category.label}</h1>
 
@@ -4591,7 +4592,7 @@ function TemplateF({ item, category, lang, t, onBack, galleryIndex, onGalleryInd
     <div className="lg2-screen-scroll lg2-detail-scroll" data-lg-scroll>
       <div className="lg2-detail-sheet-root">
         <HeroGallery media={splitPanoramaMedia(media).regular} onBack={onBack} galleryIndex={galleryIndex} onGalleryIndex={onGalleryIndex} t={t} />
-        <article className="lg2-detail-sheet">
+        <article className={detailSheetClass(media)}>
            <div className="lg2-grabber" aria-hidden="true" />
            {price ? (
              <div className="lg2-detail-title-row">
@@ -4636,7 +4637,7 @@ function TemplateG({ item, category, t, onBack, galleryIndex, onGalleryIndex, on
     <div className="lg2-screen-scroll lg2-detail-scroll" data-lg-scroll>
       <div className="lg2-detail-sheet-root">
         <HeroGallery media={splitPanoramaMedia(media).regular} onBack={onBack} galleryIndex={galleryIndex} onGalleryIndex={onGalleryIndex} t={t} />
-        <article className="lg2-detail-sheet">
+        <article className={detailSheetClass(media)}>
            <div className="lg2-grabber" aria-hidden="true" />
            <h1><RichInline value={heading} /></h1>
            {(subtitle || routeFacts.length > 0) && (
