@@ -3382,3 +3382,45 @@ mtime_ms = 1792932839146
 storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/632f2460-6000-46b9-934c-497486f2df53/3786d12b-650c-444c-b27e-d7120c97f7b2"
 storage_version_token = "1792933183193903"
 content_type = "video/mp4"
+
+[[outputs]]
+id = "jYbZwiJsAW7tDhpC33duD"
+uri = "file://reports/panorama-final/preview-fix/trend-click-to-editor.mp4"
+type = "video"
+title = "Trend — klik panorame odpre fotografije"
+description = "Dejanski klik v administrativnem predogledu, pravilni vnos in natančen obris."
+logical_id = "d2795d2e-af07-4e7b-af3e-f6acf5a35599"
+content_hash = "sha256:1bfbd1c6824ca7cdb66b3a71c28fc62e129835fd8229889c95c7c026ea5d34e1"
+size = 182460
+mtime_ms = 1792934155370
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/d2795d2e-af07-4e7b-af3e-f6acf5a35599/59119082-7a74-4f94-9b1c-6975813093e6"
+storage_version_token = "1792936076143571"
+content_type = "video/mp4"
+
+[[outputs]]
+id = "AXOSsHFCyvvwppz8gMN2u"
+uri = "file://reports/panorama-final/preview-fix/enostaven-click-to-editor.mp4"
+type = "video"
+title = "Enostaven — klik panorame odpre fotografije"
+description = "Dejanski klik panorame v shranjenem dizajnu Enostaven z natančnim obrisom."
+logical_id = "50dcd384-c023-433b-8fa6-e23cbf1b491c"
+content_hash = "sha256:a1a5f7e9d431b56307df0771951535bc519c8f54b925c7724d026a90793056d2"
+size = 280609
+mtime_ms = 1792935584309
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/50dcd384-c023-433b-8fa6-e23cbf1b491c/decf5668-c8ee-494e-a66e-84226c7cbdae"
+storage_version_token = "1792936076884611"
+content_type = "video/mp4"
+
+[[outputs]]
+id = "D7Nf_y5Qfu5PNHdE-Y2cd"
+uri = "file://reports/panorama-final/preview-fix/porocilo.html"
+type = "html"
+title = "Predogled — vzroka, popravka in meritve"
+description = "Oba dizajna, fotografije pravilnega vnosa, geometrija obrisa in dokaz čiščenja."
+logical_id = "c408d200-9123-41a4-97cd-6928a6a4ceb3"
+content_hash = "sha256:9a028ad31276b878344b2bb4617c26a1d625f9bd3379fd1916ede1f9b14ca030"
+size = 751710
+mtime_ms = 1792936021162
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/c408d200-9123-41a4-97cd-6928a6a4ceb3/ba389d0c-1442-4422-a124-140e238d5fc6"
+storage_version_token = "1792936077767881"
+content_type = "text/html"

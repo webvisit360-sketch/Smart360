@@ -389,13 +389,28 @@ export default function AdminTenantEdit() {
   const [previewKey, setPreviewKey] = useState(0);
   useEffect(() => {
     let timer: ReturnType<typeof setTimeout> | null = null;
-    return queryClient.getMutationCache().subscribe((event: any) => {
+    let previousData = JSON.stringify(queryClient.getQueryData(getGetTenantQueryKey(id)));
+    const unsubscribeMutations = queryClient.getMutationCache().subscribe((event: any) => {
       if (event?.type !== "updated" || event?.action?.type !== "success") return;
       if (event.mutation?.options?.mutationKey?.[0] === "admin-announcements") return;
       void queryClient.invalidateQueries({ queryKey: getGetTenantQueryKey(id) });
+    });
+    // Media writes use fetch/XHR rather than MutationCache. Both paths refresh
+    // this tenant query; wait for its network result, not optimistic cache edits.
+    const unsubscribeQueries = queryClient.getQueryCache().subscribe((event: any) => {
+      if (event?.type !== "updated" || event.action?.type !== "success" || event.action?.manual) return;
+      if (JSON.stringify(event.query.queryKey) !== JSON.stringify(getGetTenantQueryKey(id))) return;
+      const nextData = JSON.stringify(event.query.state.data);
+      if (nextData === previousData) return;
+      previousData = nextData;
       if (timer) clearTimeout(timer);
       timer = setTimeout(() => setPreviewKey((key) => key + 1), 40);
     });
+    return () => {
+      unsubscribeMutations();
+      unsubscribeQueries();
+      if (timer) clearTimeout(timer);
+    };
   }, [id, queryClient]);
 
   // Click-to-edit from the live preview (admin-only overlay in the iframe).

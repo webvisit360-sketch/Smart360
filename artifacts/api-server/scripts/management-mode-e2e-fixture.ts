@@ -175,7 +175,7 @@ async function setup() {
         tenantType: "apartmaji", managementMode: i.initialMode,
         latitude: i.label === "A" ? 0.12345 : 0.23456, longitude: -140.12345,
         address: "SYNTHETIC TEST LOCATION — not a real property",
-        guestUiMode: "living-guide", languages: ["sl", "en"], theme: "noc",
+        guestUiMode: "living-guide", languages: ["sl", "en"], theme: "swipe",
         livingGuideNav: ["home", "stay", "offer", "explore", "program"],
         email: null, orderNotifyEmail: false, messageNotifyEmail: false,
         isPublished: true, firstPublishedAt: now, lastPublishedAt: now,

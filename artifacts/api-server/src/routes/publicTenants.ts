@@ -20,6 +20,7 @@ import { getUiAndPlurals } from "../lib/translationKeys";
 import { guestUrl, guestQrSvg } from "../lib/guestUrl";
 import { wifiQrSvg } from "../lib/wifiQr";
 import { isAuthenticated } from "../lib/adminAuth";
+import { canPreviewTenant } from "../lib/tenantPreview";
 import { getHostResponseStats } from "../lib/hostResponseStats";
 import { readPublishedContent, type PublishedContent } from "../lib/publishedSnapshots";
 import { guestOfflineConfig, renderGuestServiceWorker, renderLegacyGuestServiceWorker } from "../lib/guestServiceWorker";
@@ -246,9 +247,7 @@ router.get("/public/tenant-by-domain", async (req, res): Promise<void> => {
     .from(tenantsTable)
     .where(eq(tenantsTable.customDomain, hostname));
 
-  const preview =
-    (req.query["preview"] === "true" || req.query["preview"] === "1") &&
-    (await isAuthenticated(req));
+  const preview = await canPreviewTenant(req, tenant?.id);
 
   if (!tenant || tenant.copyState === "copying" || (!tenant.isPublished && !preview)) {
     res.status(404).json({ error: "Not found" });
@@ -411,10 +410,8 @@ router.get("/public/tenants/:slug", async (req, res): Promise<void> => {
     slug,
     req.headers["host"] as string | undefined
   );
-  // Preview of unpublished tenants is only for the authenticated operator.
-  const preview =
-    (req.query["preview"] === "true" || req.query["preview"] === "1") &&
-    (await isAuthenticated(req));
+  // Drafts are private to the operator or the tenant's own authenticated host.
+  const preview = await canPreviewTenant(req, tenant?.id);
   if (!tenant || tenant.copyState === "copying" || (!tenant.isPublished && !preview)) {
     res.status(404).json({ error: "Not found" });
     return;

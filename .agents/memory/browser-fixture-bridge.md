@@ -38,3 +38,9 @@ For approved isolated editor tests, prefer a tenant-scoped temporary self-servic
 **Why:** The app intentionally has one operator identity; a second account row does not create an independently scoped operator. Existing fixture reports may remain after successful cleanup, so their presence alone does not mean test data still exists.
 
 **How to apply:** Verify the actual editor with the narrower temporary host access, report that scope honestly, and explicitly remove uploaded object-storage derivatives as well as database fixtures. Ordinary media deletion removes references, not immediately the stored files.
+
+Synthetic fixtures must satisfy current admin request validators, not just database constraints.
+
+**Why:** A legacy theme accepted by a direct fixture insert made a later unrelated design save fail validation, falsely suggesting a preview-refresh defect.
+
+**How to apply:** Check fixture defaults against the actual save contract before browser verification. Correct only synthetic setup when invalid fixture data is the cause; do not relax application validation.
