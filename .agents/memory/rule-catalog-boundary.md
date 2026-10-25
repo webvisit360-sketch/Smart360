@@ -10,3 +10,11 @@ Import the owner's audited rule stems literally and honor its curated whole-word
 Rule cards have no accent fill; the accent belongs only to their pictogram.
 **Why:** The owner rejected the filled green production cards and approved the outlined light/dark sheet instead.
 **How to apply:** Use the binding sheet's neutral text and outlines; ensure dark-surface icons reach 3:1 by same-hue lightening. The owner explicitly requested fallback logs to include the displayed sentence, superseding fingerprint-only logging.
+
+Both designs must source rule-icon accents from the tenant palette, never the
+shared Trend daypart accent.
+**Why:** The owner confirmed using the same actual Enostaven palette source in
+Trend, rather than the sample green from the mock. Passing contrast is not
+enough when the wrong source hue is supplied.
+**How to apply:** Keep shared theme colors unchanged; lighten the tenant accent
+only when contrast requires it, and do not force lightening of a passing color.

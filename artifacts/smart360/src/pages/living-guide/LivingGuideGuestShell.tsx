@@ -2025,7 +2025,7 @@ export default function LivingGuideGuestShell({
   }, [isSimple]);
   const simpleStyle = isSimple
     ? (simplePaletteStyle(resolveSimplePalette(tenant?.simplePalette, tenant?.simpleBaseColor)) as CSSProperties)
-    : undefined;
+    : ({ "--rule-tenant-accent": resolveSimplePalette(tenant?.simplePalette, tenant?.simpleBaseColor).tile2 } as CSSProperties);
   const simpleHasContact = ["phone", "whatsapp", "viber", "instagram", "email"].some((key) => Boolean(tenant?.[key]));
   const simpleSections = isSimple
     ? buildSimpleSections(sections, lang, {

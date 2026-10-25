@@ -3316,7 +3316,7 @@ body[data-t="swipe"] .lg2-order-dock {
 .lg2-bullet-rules.lg2-rule-list {
   /* Light surface (sheet default): no fill, #DCDFE3 outline, #2A3028 text,
      icon = tenant accent (its only appearance on the card). */
-  --rc-acc: var(--acc);
+  --rc-acc: var(--rule-tenant-accent);
   --rc-line: #DCDFE3;
   --rc-txt: #2A3028;
   --rc-ink: var(--rc-acc);

@@ -1,5 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { resolveSimplePalette } from "../pages/living-guide/simple/simple-palette";
+import { readFileSync } from "node:fs";
 
 import {
   contrastRatio,
@@ -12,6 +14,24 @@ import {
 } from "../lib/rule-icon-contrast";
 
 const rgb = (v: string) => parseColor(v)!.rgb;
+
+test("Trend rule source uses tenant palette rather than the shared daypart accent", () => {
+  const css = readFileSync(new URL("../pages/living-guide/living-guide-guest.css", import.meta.url), "utf8");
+  const source = readFileSync(new URL("../pages/living-guide/LivingGuideGuestShell.tsx", import.meta.url), "utf8");
+  assert.match(css, /--rc-acc:\s*var\(--rule-tenant-accent\)/);
+  assert.doesNotMatch(css, /--rc-acc:\s*var\(--acc\)/);
+  assert.match(source, /"--rule-tenant-accent":\s*resolveSimplePalette\(tenant\?\.simplePalette,\s*tenant\?\.simpleBaseColor\)\.tile2/);
+  const green = resolveSimplePalette("custom", "#6CB843").tile2;
+  const bordo = resolveSimplePalette("bordo", "#EECB87").tile2;
+  assert.equal(green.toUpperCase(), "#559333");
+  assert.equal(bordo.toUpperCase(), "#521445");
+  const tones = [green, bordo].map(accent=>ruleIconToneOnDark(rgb(accent),rgb("#0C1322")));
+  assert.notEqual(tones[0].color,tones[1].color);
+  for(const tone of tones) {
+    assert.ok(tone.contrast>=3);
+    assert.notEqual(tone.color,"#E9A63A");
+  }
+});
 
 test("sheet example: #4E7431 on #14243C is below 3:1", () => {
   const c = contrastRatio(rgb("#4E7431"), rgb("#14243C"));
