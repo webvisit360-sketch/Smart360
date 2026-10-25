@@ -313,9 +313,12 @@ function GuestRoute({ slug }: { slug: string }) {
 }
 
 function Router() {
+  const [location] = useLocation();
   return (
     <RoutedErrorBoundary>
-      <Suspense fallback={null}>
+      <Suspense fallback={location === "/admin" || location.startsWith("/admin/")
+        ? <div data-surface="admin" className="admin-scope" role="status" aria-live="polite" style={{ minHeight: "100dvh", display: "grid", placeItems: "center" }}>Nalaganje administracije…</div>
+        : null}>
       <Switch>
         <Route path="/" component={Landing} />
         <Route path="/admin" component={AdminRouter} />

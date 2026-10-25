@@ -67,6 +67,10 @@ function collectFromProps(props: Record<string, unknown> | null | undefined, ids
 /** React keys and data props owned by this host element (up to the next host). */
 function reactRefs(el: Element) {
   const ids: string[] = [];
+  // Gallery slides own their entry identity on the DOM node itself, not on
+  // a parent React component (which owns the whole category).
+  const itemId = el.getAttribute("data-item-id");
+  if (itemId) ids.push(itemId);
   const sectionKeys: string[] = [];
   let bulletList = false;
   const fiber = fiberOf(el);

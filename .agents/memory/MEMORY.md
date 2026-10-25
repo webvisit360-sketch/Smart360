@@ -1,4 +1,5 @@
 # Memory index
+- [Admin login first paint](admin-login-first-paint.md) — public login must not wait for protected editor modules; successful requests can still leave a blank first paint.
 - [Rule catalogue authority](rule-catalog-boundary.md) — exact audited stems; report semantic collisions and distinguish paragraphs from bullet rendering.
 - [Kuula instruction overlay](kuula-instructions.md) — narrow instruction toggle differs from navigation chrome; inst overrides legacy hideinst.
 - [System tiles and refresh](system-tiles-refresh.md) — published visibility defaults, SOS confirmation, and protection across content refresh and PWA resumes.
