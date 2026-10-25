@@ -1,7 +1,7 @@
 // Deterministic import of the "Ikone pravil" section of the owner's trusted,
 // checked-in catalogue. Run from the workspace root. Never runtime input.
 import { readFileSync, writeFileSync } from "node:fs";
-const source = "attached_assets/ikone-gumbov_5_1792948009512.html";
+const source = "attached_assets/ikone-gumbov_7_1792953066359.html";
 const html = readFileSync(source, "utf8");
 const section = html.split(/<h2>Ikone pravil[^<]*<\/h2>/)[1]?.split(/<h2>|<\/body>/)[0];
 if (!section) throw new Error("Missing Ikone pravil section");

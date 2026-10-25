@@ -41,7 +41,7 @@ export const RULE_ICON_CATALOG = [
       "pušen",
       "puši"
     ],
-    "svg": "<svg viewBox=\"0 0 24 24\"><path fill-rule=\"evenodd\" d=\"M3 13.4h12.6v3.2H3zm14 0h1.7v3.2H17zm2.7 0h1.7v3.2h-1.7zM17.2 6c1.9.5 3.2 2 3.4 4l-1.7.2c-.2-1.4-1-2.4-2.2-2.7zM4.4 4.3 20.4 20.3l-1.4 1.4L3 5.7z\"/></svg>"
+    "svg": "<svg viewBox=\"0 0 24 24\"><path fill-rule=\"evenodd\" d=\"M2.5 12.9h14v3.8h-14zm15.5 0h1.8v3.8H18zm2.9 0h1.1v3.8h-1.1zM4.5 3.9 20.6 20l-1.9 1.9L2.6 5.8z\"/></svg>"
   },
   {
     "id": "rule:locevanje-odpadkov",
@@ -66,7 +66,7 @@ export const RULE_ICON_CATALOG = [
       "otpad",
       "smeć"
     ],
-    "svg": "<svg viewBox=\"0 0 24 24\"><path d=\"M13 3.1l2.9 5-2.1 1.2-1.7-2.9-1.4 2.4-2.1-1.2 2.3-4.5a1.2 1.2 0 0 1 2.1 0z\"/><path d=\"M13 3.1l2.9 5-2.1 1.2-1.7-2.9-1.4 2.4-2.1-1.2 2.3-4.5a1.2 1.2 0 0 1 2.1 0z\" transform=\"rotate(120 12 12.6)\"/><path d=\"M13 3.1l2.9 5-2.1 1.2-1.7-2.9-1.4 2.4-2.1-1.2 2.3-4.5a1.2 1.2 0 0 1 2.1 0z\" transform=\"rotate(240 12 12.6)\"/></svg>"
+    "svg": "<svg viewBox=\"0 0 24 24\"><path d=\"M12 4.2a7.8 7.8 0 0 1 7.1 4.6l2-.9A10 10 0 0 0 5 4.9L3.2 3.1v5.8H9L6.6 6.5A7.7 7.7 0 0 1 12 4.2z\"/><path d=\"M12 4.2a7.8 7.8 0 0 1 7.1 4.6l2-.9A10 10 0 0 0 5 4.9L3.2 3.1v5.8H9L6.6 6.5A7.7 7.7 0 0 1 12 4.2z\" transform=\"rotate(180 12 12)\"/></svg>"
   },
   {
     "id": "rule:elektrika-in-luci",
@@ -161,7 +161,7 @@ export const RULE_ICON_CATALOG = [
       "feest",
       "tulum"
     ],
-    "svg": "<svg viewBox=\"0 0 24 24\"><path fill-rule=\"evenodd\" d=\"m3.1 20.9 4-10.3 6.3 6.3zM13.4 6.2a1.3 1.3 0 1 1 0 2.6 1.3 1.3 0 0 1 0-2.6zm4.4 2.6a1.3 1.3 0 1 1 0 2.6 1.3 1.3 0 0 1 0-2.6zm-1.5-5.4a1.3 1.3 0 1 1 0 2.6 1.3 1.3 0 0 1 0-2.6zM20 2.6l1.4 1.4L4.7 20.7l-1.4-1.4z\"/></svg>"
+    "svg": "<svg viewBox=\"0 0 24 24\"><path fill-rule=\"evenodd\" d=\"m2.9 21.1 4.4-11.2 6.8 6.8zM14.4 5.2a1.8 1.8 0 1 1 0 3.6 1.8 1.8 0 0 1 0-3.6zm4.7 4.6a1.8 1.8 0 1 1 0 3.6 1.8 1.8 0 0 1 0-3.6zM19.5 2.4l1.9 1.9L5.3 20.4l-1.9-1.9z\"/></svg>"
   },
   {
     "id": "rule:cistoca",
@@ -185,7 +185,7 @@ export const RULE_ICON_CATALOG = [
       "čistoć",
       "uredn"
     ],
-    "svg": "<svg viewBox=\"0 0 24 24\"><path d=\"M10.4 2.8l1.7 4.9 4.9 1.7-4.9 1.7-1.7 4.9-1.7-4.9-4.9-1.7 4.9-1.7z\"/><path d=\"M18 13.6l1 2.7 2.7 1-2.7 1-1 2.7-1-2.7-2.7-1 2.7-1z\"/></svg>"
+    "svg": "<svg viewBox=\"0 0 24 24\"><path d=\"M11 2.4l2.2 6.4 6.4 2.2-6.4 2.2L11 19.6l-2.2-6.4-6.4-2.2 6.4-2.2z\"/><circle cx=\"18.9\" cy=\"18.9\" r=\"2.3\"/></svg>"
   },
   {
     "id": "rule:vrata-v-stranisce",

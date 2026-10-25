@@ -4,6 +4,7 @@ import { startOuterShadowStrip } from "./simple/strip-outer-shadows";
 import {
   type CSSProperties,
   type FormEvent,
+  type ReactNode,
   Fragment,
   createContext,
   useContext,
@@ -59,6 +60,7 @@ import {
 import { LivingGuideSprite } from "./LivingGuideSprite";
 import { livingGuideInterWoff2 } from "./inter-font-source";
 import { CategoryIcon, isAvailableLucideIcon } from "@/components/category-icon";
+import { isDarkSurface, parseColor, ruleIconToneOnDark, RULE_ICON_PALE_INK, type Rgb } from "@/lib/rule-icon-contrast";
 import { AUTOMATIC_TILE_ICON, matchRuleIcon, matchTileCatalog, ruleBulletTexts } from "@workspace/category-icons";
 import {
   isLivingTheme,
@@ -437,7 +439,7 @@ function StructuredBulletRows({
     );
   }
   return (
-    <div className="lg2-rule-list lg2-bullet-rules" data-testid="list-rule-cards">
+    <RuleCardList>
       {bullets.map((bullet, index) => {
         const { entry } = matchRuleIcon(bullet);
         return (
@@ -448,8 +450,62 @@ function StructuredBulletRows({
           </div>
         );
       })}
+    </RuleCardList>
+  );
+}
+
+/**
+ * Rule-card container. Measures the actual surface behind the cards and the
+ * tenant accent (icon `color`), then sets data-rc-surface and, on dark
+ * surfaces, --rc-ink-dark to the contrast-safe accent tone (>= 3:1).
+ */
+function RuleCardList({ children }: { children: ReactNode }) {
+  const ref = useRef<HTMLDivElement | null>(null);
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const apply = () => {
+      let node: HTMLElement | null = el.parentElement;
+      let bg: Rgb | null = null;
+      while (node) {
+        const parsed = parseColor(getComputedStyle(node).backgroundColor);
+        if (parsed && parsed.alpha > 0.5) { bg = parsed.rgb; break; }
+        node = node.parentElement;
+      }
+      if (!bg) bg = parseColor(getComputedStyle(el).getPropertyValue("--bg"))?.rgb ?? [255, 255, 255];
+      const dark = isDarkSurface(bg);
+      el.dataset.rcSurface = dark ? "dark" : "light";
+      el.style.removeProperty("--rc-ink-dark");
+      if (!dark) return;
+      const probe = el.querySelector<HTMLElement>(".lg2-rule-card-icon");
+      const accent = parseColor(probe ? getComputedStyle(probe).color : null)?.rgb;
+      const tone = accent ? ruleIconToneOnDark(accent, bg) : null;
+      el.style.setProperty("--rc-ink-dark", tone ? tone.color : RULE_ICON_PALE_INK);
+      el.dataset.rcContrast = tone ? tone.contrast.toFixed(2) : "";
+    };
+    apply();
+    const observer = new MutationObserver(apply);
+    observer.observe(document.body, { attributes: true, attributeFilter: ["data-t", "class", "style"] });
+    return () => observer.disconnect();
+  }, []);
+  return (
+    <div ref={ref} className="lg2-rule-list lg2-bullet-rules" data-testid="list-rule-cards">
+      {children}
     </div>
   );
+}
+
+/** Plain-text of a body for rule matching (strip tags, collapse whitespace) — same as server audit. */
+function ruleBodyText(body: unknown): string {
+  if (typeof body !== "string") return "";
+  return body.replace(/<[^>]*>/g, " ").replace(/&nbsp;/g, " ").replace(/&amp;/g, "&").replace(/\s+/g, " ").trim();
+}
+
+/** RULES-layout row that is a single body-only sentence: rendered as a rule card. */
+function isBodyOnlyRuleItem(item: any, category: any): boolean {
+  return !item?.title && !item?.gpxRoute
+    && itemBullets(item, category).length === 0
+    && ruleBodyText(item?.body).length > 0;
 }
 
 function firstMedia(category: any): any | null {
@@ -4254,6 +4310,17 @@ function TemplateB2({ items, initialItemId, category, ...props }: any) {
 }
 
 // Template C: Rules
+function groupRuleItems(items: any[], category: any): Array<{ cards: boolean; items: any[] }> {
+  const groups: Array<{ cards: boolean; items: any[] }> = [];
+  for (const item of items) {
+    const cards = isBodyOnlyRuleItem(item, category);
+    const last = groups[groups.length - 1];
+    if (cards && last?.cards) last.items.push(item);
+    else groups.push({ cards, items: [item] });
+  }
+  return groups;
+}
+
 function TemplateC({ category, items, t, onBack, galleryIndex, onGalleryIndex }: any) {
   const media = categoryMedia(category);
   return (
@@ -4264,7 +4331,20 @@ function TemplateC({ category, items, t, onBack, galleryIndex, onGalleryIndex }:
           <div className="lg2-grabber" aria-hidden="true" />
           <h1>{category.label}</h1>
           <div className="lg2-rule-list">
-             {items.map((item: any) => {
+             {groupRuleItems(items, category).map((group: any) => group.cards ? (
+               <RuleCardList key={`cards-${group.items[0].id}`}>
+                 {group.items.map((item: any) => {
+                   const { entry } = matchRuleIcon(ruleBodyText(item.body));
+                   return (
+                     <div className="lg2-rule-row lg2-rule-card" key={item.id} data-item-id={item.id} data-rule-icon={entry.id} data-testid={`card-rule-item-${item.id}`}>
+                       <span className="lg2-rule-card-icon" aria-hidden="true" dangerouslySetInnerHTML={{ __html: entry.svg }} />
+                       <div className="lg2-rule-card-body" dangerouslySetInnerHTML={{ __html: bodyHtml(item.body) }} />
+                     </div>
+                   );
+                 })}
+               </RuleCardList>
+             ) : (() => {
+               const item = group.items[0];
                const isWarning = !!item.tint;
                return (
                  <Fragment key={item.id}>
@@ -4281,7 +4361,7 @@ function TemplateC({ category, items, t, onBack, galleryIndex, onGalleryIndex }:
                    <StructuredBulletRows bullets={itemBullets(item, category)} />
                  </Fragment>
                );
-             })}
+             })())}
           </div>
           <PanoramaStrip media={splitPanoramaMedia(media).panoramas} />
         </article>
