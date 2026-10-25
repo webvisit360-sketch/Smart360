@@ -18,10 +18,12 @@ const RULE_MATCHES: RuleCandidate[] = RULE_ICON_CATALOG.flatMap((entry) =>
   }).filter((candidate) => candidate.words.length > 0),
 );
 
-// Identical to matchTileCatalog: stems under 4 letters are exact words,
-// longer stems are word prefixes. Catalogue stems are used verbatim.
+const WHOLE_WORD_STEMS = new Set(
+  ["wc", "pes", "psi", "pet", "dog", "pas", "eau", "feu", "žar", "kind", "départ"].map(normalizeTileLabel),
+);
+// Catalogue's curated ambiguous stems remain whole words regardless of length.
 function wordMatches(stem: string, word: string): boolean {
-  return stem.length < 4 ? word === stem : word.startsWith(stem);
+  return stem.length < 4 || WHOLE_WORD_STEMS.has(stem) ? word === stem : word.startsWith(stem);
 }
 
 /** Strict word-prefix policy (longest stem, then matched-word count, then

@@ -1,4 +1,5 @@
 # Memory index
+- [Rule catalogue authority](rule-catalog-boundary.md) — exact audited stems; report semantic collisions and distinguish paragraphs from bullet rendering.
 - [Kuula instruction overlay](kuula-instructions.md) — narrow instruction toggle differs from navigation chrome; inst overrides legacy hideinst.
 - [System tiles and refresh](system-tiles-refresh.md) — published visibility defaults, SOS confirmation, and protection across content refresh and PWA resumes.
 - [Smartxstay import boundary](smartxstay-import-boundary.md) — operator-click only, additive drafts, preserved curated entries, and rendered-language verification.

@@ -30,9 +30,8 @@ test("reference Hišni red sentences map to the reference icons", () => {
   for (const [text, expected] of cases) assert.equal(id(text), expected, text);
 });
 
-test("CONFLICT (reported, not patched): catalogue short stem 'vod' is exact-only", () => {
-  // The reference card expects a water drop, but strict policy needs the word "vod".
-  assert.equal(id("Prosim, varčujte z vodo."), "rule:privzeto-pravilo");
+test("audited water stems match the reference sentence", () => {
+  assert.equal(id("Prosim, varčujte z vodo."), "rule:varcevanje-z-vodo");
   assert.equal(id("Please save water."), "rule:varcevanje-z-vodo");
 });
 
@@ -51,15 +50,19 @@ test("multilingual examples", () => {
 });
 
 test("strict policy: no interior substrings, short stems exact, collision guards", () => {
-  assert.equal(id("Zaprite vrata, ki vodijo na teraso."), "rule:privzeto-pravilo");
+  // Audited catalogue includes "vodi"; strict prefix policy also matches "vodijo".
+  assert.equal(id("Zaprite vrata, ki vodijo na teraso."), "rule:varcevanje-z-vodo");
   assert.equal(id("Unsmokeable"), "rule:privzeto-pravilo");
 });
 
-test("CONFLICT (reported, not patched): verbatim catalogue stems over/under-match", () => {
-  assert.equal(id("Vietato fumare."), "rule:privzeto-pravilo"); // 'fum' exact-only
-  assert.equal(id("Pets are welcome."), "rule:privzeto-pravilo"); // 'pet' exact-only
-  assert.equal(id("Bitte dann abschließen."), "rule:poskodbe-javite"); // it 'dann' = de 'then'
-  assert.equal(id("Guests are kindly asked to lock the gate."), "rule:nadzor-otrok"); // nl 'kind' prefixes 'kindly'
+test("audited stems remove previous collisions and missed forms", () => {
+  assert.equal(id("Vietato fumare."), "rule:kajenje-prepovedano");
+  assert.equal(id("Pets are welcome."), "rule:hisni-ljubljencki");
+  for (const text of ["Bitte dann abschließen.", "Guests are kindly asked to lock the gate.", "vodnik", "sončni zahod", "park", "breakfast", "kindly", "départements"]) {
+    assert.equal(matchRuleIcon(text).fallback, true, text);
+  }
+  assert.equal(id("kind"), "rule:nadzor-otrok");
+  assert.equal(id("départ"), "rule:odhod-check-out");
 });
 
 test("nonsense and empty fall back to the neutral icon", () => {
