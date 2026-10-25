@@ -433,7 +433,7 @@ type SectionDialogProps =
   | { mode: "create"; tenantId: string; section?: undefined; scope?: "events" | "offer"; onDone: () => void }
   | { mode: "edit"; tenantId: string; section: Section; scope?: undefined; onDone: () => void };
 
-function SectionDialog({ mode, tenantId, section, scope, onDone }: SectionDialogProps) {
+export function SectionDialog({ mode, tenantId, section, scope, onDone }: SectionDialogProps) {
   const queryClient = useQueryClient();
   const [busy, setBusy] = useState(false);
 
@@ -755,7 +755,7 @@ export function EditDialog({
         role="region"
         aria-label={title}
         onKeyDown={(event) => { if (event.key === "Escape") { event.stopPropagation(); requestClose(); } }}
-        className="mt-2 mb-3 flex max-h-[min(82vh,900px)] flex-col gap-3 rounded-[14px] border-2 border-[#157347] bg-white p-4 shadow-[0_8px_24px_-12px_rgba(21,115,71,0.45)]"
+        className="mt-2 mb-3 flex min-w-0 max-h-[min(82vh,900px)] flex-col gap-3 overflow-hidden rounded-[14px] border-2 border-[#157347] bg-white p-4 shadow-[0_8px_24px_-12px_rgba(21,115,71,0.45)]"
       >
         <div className="flex shrink-0 items-center justify-between gap-2">
           <p className="text-[15px] font-extrabold text-[#14201F]">{title}</p>
@@ -1071,14 +1071,17 @@ export function textToBullets(text: string): string[] {
   return text.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
 }
 
-function ContentDraftAccess({ allowed, children }: { allowed: boolean; children: React.ReactNode }) {
+export function ContentDraftAccess({ allowed, children }: { allowed: boolean; children: React.ReactNode }) {
+  // Layout-transparent permission boundary: the form must remain a flex item
+  // of EditDialog so its min-h-0 body shrinks, not its footer spilling into
+  // subsequent rows. Keep native fieldset disabling when access is revoked.
   return (
-    <div>
-      {!allowed && <p role="status" data-testid="status-content-draft-restricted" className="mb-4 rounded-xl border bg-muted p-3 text-sm">
+    <>
+      {!allowed && <p role="status" data-testid="status-content-draft-restricted" className="shrink-0 rounded-xl border bg-muted p-3 text-sm">
         Način upravljanja se je spremenil. Osnutek ostaja odprt; urejanje in shranjevanje te vsebine zdaj opravi Smart360.
       </p>}
-      <fieldset disabled={!allowed} className="min-w-0">{children}</fieldset>
-    </div>
+      <fieldset disabled={!allowed} className="contents">{children}</fieldset>
+    </>
   );
 }
 
