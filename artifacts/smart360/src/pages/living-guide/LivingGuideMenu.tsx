@@ -20,8 +20,8 @@ const ICONS: Record<string, ReactNode> = {
 
 export const MenuGlyph = () => <Icon><path d="M4 7h16M4 12h16M4 17h16" /></Icon>;
 
-export function LivingGuideMenu({ lang, t, installAvailable, onClose, onLanguage, onInstall, onHelp, onAbout }: {
-  lang: string; t: UiTranslator; installAvailable: boolean; onClose: () => void;
+export function LivingGuideMenu({ lang, t, installAvailable, aboutVisible = true, helpVisible = true, onClose, onLanguage, onInstall, onHelp, onAbout }: {
+  lang: string; t: UiTranslator; installAvailable: boolean; aboutVisible?: boolean; helpVisible?: boolean; onClose: () => void;
   onLanguage: () => void; onInstall: () => void; onHelp: () => void; onAbout: () => void;
 }) {
   const c = menuCopy(lang);
@@ -77,7 +77,7 @@ export function LivingGuideMenu({ lang, t, installAvailable, onClose, onLanguage
           </button>
         </div>
         <div className="lg2-menu-sheet">
-          {menuRowIds(installAvailable).map((id) => (
+          {menuRowIds(installAvailable, aboutVisible, helpVisible).map((id) => (
             <button key={id} type="button" className="lg2-menu-row" onClick={rows[id].run} data-testid={`menu-row-${id}`}>
               <span className="lg2-menu-ic">{ICONS[id]}</span>
               <span className="lg2-menu-txt"><span className="lg2-menu-mt">{rows[id].title}</span><span className="lg2-menu-ms">{rows[id].sub}</span></span>

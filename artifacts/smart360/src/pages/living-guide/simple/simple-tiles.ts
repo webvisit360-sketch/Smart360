@@ -4,6 +4,7 @@
 import type { SimpleIconKey } from "./simple-icons";
 import { resolveCategoryTileIcon } from "@workspace/category-icons";
 import { simpleCopy, type SimpleCopyKey } from "./simple-copy";
+import { normalizeSystemTileVisibility } from "../system-tile-visibility";
 
 export type SimpleTileAction =
   | { kind: "category"; categoryId: string }
@@ -23,6 +24,8 @@ export type SimpleRuntime = {
   mapHref: string | null;
   /** Tenant has the existing in-app map view (site plan); preferred over the external link. */
   hasSiteMap?: boolean;
+  /** Per-tenant system tile visibility; absent keys default to visible. */
+  systemTileVisibility?: unknown;
 };
 
 /**
@@ -56,14 +59,15 @@ function categoryTiles(section: any): SimpleTile[] {
 export function buildSimpleSections(sections: any[], lang: string, rt: SimpleRuntime): SimpleSection[] {
   const L = (k: SimpleCopyKey) => simpleCopy(k, lang);
 
-  const home: SimpleTile[] = [
+  const shown = normalizeSystemTileVisibility(rt.systemTileVisibility);
+  const home: SimpleTile[] = ([
     { id: "notices", label: L("notices"), icon: "bell", action: { kind: "notices" } },
     ...(rt.hasWeather ? [{ id: "weather", label: L("weather"), icon: "weather" as const, action: { kind: "weather" } as const }] : []),
     { id: "sos", label: L("sos"), icon: "sos", action: { kind: "sos" } },
     ...(rt.hasContact ? [{ id: "contact", label: L("contact"), icon: "phone" as const, action: { kind: "contact" } as const }] : []),
     ...(rt.installAvailable ? [{ id: "install", label: L("install"), icon: "install" as const, action: { kind: "install" } as const }] : []),
     { id: "about", label: L("about"), icon: "info", action: { kind: "about" } },
-  ];
+  ] as SimpleTile[]).filter((tile) => shown[tile.id as keyof typeof shown] !== false);
   const offer = [
     ...(rt.hasOrderable ? [{ id: "orders", label: L("orders"), icon: "order" as const, action: { kind: "orders" } as const }] : []),
   ];

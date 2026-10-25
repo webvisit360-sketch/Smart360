@@ -22,7 +22,7 @@ import { getOpenStatus } from "@/lib/hours";
 import { sanitizeHtml } from "@/lib/sanitize";
 import { resolveTenantMapsUrl } from "@/lib/tenant-maps";
 import { itemMapsHref } from "@/lib/maps-href";
-import { beginGuestActivity, endGuestActivity } from "@/lib/bundle-freshness";
+import { beginGuestActivity, endGuestActivity, isReloadSafe } from "@/lib/bundle-freshness";
 import {
   CARD_IMAGE_WIDTH,
   HERO_IMAGE_WIDTH,
@@ -140,6 +140,7 @@ import { LandingFlagColumn } from "./simple/LanguageFlags";
 import { GuideBackCircle, GuideHeaderControls } from "./simple/GuideHeaderControls";
 import { SimpleCoverView, SimpleFullView, SimpleHomeView, SimpleSheet, SimpleWeatherSheet } from "./simple/SimpleViews";
 import { simpleCopy } from "./simple/simple-copy";
+import { systemTileVisible } from "./system-tile-visibility";
 import { buildSimpleSections, type SimpleTile } from "./simple/simple-tiles";
 import { resolveGuestDesign, resolveSimplePalette, simplePaletteStyle } from "./simple/simple-palette";
 import { isProgramCategory, orderPrefillNoteFor, programEventOf, signupNote } from "./living-guide-program-model";
@@ -710,7 +711,8 @@ export default function LivingGuideGuestShell({
   // detail, reset a recorder, or unmount its timer / geolocation hook.
   const [showSos, setShowSos] = useState(false);
   const openSos = useCallback(() => setShowSos(true), []);
-  const sosEntry = useMemo(() => ({ lang, onOpen: openSos, isOpen: showSos }), [lang, openSos, showSos]);
+  const sosTileVisible = systemTileVisible(tenant, "sos");
+  const sosEntry = useMemo(() => (sosTileVisible ? { lang, onOpen: openSos, isOpen: showSos } : null), [sosTileVisible, lang, openSos, showSos]);
   const rootRef = useRef<HTMLDivElement>(null);
   const heldLayerRef = useRef<HTMLDivElement>(null);
   const heldViewStackRef = useRef<HeldRouteSurface[]>([]);
@@ -1467,6 +1469,9 @@ export default function LivingGuideGuestShell({
   const [launchRevision, setLaunchRevision] = useState(0);
   const [launchOverActiveTour, setLaunchOverActiveTour] = useState(false);
   usePwaLaunch(slug, hasLandingScreen(tenant), () => {
+    // A foreground wake must never close the recorder or discard a typed
+    // message. Publication refresh is independently deferred until safe.
+    if (hasActiveTourView(slug) || !isReloadSafe()) return;
     setShowSignIn(false);
     setShowNotices(false);
     setShowSearch(false);
@@ -1995,6 +2000,7 @@ export default function LivingGuideGuestShell({
         recordingEnabled: isTourRecordingEnabled(tenant),
         mapHref: resolveTenantMapsUrl(tenant, "search"),
         hasSiteMap: navState.hasSiteMap,
+        systemTileVisibility: tenant?.systemTileVisibility,
       })
     : [];
   const simpleBaseIsHome = isSimple && ["home", "grid", "more"].includes(baseScreen);
@@ -2090,7 +2096,7 @@ export default function LivingGuideGuestShell({
             slug={slug}
             onSearch={() => setShowSearch(true)}
             navState={navState}
-            onOpenHelp={openEmergencyHelp}
+            onOpenHelp={systemTileVisible(tenant, "sos") ? openEmergencyHelp : undefined}
             helpTitle={emergencyHelpCategory.label}
           />
         )}
@@ -2138,7 +2144,7 @@ export default function LivingGuideGuestShell({
             onOpenCategory={openCategory}
             onOpenNotices={() => setShowNotices(true)}
             notices={notices}
-            onOpenHelp={openEmergencyHelp}
+            onOpenHelp={systemTileVisible(tenant, "sos") ? openEmergencyHelp : undefined}
             helpTitle={emergencyHelpCategory.label}
           />
         )}
@@ -2222,7 +2228,7 @@ export default function LivingGuideGuestShell({
             setLocation={setLocation}
             tenant={tenant}
             onOpenItem={(id: string, categoryId?: string) => openItem(categoryId ?? categoryContext.category.id, id)}
-            showHostContacts={
+            showHostContacts={systemTileVisible(tenant, "contact") && 
               categoryContext.section?.key === "stay" &&
               categoryContext.category.id ===
                 visible(categoryContext.section?.categories)[0]?.id
@@ -2314,7 +2320,9 @@ export default function LivingGuideGuestShell({
         <LivingGuideMenu
           lang={lang}
           t={t}
-          installAvailable={installEnabled && !isGuestStandalone(slug)}
+          installAvailable={installEnabled && !isGuestStandalone(slug) && systemTileVisible(tenant, "install")}
+          aboutVisible={systemTileVisible(tenant, "about")}
+          helpVisible={systemTileVisible(tenant, "sos")}
           onClose={() => setShowMenu(false)}
           onLanguage={() => { setShowMenu(false); setShowLanguages(true); }}
           onInstall={() => {
@@ -2697,7 +2705,7 @@ function GridView({ tenant, section, lang, t, guest, onEditGuest, onOpenCategory
           <p>{tenant.name}</p>
           <h1>{section.title}</h1>
         </div>
-        {notices.length > 0 && (
+        {notices.length > 0 && systemTileVisible(tenant, "notices") && (
           <button className={`lg2-bell${hasNew ? " lg2-bell--dot" : ""}`} type="button" onClick={onOpenNotices} aria-label={t("UI.lg.notices.title")}>
             <svg aria-hidden="true"><use href="#lg-i-bell"/></svg>
           </button>
@@ -3233,7 +3241,7 @@ function StayView({ tenant, section, adminFullTree, t, guest, onEditGuest, onOpe
           <p>{tenant.name}</p>
           <h1>{section.title}</h1>
         </div>
-        {notices.length > 0 && (
+        {notices.length > 0 && systemTileVisible(tenant, "notices") && (
           <button className={`lg2-bell${hasNew ? " lg2-bell--dot" : ""}`} type="button" onClick={onOpenNotices} aria-label={t("UI.lg.notices.title")}>
             <svg aria-hidden="true"><use href="#lg-i-bell"/></svg>
           </button>
@@ -3294,9 +3302,9 @@ function StayView({ tenant, section, adminFullTree, t, guest, onEditGuest, onOpe
             />
           );
         })}
-        <div className="lg2-help-entry">
+        {onOpenHelp && <div className="lg2-help-entry">
           <button type="button" onClick={onOpenHelp}>{helpTitle}</button>
-        </div>
+        </div>}
         {groups.length === 0 && (
           <div className="lg2-empty">{t("UI.lg.search.empty")}</div>
         )}
@@ -4796,7 +4804,7 @@ function HomeView({
               />
             )}
           </div>
-          <GuestInstallCard slug={tenant.slug} lang={lang} enabled={window.location.pathname.startsWith(`/${tenant.slug}/`) && !new URLSearchParams(window.location.search).has("preview")} />
+          {systemTileVisible(tenant, "install") && <GuestInstallCard slug={tenant.slug} lang={lang} enabled={window.location.pathname.startsWith(`/${tenant.slug}/`) && !new URLSearchParams(window.location.search).has("preview")} />}
 
         <div className="lg2-hqbar">
           <button
@@ -4812,7 +4820,7 @@ function HomeView({
             <svg aria-hidden="true"><use href="#lg-i-wifi" /></svg>
             <b>WiFi</b>
           </button>
-          <button
+          {systemTileVisible(tenant, "notices") && <button
             className="lg2-q"
             type="button"
             onClick={onOpenNotices}
@@ -4821,7 +4829,7 @@ function HomeView({
             <svg aria-hidden="true"><use href="#lg-i-bell" /></svg>
             <b>{t("UI.lg.notices.title", "Obvestila")}</b>
             {announcementsUnread && <span className="lg2-qd lg2-qd--ann" data-testid="dot-announcements-unread" />}
-          </button>
+          </button>}
           <button
             className="lg2-q"
             type="button"
@@ -4845,7 +4853,7 @@ function HomeView({
           )}
         </div>
 
-        <WeatherCard location={tenantWeatherLocation(tenant)} />
+        {systemTileVisible(tenant, "weather") && <WeatherCard location={tenantWeatherLocation(tenant)} />}
 
         {visibleDanesItems.length > 0 && (
           <>
@@ -4912,14 +4920,14 @@ function HomeView({
             </button>
           </div>
         ))}
-        <div className="lg2-hhelp">
+        {onOpenHelp && <div className="lg2-hhelp">
           <button
             type="button"
             onClick={onOpenHelp}
           >
             {helpTitle}
           </button>
-        </div>
+        </div>}
         <div className="lg2-made">
           <img
             src={`${import.meta.env.BASE_URL}brand/smart360-znak-40.png?v=faceted-1`}

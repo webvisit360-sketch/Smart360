@@ -2348,6 +2348,15 @@ export const TenantBaseSimplePalette = {
   custom: 'custom',
 } as const;
 
+export type TenantBaseSystemTileVisibility = {
+  notices?: boolean;
+  weather?: boolean;
+  sos?: boolean;
+  contact?: boolean;
+  install?: boolean;
+  about?: boolean;
+};
+
 /**
  * Guest-facing UI mode: 'legacy' = existing mediterran/swipe themes; 'living-guide' = Living Guide shell
  */
@@ -2466,6 +2475,8 @@ export interface TenantBase {
   /** @nullable */
   simplePalette?: TenantBaseSimplePalette;
   simpleDynamicBackground?: boolean;
+  publishedVersion?: string;
+  systemTileVisibility?: TenantBaseSystemTileVisibility;
   /**
      * @nullable
      * @pattern ^#[0-9a-fA-F]{6}$
@@ -2667,6 +2678,15 @@ export const TenantUpdateSimplePalette = {
   custom: 'custom',
 } as const;
 
+export type TenantUpdateSystemTileVisibility = {
+  notices?: boolean;
+  weather?: boolean;
+  sos?: boolean;
+  contact?: boolean;
+  install?: boolean;
+  about?: boolean;
+};
+
 /**
  * Guest-facing UI mode for all new and updated tenants
  */
@@ -2768,6 +2788,7 @@ export interface TenantUpdate {
   /** @nullable */
   simplePalette?: TenantUpdateSimplePalette;
   simpleDynamicBackground?: boolean;
+  systemTileVisibility?: TenantUpdateSystemTileVisibility;
   /**
      * @nullable
      * @pattern ^#[0-9a-fA-F]{6}$
@@ -4236,6 +4257,10 @@ export type GetPublishedSlugRedirect200 = {
 export type GetPublicTenantParams = {
 lang?: string;
 preview?: boolean;
+};
+
+export type GetPublishedVersion200 = {
+  version: string;
 };
 
 export type SearchPublicTenantParams = {

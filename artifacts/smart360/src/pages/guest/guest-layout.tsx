@@ -3,6 +3,7 @@ import { IconSprite } from "./IconSprite";
 import { useLocation, useSearch } from "wouter";
 import { useGetPublicTenant } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
+import { usePublishedFreshness } from "@/hooks/use-published-freshness";
 import { canRegisterGuestWorker, canRegisterLivingGuideWorker } from "../living-guide/living-guide-offline-model";
 import { registerLivingGuideWorker, registerPassthroughGuestWorker } from "../living-guide/living-guide-worker-registration";
 import { resolveLang } from "./i18n";
@@ -46,6 +47,9 @@ export default function GuestLayout({ children }: { children: ReactNode }) {
         enabled: !!slug,
         retry: false,
         queryKey: ['getPublicTenant', slug, lang, isPreview],
+        refetchOnWindowFocus: false,
+        refetchOnReconnect: false,
+        refetchOnMount: false,
         placeholderData: (previousTenant) =>
           previousTenant?.slug === slug ? previousTenant : undefined,
       },
@@ -53,6 +57,7 @@ export default function GuestLayout({ children }: { children: ReactNode }) {
   );
   const isLivingGuideMode =
     livingGuidePreview || tenant?.guestUiMode === "living-guide";
+  usePublishedFreshness(slug, lang, !isPreview && !!tenant && isLivingGuideMode);
 
   useEffect(() => {
     // Custom-domain root/host aliases are NOT within the canonical manifest
@@ -63,12 +68,9 @@ export default function GuestLayout({ children }: { children: ReactNode }) {
     };
     if (!("serviceWorker" in navigator) || !canRegisterGuestWorker(workerRoute)) return;
     if (!canRegisterLivingGuideWorker(workerRoute)) return registerPassthroughGuestWorker(slug);
-    return registerLivingGuideWorker(slug, lang, () => {
-      // Refetch content in place: no navigation, remount or draft/tour reset.
-      void queryClient.invalidateQueries({
-        predicate: ({ queryKey }) => queryKey[0] === "getPublicTenant" && queryKey[1] === slug,
-      });
-    });
+    // Publication events are handled by usePublishedFreshness, which defers
+    // applying a new snapshot until typed messages and tours are safe.
+    return registerLivingGuideWorker(slug, lang, () => {});
   }, [tenant?.slug, tenant?.guestUiMode, slug, lang, searchStr, queryClient]);
 
   useEffect(() => {

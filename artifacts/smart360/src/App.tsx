@@ -52,6 +52,9 @@ const LivingGuideProgramFixture = import.meta.env.DEV
 const SimpleDesignFixture = import.meta.env.DEV
   ? lazy(() => import('@/pages/living-guide/simple/SimpleDesignFixture'))
   : null;
+const SystemTilesFixture = import.meta.env.DEV
+  ? lazy(() => import('@/components/admin/system-tile-visibility-fixture'))
+  : null;
 const LivingGuideGuestShell = lazy(
   () => import('@/pages/living-guide/LivingGuideGuestShell'),
 );
@@ -167,6 +170,9 @@ function GuestHost() {
       query: {
         enabled: !!slug,
         queryKey: ['getPublicTenant', slug, queryLang, isPreview],
+        refetchOnWindowFocus: false,
+        refetchOnReconnect: false,
+        refetchOnMount: false,
         placeholderData: (previousTenant) =>
           previousTenant?.slug === slug ? previousTenant : undefined,
       },
@@ -356,6 +362,9 @@ function Router() {
           </Route>
         )}
 
+        {SystemTilesFixture && (
+          <Route path="/__system-tiles-fixture"><Suspense fallback={null}><SystemTilesFixture /></Suspense></Route>
+        )}
         {SimpleDesignFixture && (
           <Route path="/__simple-fixture/*?">
             <Suspense fallback={null}>

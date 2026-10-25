@@ -2270,6 +2270,15 @@ export const GetPublicTenantResponse = zod.object({
   "guestDesign": zod.union([zod.literal('trend'),zod.literal('simple'),zod.literal(null)]).nullish(),
   "simplePalette": zod.union([zod.literal('bordo'),zod.literal('modra'),zod.literal('custom'),zod.literal(null)]).nullish(),
   "simpleDynamicBackground": zod.boolean().optional(),
+  "publishedVersion": zod.string().optional(),
+  "systemTileVisibility": zod.object({
+  "notices": zod.boolean().optional(),
+  "weather": zod.boolean().optional(),
+  "sos": zod.boolean().optional(),
+  "contact": zod.boolean().optional(),
+  "install": zod.boolean().optional(),
+  "about": zod.boolean().optional()
+}).optional(),
   "simpleBaseColor": zod.string().regex(getPublicTenantResponseOneSimpleBaseColorRegExp).nullish(),
   "theme": zod.string(),
   "guestUiMode": zod.enum(['legacy', 'living-guide']).describe('Guest-facing UI mode: \'legacy\' = existing mediterran\/swipe themes; \'living-guide\' = Living Guide shell'),
@@ -2447,6 +2456,18 @@ export const GetPublicTenantResponse = zod.object({
   "hostAnsweredMessageCount": zod.number().optional().describe('Real guest-to-host response cycles measured for this tenant'),
   "hostResponseMedianMinutes": zod.number().nullish().describe('Median response time rounded up to whole minutes; null until five cycles exist')
 }))
+
+
+/**
+ * @summary Uncached identity of the currently published snapshot
+ */
+export const GetPublishedVersionParams = zod.object({
+  "slug": zod.coerce.string()
+})
+
+export const GetPublishedVersionResponse = zod.object({
+  "version": zod.string()
+})
 
 
 /**
@@ -2875,6 +2896,15 @@ export const ListTenantsResponseItem = zod.object({
   "guestDesign": zod.union([zod.literal('trend'),zod.literal('simple'),zod.literal(null)]).nullish(),
   "simplePalette": zod.union([zod.literal('bordo'),zod.literal('modra'),zod.literal('custom'),zod.literal(null)]).nullish(),
   "simpleDynamicBackground": zod.boolean().optional(),
+  "publishedVersion": zod.string().optional(),
+  "systemTileVisibility": zod.object({
+  "notices": zod.boolean().optional(),
+  "weather": zod.boolean().optional(),
+  "sos": zod.boolean().optional(),
+  "contact": zod.boolean().optional(),
+  "install": zod.boolean().optional(),
+  "about": zod.boolean().optional()
+}).optional(),
   "simpleBaseColor": zod.string().regex(listTenantsResponseOneSimpleBaseColorRegExp).nullish(),
   "theme": zod.string(),
   "guestUiMode": zod.enum(['legacy', 'living-guide']).describe('Guest-facing UI mode: \'legacy\' = existing mediterran\/swipe themes; \'living-guide\' = Living Guide shell'),
@@ -2985,6 +3015,15 @@ export const CreateTenantResponse = zod.object({
   "guestDesign": zod.union([zod.literal('trend'),zod.literal('simple'),zod.literal(null)]).nullish(),
   "simplePalette": zod.union([zod.literal('bordo'),zod.literal('modra'),zod.literal('custom'),zod.literal(null)]).nullish(),
   "simpleDynamicBackground": zod.boolean().optional(),
+  "publishedVersion": zod.string().optional(),
+  "systemTileVisibility": zod.object({
+  "notices": zod.boolean().optional(),
+  "weather": zod.boolean().optional(),
+  "sos": zod.boolean().optional(),
+  "contact": zod.boolean().optional(),
+  "install": zod.boolean().optional(),
+  "about": zod.boolean().optional()
+}).optional(),
   "simpleBaseColor": zod.string().regex(createTenantResponseOneSimpleBaseColorRegExp).nullish(),
   "theme": zod.string(),
   "guestUiMode": zod.enum(['legacy', 'living-guide']).describe('Guest-facing UI mode: \'legacy\' = existing mediterran\/swipe themes; \'living-guide\' = Living Guide shell'),
@@ -4407,6 +4446,15 @@ export const GetTenantResponse = zod.object({
   "guestDesign": zod.union([zod.literal('trend'),zod.literal('simple'),zod.literal(null)]).nullish(),
   "simplePalette": zod.union([zod.literal('bordo'),zod.literal('modra'),zod.literal('custom'),zod.literal(null)]).nullish(),
   "simpleDynamicBackground": zod.boolean().optional(),
+  "publishedVersion": zod.string().optional(),
+  "systemTileVisibility": zod.object({
+  "notices": zod.boolean().optional(),
+  "weather": zod.boolean().optional(),
+  "sos": zod.boolean().optional(),
+  "contact": zod.boolean().optional(),
+  "install": zod.boolean().optional(),
+  "about": zod.boolean().optional()
+}).optional(),
   "simpleBaseColor": zod.string().regex(getTenantResponseOneOneSimpleBaseColorRegExp).nullish(),
   "theme": zod.string(),
   "guestUiMode": zod.enum(['legacy', 'living-guide']).describe('Guest-facing UI mode: \'legacy\' = existing mediterran\/swipe themes; \'living-guide\' = Living Guide shell'),
@@ -4645,6 +4693,14 @@ export const UpdateTenantBody = zod.object({
   "guestDesign": zod.union([zod.literal('trend'),zod.literal('simple'),zod.literal(null)]).nullish(),
   "simplePalette": zod.union([zod.literal('bordo'),zod.literal('modra'),zod.literal('custom'),zod.literal(null)]).nullish(),
   "simpleDynamicBackground": zod.boolean().optional(),
+  "systemTileVisibility": zod.object({
+  "notices": zod.boolean().optional(),
+  "weather": zod.boolean().optional(),
+  "sos": zod.boolean().optional(),
+  "contact": zod.boolean().optional(),
+  "install": zod.boolean().optional(),
+  "about": zod.boolean().optional()
+}).optional(),
   "simpleBaseColor": zod.string().regex(updateTenantBodySimpleBaseColorRegExp).nullish(),
   "renewsAt": zod.string().nullish(),
   "theme": zod.string().optional(),
@@ -4733,6 +4789,15 @@ export const UpdateTenantResponse = zod.object({
   "guestDesign": zod.union([zod.literal('trend'),zod.literal('simple'),zod.literal(null)]).nullish(),
   "simplePalette": zod.union([zod.literal('bordo'),zod.literal('modra'),zod.literal('custom'),zod.literal(null)]).nullish(),
   "simpleDynamicBackground": zod.boolean().optional(),
+  "publishedVersion": zod.string().optional(),
+  "systemTileVisibility": zod.object({
+  "notices": zod.boolean().optional(),
+  "weather": zod.boolean().optional(),
+  "sos": zod.boolean().optional(),
+  "contact": zod.boolean().optional(),
+  "install": zod.boolean().optional(),
+  "about": zod.boolean().optional()
+}).optional(),
   "simpleBaseColor": zod.string().regex(updateTenantResponseOneSimpleBaseColorRegExp).nullish(),
   "theme": zod.string(),
   "guestUiMode": zod.enum(['legacy', 'living-guide']).describe('Guest-facing UI mode: \'legacy\' = existing mediterran\/swipe themes; \'living-guide\' = Living Guide shell'),
@@ -5139,6 +5204,15 @@ export const DuplicateTenantResponse = zod.object({
   "guestDesign": zod.union([zod.literal('trend'),zod.literal('simple'),zod.literal(null)]).nullish(),
   "simplePalette": zod.union([zod.literal('bordo'),zod.literal('modra'),zod.literal('custom'),zod.literal(null)]).nullish(),
   "simpleDynamicBackground": zod.boolean().optional(),
+  "publishedVersion": zod.string().optional(),
+  "systemTileVisibility": zod.object({
+  "notices": zod.boolean().optional(),
+  "weather": zod.boolean().optional(),
+  "sos": zod.boolean().optional(),
+  "contact": zod.boolean().optional(),
+  "install": zod.boolean().optional(),
+  "about": zod.boolean().optional()
+}).optional(),
   "simpleBaseColor": zod.string().regex(duplicateTenantResponseTenantOneSimpleBaseColorRegExp).nullish(),
   "theme": zod.string(),
   "guestUiMode": zod.enum(['legacy', 'living-guide']).describe('Guest-facing UI mode: \'legacy\' = existing mediterran\/swipe themes; \'living-guide\' = Living Guide shell'),
@@ -5255,6 +5329,15 @@ export const RenewTenantResponse = zod.object({
   "guestDesign": zod.union([zod.literal('trend'),zod.literal('simple'),zod.literal(null)]).nullish(),
   "simplePalette": zod.union([zod.literal('bordo'),zod.literal('modra'),zod.literal('custom'),zod.literal(null)]).nullish(),
   "simpleDynamicBackground": zod.boolean().optional(),
+  "publishedVersion": zod.string().optional(),
+  "systemTileVisibility": zod.object({
+  "notices": zod.boolean().optional(),
+  "weather": zod.boolean().optional(),
+  "sos": zod.boolean().optional(),
+  "contact": zod.boolean().optional(),
+  "install": zod.boolean().optional(),
+  "about": zod.boolean().optional()
+}).optional(),
   "simpleBaseColor": zod.string().regex(renewTenantResponseOneSimpleBaseColorRegExp).nullish(),
   "theme": zod.string(),
   "guestUiMode": zod.enum(['legacy', 'living-guide']).describe('Guest-facing UI mode: \'legacy\' = existing mediterran\/swipe themes; \'living-guide\' = Living Guide shell'),

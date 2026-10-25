@@ -1,7 +1,7 @@
 import { GUIDE_LANGUAGES, guideLanguage, isGuideLanguage } from "@workspace/guide-languages";
 import { publishedLanguageTree } from "../lib/publishedLanguageFallback";
 import { Router, type IRouter } from "express";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import { db, tenantsTable, tenantAliasesTable, publishedSnapshotsTable } from "@workspace/db";
 import {
   GetPublicTenantResponse,
@@ -72,7 +72,9 @@ async function buildPublicPayload(
   visibleOnly = true,
   published = false,
 ): Promise<PayloadEntry> {
-  const snapshot = published ? await readPublishedContent(tenant.id) : null;
+  const [publication] = published ? await db.select().from(publishedSnapshotsTable)
+    .where(eq(publishedSnapshotsTable.tenantId, tenant.id)) : [];
+  const snapshot = publication?.content as unknown as PublishedContent | undefined;
   const publishedSource = snapshot?.languages.sl;
   const selectedLang = guideLanguage(lang);
   const saved = snapshot?.languages[selectedLang] ?? snapshot?.languages.en ?? publishedSource;
@@ -101,6 +103,7 @@ async function buildPublicPayload(
   const payload = GetPublicTenantResponse.parse(
     serialize({
       ...tree,
+      publishedVersion: publication?.publishedAt.toISOString(),
       languages: GUIDE_LANGUAGES,
       publicUrl,
       qrSvg,
@@ -123,7 +126,9 @@ async function getPublicPayload(
   if (opts.bypassCache) {
     return buildPublicPayload(tenant, lang, opts.visibleOnly ?? true);
   }
-  const key = `${tenant.id}|${lang ?? "sl"}`;
+  const [publication] = await db.select({ at: publishedSnapshotsTable.publishedAt })
+    .from(publishedSnapshotsTable).where(eq(publishedSnapshotsTable.tenantId, tenant.id));
+  const key = `${tenant.id}|${lang ?? "sl"}|${publication?.at.toISOString()}`;
   const hit = payloadCache.get(key);
   if (hit && hit.expiresAt > Date.now()) return hit;
   const entry = await buildPublicPayload(tenant, lang, true, true);
@@ -431,6 +436,18 @@ router.get("/public/tenants/:slug", async (req, res): Promise<void> => {
   res.set("Cache-Control", "no-store");
   if (tree.guestDesign === "simple") auditCategoryIconFallbacks(tenant.id, lang ?? "sl", tree.sections);
   res.json(payload);
+});
+
+router.get("/public/tenants/:slug/published-version", async (req, res): Promise<void> => {
+  res.set("Cache-Control", "no-store");
+  const resolved = await resolveTenantBySlugOrDomain(firstParam(req.params["slug"]) ?? "", req.headers.host);
+  if (!resolved) { res.status(404).json({ error: "Not found" }); return; }
+  const [publication] = await db.select({ version: publishedSnapshotsTable.publishedAt })
+    .from(publishedSnapshotsTable)
+    .innerJoin(tenantsTable, eq(tenantsTable.id, publishedSnapshotsTable.tenantId))
+    .where(and(eq(tenantsTable.id, resolved.id), eq(tenantsTable.isPublished, true)));
+  if (!publication) { res.status(404).json({ error: "Not found" }); return; }
+  res.json({ version: publication.version.toISOString() });
 });
 
 router.get("/public/tenants/:slug/weather", async (req, res): Promise<void> => {

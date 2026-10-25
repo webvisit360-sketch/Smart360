@@ -41,7 +41,7 @@ export const MENU_COPY = extendCatalog({
 export const menuCopy = (lang: string) => MENU_COPY[guideLanguage(lang)];
 
 /** Exactly five rows in this order; install hidden when the guide already runs standalone. */
-export function menuRowIds(installAvailable: boolean) {
-  return ["language", "profile", ...(installAvailable ? ["install"] : []), "help", "about"] as const;
+export function menuRowIds(installAvailable: boolean, aboutVisible = true, helpVisible = true) {
+  return ["language", "profile", ...(installAvailable ? ["install"] : []), ...(helpVisible ? ["help"] : []), ...(aboutVisible ? ["about"] : [])] as ("language" | "profile" | "install" | "help" | "about")[];
 }
 

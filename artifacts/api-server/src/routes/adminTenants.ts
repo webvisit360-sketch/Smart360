@@ -177,7 +177,7 @@ const tenantSettingCategories: ReadonlyArray<readonly [readonly string[], string
   [["address", "mapQuery", "mapUrl", "latitude", "longitude", "coordinateOverride"], "lokacija"],
   [["wifiSsid", "wifiPass", "wifiEnc"], "Wi-Fi dostop"],
   [[
-    "bgColor", "theme", "guestDesign", "simplePalette", "simpleBaseColor", "simpleDynamicBackground", "coverTitle", "coverSubtitle", "coverTitleSize",
+    "bgColor", "theme", "guestDesign", "simplePalette", "simpleBaseColor", "simpleDynamicBackground", "systemTileVisibility", "coverTitle", "coverSubtitle", "coverTitleSize",
     "coverTitleOpacity", "coverTextColor", "coverSubSize", "coverSubOpacity",
     "coverMetaSize", "coverMetaOpacity", "coverVeil", "tileVeil", "textScale",
     "textFont", "textColor", "coverAlign", "coverShowRating", "logoX", "logoY",

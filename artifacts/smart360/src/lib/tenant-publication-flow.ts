@@ -30,6 +30,7 @@ export function tenantSavePayload<T extends {
   orderNotifyEmail?: boolean;
   messageNotifyEmail?: boolean;
   tourRecordingEnabled?: boolean;
+  systemTileVisibility?: Record<string, boolean>;
 }>(snapshot: T, quotaGb: string, isOwner: boolean, canManageContent = isOwner) {
   const {
     latitude: _latitude,
@@ -69,7 +70,7 @@ export function tenantSavePayload<T extends {
     // review/subscription field, management mode or future operator field into autosave.
     const editableFields = [
       "name", "subtitle", "customDomain", "theme", "mapQuery", "mapUrl", "tourUrl",
-      "tourRecordingEnabled", "heroUrl", "logoUrl", "coverTitle", "coverSubtitle",
+      "tourRecordingEnabled", "systemTileVisibility", "heroUrl", "logoUrl", "coverTitle", "coverSubtitle",
       "coverTitleSize", "coverTitleOpacity", "coverTextColor", "coverSubSize",
       "coverSubOpacity", "coverMetaSize", "coverMetaOpacity", "coverVeil", "tileVeil",
       "textScale", "textFont", "textColor", "coverAlign", "coverShowRating",

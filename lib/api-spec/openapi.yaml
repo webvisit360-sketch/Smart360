@@ -612,6 +612,28 @@ paths:
           description: Not found or unpublished
         "301":
           description: Permanently redirected to the tenant's canonical slug
+  /public/tenants/{slug}/published-version:
+    get:
+      operationId: getPublishedVersion
+      tags: [public]
+      summary: Uncached identity of the currently published snapshot
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Current publication identity
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [version]
+                properties:
+                  version: { type: string }
+        "404":
+          description: Not found or unpublished
   /public/tenants/{slug}/weather:
     get:
       operationId: getTenantWeather
@@ -5155,6 +5177,17 @@ components:
         guestDesign: { type: ["string", "null"], enum: [trend, simple, null] }
         simplePalette: { type: ["string", "null"], enum: [bordo, modra, custom, null] }
         simpleDynamicBackground: { type: boolean }
+        publishedVersion: { type: string }
+        systemTileVisibility:
+          type: object
+          additionalProperties: false
+          properties:
+            notices: { type: boolean }
+            weather: { type: boolean }
+            sos: { type: boolean }
+            contact: { type: boolean }
+            install: { type: boolean }
+            about: { type: boolean }
         simpleBaseColor: { type: ["string", "null"], pattern: "^#[0-9a-fA-F]{6}$" }
         theme: { type: string }
         guestUiMode:
@@ -5325,6 +5358,16 @@ components:
         guestDesign: { type: ["string", "null"], enum: [trend, simple, null] }
         simplePalette: { type: ["string", "null"], enum: [bordo, modra, custom, null] }
         simpleDynamicBackground: { type: boolean }
+        systemTileVisibility:
+          type: object
+          additionalProperties: false
+          properties:
+            notices: { type: boolean }
+            weather: { type: boolean }
+            sos: { type: boolean }
+            contact: { type: boolean }
+            install: { type: boolean }
+            about: { type: boolean }
         simpleBaseColor: { type: ["string", "null"], pattern: "^#[0-9a-fA-F]{6}$" }
         renewsAt: { type: ["string", "null"] }
         theme: { type: string }

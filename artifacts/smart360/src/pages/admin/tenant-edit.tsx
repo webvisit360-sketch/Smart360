@@ -23,6 +23,8 @@ import { KreatorPhotoProposals } from "@/components/admin/kreator-photo-proposal
 import { AdminLivingGuideSettings } from "@/components/admin/admin-living-guide-settings";
 import { CoverEditor, THEME_DEFAULTS, PRESET_COLORS } from "@/components/admin/cover-editor";
 import { SlugField } from "@/components/admin/slug-field";
+import { SystemTileVisibilitySettings } from "@/components/admin/system-tile-visibility-settings";
+import { normalizeSystemTileVisibility } from "@/pages/living-guide/system-tile-visibility";
 import { useToast } from "@/hooks/use-toast";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { parseVirtualTourInput, virtualTourEmbedUrl } from "@/lib/virtual-tour";
@@ -222,6 +224,7 @@ export default function AdminTenantEdit() {
     longitude: "",
     tourUrl: "",
     tourRecordingEnabled: false,
+    systemTileVisibility: normalizeSystemTileVisibility(null) as Record<string, boolean>,
     heroUrl: "",
     logoUrl: "",
 
@@ -515,6 +518,7 @@ export default function AdminTenantEdit() {
         longitude: tenant.longitude?.toString() ?? "",
         tourUrl: tenant.tourUrl || "",
         tourRecordingEnabled: tenant.tourRecordingEnabled ?? false,
+        systemTileVisibility: normalizeSystemTileVisibility(tenant.systemTileVisibility),
         heroUrl: tenant.heroUrl || "",
         logoUrl: tenant.logoUrl || "",
 
@@ -1150,6 +1154,8 @@ export default function AdminTenantEdit() {
                   <Switch id="tour-recording-enabled" data-testid="switch-tour-recording" checked={formData.tourRecordingEnabled}
                     onCheckedChange={(checked) => setFormData((previous) => ({ ...previous, tourRecordingEnabled: checked }))} />
                 </div>}
+                {permissions.canManageContent && <SystemTileVisibilitySettings value={formData.systemTileVisibility}
+                  onChange={(next) => setFormData((previous) => ({ ...previous, systemTileVisibility: next }))} />}
                 {isOwner && <div className="space-y-2">
                   <Label>Kvota za medije (GB)</Label>
                   <Input type="number" min={0.1} step={0.5} value={mediaQuotaGb} onChange={e => setMediaQuotaGb(e.target.value)} />

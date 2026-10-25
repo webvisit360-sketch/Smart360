@@ -2,6 +2,7 @@ import {
   pgTable,
   text,
   boolean,
+  jsonb,
   bigint,
   doublePrecision,
   timestamp,
@@ -142,6 +143,7 @@ export const tenantsTable = pgTable("tenants", {
   guestDesign: text("guest_design"),
   simplePalette: text("simple_palette"),
   simpleDynamicBackground: boolean("simple_dynamic_background").notNull().default(false),
+  systemTileVisibility: jsonb("system_tile_visibility").$type<Record<string, boolean>>().notNull().default({ notices: true, weather: true, sos: true, contact: true, install: true, about: true }),
   simpleBaseColor: text("simple_base_color"),
   theme: text("theme").notNull().default("mediterran"),
   // Guest-facing UI mode. New tenants always use the Living Guide shell.

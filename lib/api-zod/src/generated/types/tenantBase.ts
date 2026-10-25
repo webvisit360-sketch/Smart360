@@ -10,6 +10,7 @@ import type { TenantBaseGuestUiMode } from './tenantBaseGuestUiMode';
 import type { TenantBaseLivingGuideNavItem } from './tenantBaseLivingGuideNavItem';
 import type { TenantBaseNotificationChannel } from './tenantBaseNotificationChannel';
 import type { TenantBaseSimplePalette } from './tenantBaseSimplePalette';
+import type { TenantBaseSystemTileVisibility } from './tenantBaseSystemTileVisibility';
 
 export interface TenantBase {
   id: string;
@@ -106,6 +107,8 @@ export interface TenantBase {
   /** @nullable */
   simplePalette?: TenantBaseSimplePalette;
   simpleDynamicBackground?: boolean;
+  publishedVersion?: string;
+  systemTileVisibility?: TenantBaseSystemTileVisibility;
   /**
      * @nullable
      * @pattern ^#[0-9a-fA-F]{6}$

@@ -10,6 +10,7 @@ import type { TenantUpdateGuestUiMode } from './tenantUpdateGuestUiMode';
 import type { TenantUpdateLivingGuideNavItem } from './tenantUpdateLivingGuideNavItem';
 import type { TenantUpdateNotificationChannel } from './tenantUpdateNotificationChannel';
 import type { TenantUpdateSimplePalette } from './tenantUpdateSimplePalette';
+import type { TenantUpdateSystemTileVisibility } from './tenantUpdateSystemTileVisibility';
 
 export interface TenantUpdate {
   slug?: string;
@@ -90,6 +91,7 @@ export interface TenantUpdate {
   /** @nullable */
   simplePalette?: TenantUpdateSimplePalette;
   simpleDynamicBackground?: boolean;
+  systemTileVisibility?: TenantUpdateSystemTileVisibility;
   /**
      * @nullable
      * @pattern ^#[0-9a-fA-F]{6}$

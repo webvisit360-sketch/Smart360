@@ -6,6 +6,7 @@ import {
 import { loadTourForView, saveTourForView } from '../lib/guided-tour-persistence';
 import type { TourProfile } from '../lib/tour-calories';
 import { registerActiveTourView } from '../lib/active-tour-views';
+import { beginGuestActivity, endGuestActivity } from '../lib/bundle-freshness';
 
 export type WakeStatus = 'idle' | 'requesting' | 'held' | 'unavailable';
 type WakeSentinel = { released: boolean; release(): Promise<void>; addEventListener(type: 'release', listener: () => void): void };
@@ -155,6 +156,12 @@ export function useLiveTour(key: string, { ephemeralFinished = false }: { epheme
 
   const active = state !== null && state.status !== 'finished';
   useEffect(() => active ? registerActiveTourView(key) : undefined, [active, key]);
+  useEffect(() => {
+    if (!active) return;
+    const tag = `tour:${key}`;
+    beginGuestActivity(tag);
+    return () => endGuestActivity(tag);
+  }, [active, key]);
   useEffect(() => {
     if (!active) { wakeRef.current?.deactivate(); setCurrentPosition(null); return; }
     wakeRef.current?.activate();

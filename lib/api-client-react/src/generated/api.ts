@@ -92,6 +92,7 @@ import type {
   GetPublicTenantLabelPdfParams,
   GetPublicTenantParams,
   GetPublishedSlugRedirect200,
+  GetPublishedVersion200,
   GetStorageCleanupPreviewParams,
   GetTenantLabelPdfParams,
   GpxRoute,
@@ -2879,6 +2880,83 @@ export function useGetPublicTenant<TData = Awaited<ReturnType<typeof getPublicTe
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getGetPublicTenantQueryOptions(slug,params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetPublishedVersionUrl = (slug: string,) => {
+
+
+
+
+  return `/api/public/tenants/${slug}/published-version`
+}
+
+/**
+ * @summary Uncached identity of the currently published snapshot
+ */
+export const getPublishedVersion = async (slug: string, options?: Parameters<typeof customFetch>[1]): Promise<GetPublishedVersion200> => {
+
+  return customFetch<GetPublishedVersion200>(getGetPublishedVersionUrl(slug),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetPublishedVersionQueryKey = (slug: string,) => {
+    return [
+    `/api/public/tenants/${slug}/published-version`
+    ] as const;
+    }
+
+
+export const getGetPublishedVersionQueryOptions = <TData = Awaited<ReturnType<typeof getPublishedVersion>>, TError = ErrorType<void>>(slug: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getPublishedVersion>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetPublishedVersionQueryKey(slug);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getPublishedVersion>>> = ({ signal }) => getPublishedVersion(slug, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: slug !== null && slug !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getPublishedVersion>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetPublishedVersionQueryResult = NonNullable<Awaited<ReturnType<typeof getPublishedVersion>>>
+export type GetPublishedVersionQueryError = ErrorType<void>
+
+
+/**
+ * @summary Uncached identity of the currently published snapshot
+ */
+
+export function useGetPublishedVersion<TData = Awaited<ReturnType<typeof getPublishedVersion>>, TError = ErrorType<void>>(
+ slug: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getPublishedVersion>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetPublishedVersionQueryOptions(slug,options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 
