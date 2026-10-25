@@ -3354,3 +3354,31 @@ mtime_ms = 1792931923086
 storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/1717d64c-ffe5-4c81-97cf-e97032280aa0/16bb4b50-54fd-475c-ae6b-8aeb37f9faa9"
 storage_version_token = "1792931947705387"
 content_type = "video/mp4"
+
+[[outputs]]
+id = "BW7waBxDV4ghyhfMXWdsx"
+uri = "file://reports/panorama-final/click-edit/trend-no-target-attempt.mp4"
+type = "video"
+title = "Trend — neuspešen poskus preverjanja"
+description = "Predogled ne prikaže panoramske sličice; to ni dokaz uspešne izbire urejevalnika."
+logical_id = "9173115a-6d08-4d94-a870-8dc3575132e2"
+content_hash = "sha256:b279cdd8c1f5a8fe9fa10d546fad45bb924b6e92d6270284728e700e116f0fc9"
+size = 136698
+mtime_ms = 1792932913942
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/9173115a-6d08-4d94-a870-8dc3575132e2/418aa7f7-dbc4-4b43-897e-d34a383186aa"
+storage_version_token = "1792933182451465"
+content_type = "video/mp4"
+
+[[outputs]]
+id = "WKrAsJCJZc-LNOylfBb-2"
+uri = "file://reports/panorama-final/click-edit/enostaven-no-target-attempt.mp4"
+type = "video"
+title = "Enostaven — neuspešen poskus preverjanja"
+description = "Izbran Enostaven, vendar predogled ostane v prejšnjem prikazu brez panoramske sličice."
+logical_id = "632f2460-6000-46b9-934c-497486f2df53"
+content_hash = "sha256:59a6aafe257eedb7dedb81a20d3a0ab5f71b820fa33ef010a2935591149702c8"
+size = 238606
+mtime_ms = 1792932839146
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/632f2460-6000-46b9-934c-497486f2df53/3786d12b-650c-444c-b27e-d7120c97f7b2"
+storage_version_token = "1792933183193903"
+content_type = "video/mp4"
