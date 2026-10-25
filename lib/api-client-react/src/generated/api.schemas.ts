@@ -2371,6 +2371,15 @@ export const TenantBaseGuestUiMode = {
   'living-guide': 'living-guide',
 } as const;
 
+export type TenantBaseLandingTextMode = typeof TenantBaseLandingTextMode[keyof typeof TenantBaseLandingTextMode];
+
+
+export const TenantBaseLandingTextMode = {
+  auto: 'auto',
+  light: 'light',
+  dark: 'dark',
+} as const;
+
 export type TenantBaseLivingGuideNavItem = typeof TenantBaseLivingGuideNavItem[keyof typeof TenantBaseLivingGuideNavItem];
 
 
@@ -2498,6 +2507,7 @@ export interface TenantBase {
   coverTitleOpacity?: number | null;
   /** @nullable */
   coverTextColor?: string | null;
+  landingTextMode?: TenantBaseLandingTextMode;
   /** @nullable */
   coverSubSize?: number | null;
   /** @nullable */
@@ -2701,6 +2711,15 @@ export const TenantUpdateGuestUiMode = {
   'living-guide': 'living-guide',
 } as const;
 
+export type TenantUpdateLandingTextMode = typeof TenantUpdateLandingTextMode[keyof typeof TenantUpdateLandingTextMode];
+
+
+export const TenantUpdateLandingTextMode = {
+  auto: 'auto',
+  light: 'light',
+  dark: 'dark',
+} as const;
+
 export type TenantUpdateLivingGuideNavItem = typeof TenantUpdateLivingGuideNavItem[keyof typeof TenantUpdateLivingGuideNavItem];
 
 
@@ -2813,6 +2832,7 @@ export interface TenantUpdate {
   coverTitleOpacity?: number | null;
   /** @nullable */
   coverTextColor?: string | null;
+  landingTextMode?: TenantUpdateLandingTextMode;
   /** @nullable */
   coverSubSize?: number | null;
   /** @nullable */

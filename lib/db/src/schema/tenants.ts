@@ -155,6 +155,7 @@ export const tenantsTable = pgTable("tenants", {
   coverTitleSize: doublePrecision("cover_title_size"),
   coverTitleOpacity: doublePrecision("cover_title_opacity"),
   coverTextColor: text("cover_text_color"),
+  landingTextMode: text("landing_text_mode").notNull().default("auto"),
   coverSubSize: doublePrecision("cover_sub_size"),
   coverSubOpacity: doublePrecision("cover_sub_opacity"),
   coverMetaSize: doublePrecision("cover_meta_size"),
@@ -260,6 +261,7 @@ export const tenantsTable = pgTable("tenants", {
     "tenants_notification_channel_enum_v1",
     sql`${t.notificationChannel} IN ('email','whatsapp')`,
   ),
+  check("tenants_landing_text_mode_check", sql`${t.landingTextMode} IN ('auto', 'light', 'dark')`),
 ]);
 
 /**

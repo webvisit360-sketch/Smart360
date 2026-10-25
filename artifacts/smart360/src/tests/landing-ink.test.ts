@@ -1,6 +1,14 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { coverImageCrop, landingInk } from "../pages/living-guide/landing-ink-model";
+import { coverImageCrop, landingInk, resolveLandingInk } from "../pages/living-guide/landing-ink-model";
+
+test("manual landing ink wins over sampling and iframe fallback; older snapshots remain automatic", () => {
+  for (const sampled of ["dark", "pale"] as const) {
+    assert.equal(resolveLandingInk("dark", sampled), "dark");
+    assert.equal(resolveLandingInk("light", sampled), "pale");
+    for (const mode of ["auto", undefined, null]) assert.equal(resolveLandingInk(mode, sampled), sampled);
+  }
+});
 
 test("landing ink chooses dark on bright photos and pale on dark or unsampleable pixels", () => {
   assert.equal(landingInk([235, 245, 250, 255]), "dark");

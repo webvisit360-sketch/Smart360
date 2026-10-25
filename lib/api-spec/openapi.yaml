@@ -5201,6 +5201,7 @@ components:
         coverTitleSize: { type: ["number", "null"] }
         coverTitleOpacity: { type: ["number", "null"] }
         coverTextColor: { type: ["string", "null"] }
+        landingTextMode: { type: string, enum: [auto, light, dark] }
         coverSubSize: { type: ["number", "null"] }
         coverSubOpacity: { type: ["number", "null"] }
         coverMetaSize: { type: ["number", "null"] }
@@ -5383,6 +5384,7 @@ components:
         coverTitleSize: { type: ["number", "null"] }
         coverTitleOpacity: { type: ["number", "null"] }
         coverTextColor: { type: ["string", "null"] }
+        landingTextMode: { type: string, enum: [auto, light, dark] }
         coverSubSize: { type: ["number", "null"] }
         coverSubOpacity: { type: ["number", "null"] }
         coverMetaSize: { type: ["number", "null"] }

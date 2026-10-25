@@ -2484,7 +2484,7 @@ function CoverView({ tenant, lang, t, onOpen, onSearch, onSelectLanguage }: { te
   const title = tenant.coverTitle || tenant.name;
   const tourUrl = virtualTourEmbedUrl(tenant.tourUrl);
   const [walkRevision, setWalkRevision] = useState(0);
-  const { rootRef, ink } = useLandingInk(tourUrl ? undefined : tenant.livingGuideHeroUrl || tenant.heroUrl, ".lg2-cover-mast", `${lang}:${title}:${tenant.address}:${tenant.coverSubtitle}:${tenant.heroFocusX}:${tenant.heroFocusY}`);
+  const { rootRef, ink } = useLandingInk(tourUrl ? undefined : tenant.livingGuideHeroUrl || tenant.heroUrl, ".lg2-cover-mast", `${lang}:${title}:${tenant.address}:${tenant.coverSubtitle}:${tenant.heroFocusX}:${tenant.heroFocusY}`, tenant.landingTextMode);
 
   return (
     <section ref={rootRef} data-landing-ink={ink} className="lg2-view lg2-cover is-on" style={simplePaletteStyle(resolveSimplePalette(tenant.simplePalette, tenant.simpleBaseColor)) as CSSProperties} aria-label={title} data-testid="screen-cover">

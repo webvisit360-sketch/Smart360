@@ -21,3 +21,12 @@ test("clearing the canonical address is not silently omitted from the save", () 
   const payload = tenantSavePayload({ ...form, address: "" }, "2", false, true) as Record<string, unknown>;
   assert.equal(payload.address, "");
 });
+
+test("landing text mode saves for self-service, never for concierge contact-only saves", () => {
+  for (const landingTextMode of ["auto", "light", "dark"]) {
+    const snapshot = { ...form, landingTextMode };
+    const payload = tenantSavePayload(snapshot, "2", false, true) as Record<string, unknown>;
+    assert.equal(payload.landingTextMode, landingTextMode);
+    assert.equal("landingTextMode" in tenantSavePayload(snapshot, "2", false, false), false);
+  }
+});

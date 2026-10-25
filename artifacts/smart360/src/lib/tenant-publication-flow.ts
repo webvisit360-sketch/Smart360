@@ -71,7 +71,7 @@ export function tenantSavePayload<T extends {
     const editableFields = [
       "name", "subtitle", "customDomain", "theme", "address", "mapQuery", "mapUrl", "tourUrl",
       "tourRecordingEnabled", "systemTileVisibility", "heroUrl", "logoUrl", "coverTitle", "coverSubtitle",
-      "coverTitleSize", "coverTitleOpacity", "coverTextColor", "coverSubSize",
+      "coverTitleSize", "coverTitleOpacity", "coverTextColor", "landingTextMode", "coverSubSize",
       "coverSubOpacity", "coverMetaSize", "coverMetaOpacity", "coverVeil", "tileVeil",
       "textScale", "textFont", "textColor", "coverAlign", "coverShowRating",
       "logoX", "logoY", "logoW", "logoOpacity", "navColorCover", "navColor",

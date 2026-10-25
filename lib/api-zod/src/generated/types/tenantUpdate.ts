@@ -7,6 +7,7 @@
  */
 import type { TenantUpdateGuestDesign } from './tenantUpdateGuestDesign';
 import type { TenantUpdateGuestUiMode } from './tenantUpdateGuestUiMode';
+import type { TenantUpdateLandingTextMode } from './tenantUpdateLandingTextMode';
 import type { TenantUpdateLivingGuideNavItem } from './tenantUpdateLivingGuideNavItem';
 import type { TenantUpdateNotificationChannel } from './tenantUpdateNotificationChannel';
 import type { TenantUpdateSimplePalette } from './tenantUpdateSimplePalette';
@@ -112,6 +113,7 @@ export interface TenantUpdate {
   coverTitleOpacity?: number | null;
   /** @nullable */
   coverTextColor?: string | null;
+  landingTextMode?: TenantUpdateLandingTextMode;
   /** @nullable */
   coverSubSize?: number | null;
   /** @nullable */

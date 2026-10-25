@@ -234,6 +234,7 @@ export default function AdminTenantEdit() {
     coverTitleSize: null as number | null,
     coverTitleOpacity: null as number | null,
     coverTextColor: null as string | null,
+    landingTextMode: "auto" as "auto" | "light" | "dark",
     coverSubSize: null as number | null,
     coverSubOpacity: null as number | null,
     coverMetaSize: null as number | null,
@@ -544,6 +545,7 @@ export default function AdminTenantEdit() {
         coverTitleSize: tenant.coverTitleSize ?? null,
         coverTitleOpacity: tenant.coverTitleOpacity ?? null,
         coverTextColor: tenant.coverTextColor ?? null,
+        landingTextMode: tenant.landingTextMode ?? "auto",
         coverSubSize: tenant.coverSubSize ?? null,
         coverSubOpacity: tenant.coverSubOpacity ?? null,
         coverMetaSize: tenant.coverMetaSize ?? null,
@@ -1568,6 +1570,19 @@ export default function AdminTenantEdit() {
             </CardContent>
           </Card>
 
+          <Card>
+            <CardContent className="pt-6 space-y-2">
+              <Label htmlFor="landing-text-mode">Besedilo na naslovnici</Label>
+              <select id="landing-text-mode" className="w-full rounded-md border bg-background p-2"
+                value={formData.landingTextMode}
+                onChange={e => setFormData({ ...formData, landingTextMode: e.target.value as "auto" | "light" | "dark" })}>
+                <option value="auto">Samodejno</option>
+                <option value="light">Svetlo</option>
+                <option value="dark">Temno</option>
+              </select>
+              <p className="text-sm text-muted-foreground">Velja za ime in naslov nad fotografijo ali 360 predstavitvijo v obeh dizajnih. Samodejno pri zunanji 360 predstavitvi uporabi svetlo besedilo. Gumb in zastave ostanejo nespremenjeni.</p>
+            </CardContent>
+          </Card>
           <div
             data-admin-preserve="cover-editor"
             className={formData.guestUiMode === "living-guide" ? "hidden" : undefined}

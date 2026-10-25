@@ -7,6 +7,7 @@
  */
 import type { TenantBaseGuestDesign } from './tenantBaseGuestDesign';
 import type { TenantBaseGuestUiMode } from './tenantBaseGuestUiMode';
+import type { TenantBaseLandingTextMode } from './tenantBaseLandingTextMode';
 import type { TenantBaseLivingGuideNavItem } from './tenantBaseLivingGuideNavItem';
 import type { TenantBaseNotificationChannel } from './tenantBaseNotificationChannel';
 import type { TenantBaseSimplePalette } from './tenantBaseSimplePalette';
@@ -127,6 +128,7 @@ export interface TenantBase {
   coverTitleOpacity?: number | null;
   /** @nullable */
   coverTextColor?: string | null;
+  landingTextMode?: TenantBaseLandingTextMode;
   /** @nullable */
   coverSubSize?: number | null;
   /** @nullable */

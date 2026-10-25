@@ -365,7 +365,7 @@ export const SELF_SERVICE_TENANT_WRITABLE_FIELDS = [
   "livingGuideHeroUrl", "tourUrl", "tourRecordingEnabled", "bgColor", "theme",
   "guestDesign", "simplePalette", "simpleBaseColor", "simpleDynamicBackground", "systemTileVisibility",
   "guestUiMode", "coverTitle", "coverSubtitle", "coverTitleSize",
-  "coverTitleOpacity", "coverTextColor", "coverSubSize", "coverSubOpacity",
+  "coverTitleOpacity", "coverTextColor", "landingTextMode", "coverSubSize", "coverSubOpacity",
   "coverMetaSize", "coverMetaOpacity", "coverVeil", "tileVeil", "textScale",
   "textFont", "textColor", "coverAlign", "coverShowRating", "logoX", "logoY",
   "logoW", "logoOpacity", "navColorCover", "navColor", "navColorOn",

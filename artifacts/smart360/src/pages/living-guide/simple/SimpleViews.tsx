@@ -21,7 +21,7 @@ export function SimpleCoverView({
   const hero = simpleHeroUrl(tenant);
   const tourUrl = virtualTourEmbedUrl(tenant.tourUrl);
   const [walkRevision, setWalkRevision] = useState(0);
-  const { rootRef, ink } = useLandingInk(tourUrl ? undefined : hero, ".lgs-small, .lgs-land h1, .lgs-adr", `${lang}:${title}:${tenant.address}:${focus}`);
+  const { rootRef, ink } = useLandingInk(tourUrl ? undefined : hero, ".lgs-small, .lgs-land h1, .lgs-adr", `${lang}:${title}:${tenant.address}:${focus}`, tenant.landingTextMode);
   return (
     <section ref={rootRef} data-landing-ink={ink} className="lgs-cover" aria-label={title} data-testid="screen-simple-cover">
       <div className="lgs-hero">

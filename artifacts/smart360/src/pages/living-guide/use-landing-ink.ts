@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from "react";
-import { coverImageCrop, landingInk } from "./landing-ink-model";
+import { coverImageCrop, landingInk, resolveLandingInk } from "./landing-ink-model";
 
 /** Never reads a third-party walk. A failed/tainted image retains white + shadow. */
-export function useLandingInk(source: string | null | undefined, textSelector: string, revision: string) {
+export function useLandingInk(source: string | null | undefined, textSelector: string, revision: string, mode?: string) {
   const rootRef = useRef<HTMLElement>(null);
   const [ink, setInk] = useState<"dark" | "pale">("pale");
   useEffect(() => {
+    if (mode === "dark" || mode === "light") return;
     setInk("pale");
     const root = rootRef.current;
     const img = root?.querySelector("img");
@@ -51,6 +52,6 @@ export function useLandingInk(source: string | null | undefined, textSelector: s
       sampleImage.onload = null; sampleImage.onerror = null;
       root.removeEventListener("animationend", schedule);
     };
-  }, [source, textSelector, revision]);
-  return { rootRef, ink };
+  }, [source, textSelector, revision, mode]);
+  return { rootRef, ink: resolveLandingInk(mode, ink) };
 }

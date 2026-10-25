@@ -1,4 +1,8 @@
 /** Relative sRGB luminance, averaged only across the host text's image region. */
+export function resolveLandingInk(mode: string | null | undefined, sampled: "dark" | "pale"): "dark" | "pale" {
+  return mode === "dark" ? "dark" : mode === "light" ? "pale" : sampled;
+}
+
 export function landingInk(pixels: ArrayLike<number>): "dark" | "pale" {
   let sum = 0, count = 0;
   const linear = (v: number) => {
