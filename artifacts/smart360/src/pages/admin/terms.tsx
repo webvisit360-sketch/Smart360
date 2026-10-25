@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef } from "react";
+import { withPreviewFrame } from "@/lib/preview-frame-safety";
 import rawTermsHtml from "@assets/pogoji_1_1787975884194.html?raw";
 
 const termsHtml = rawTermsHtml.replace(
@@ -20,7 +21,9 @@ export default function TermsPage() {
       // A malformed fragment cannot name a valid element, so keep it unchanged.
     }
 
-    frameRef.current?.contentDocument?.getElementById(fragment)?.scrollIntoView();
+    withPreviewFrame(frameRef.current, window.location.origin, (_win, doc) => {
+      doc.getElementById(fragment)?.scrollIntoView();
+    });
   }, []);
 
   useEffect(() => {

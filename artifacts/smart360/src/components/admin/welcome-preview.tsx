@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { withPreviewFrame } from "@/lib/preview-frame-safety";
 import { Eye, Loader2 } from "lucide-react";
 import { AdminButton as Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -28,13 +29,15 @@ function EmailPreviewFrame({ html }: { html: string }) {
         style={{ height }}
         onLoad={(event) => {
           observer.current?.disconnect();
-          const body = event.currentTarget.contentDocument?.body;
+          withPreviewFrame(event.currentTarget, window.location.origin, (_win, doc) => {
+          const body = doc.body;
           if (!body) return;
           const resize = () => setHeight(Math.ceil(body.getBoundingClientRect().height));
           // Same-origin permits measurement only; scripts/forms/popups remain blocked.
           observer.current = new ResizeObserver(resize);
           observer.current.observe(body);
           resize();
+          });
         }}
       />
     </div>

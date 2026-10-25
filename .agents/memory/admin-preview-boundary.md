@@ -34,6 +34,19 @@ including clicks on its nested pictogram or label—not the icon's SVG path.
 **Why:** Enostaven and Trend have different tile markup; anchoring the nested
 icon can look like an unselectable tile even when the record resolver succeeds.
 
+Treat iframe authority as temporary: recheck origin inside a try/catch around
+every operation, including effect cleanup and animation callbacks. An origin
+check at attachment time does not make later WindowProxy access safe.
+**Why:** A Maps link navigated the preview cross-origin; cleanup then read
+`fetch` from that window and crashed the admin. External navigation interception
+belongs to the admin parent, not normal guest behavior. Inherited-origin srcdoc
+frames must still be supported.
+
+Invalidate callback lifetimes before attempting cross-origin cleanup, even if
+listener removal cannot run.
+**Why:** A restored iframe document can retain old edit-mode listeners after
+foreign navigation; they must not intercept clicks once editing is off.
+
 Browser evidence must wait for the entry splash to disappear and use genuine
 hit-tested clicks (not forced clicks through it).
 **Why:** The detail mounts underneath the fullscreen splash. A forced title click

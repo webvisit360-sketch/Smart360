@@ -2,18 +2,18 @@ import { useEffect, useRef } from "react";
 import type { PreviewNode, PreviewResolution, PreviewTarget } from "@/lib/preview-edit-resolver";
 import { contactFieldFromHref, tooltipText } from "@/lib/preview-edit-resolver";
 import { capturePreviewAnchor } from "./preview-selection-anchor";
+import { withPreviewFrame } from "@/lib/preview-frame-safety";
 
 /** Draft announcements are read through the authenticated admin endpoint only
  * inside this admin-owned preview. Public guest requests are never changed. */
 export function usePreviewAnnouncements(iframe: HTMLIFrameElement | null, loadTick: number, tenantId: string, slug: string, enabled: boolean) {
   useEffect(() => {
-    const win = iframe?.contentWindow;
-    if (!enabled || !win || !slug || !tenantId) return;
-    try { if (win.location.origin !== window.location.origin) return; } catch { return; }
+    if (!enabled || !slug || !tenantId) return;
+    return withPreviewFrame(iframe, window.location.origin, (win, doc) => {
     const original = win.fetch;
     const bridge: typeof fetch = (input, init) => {
       const raw = typeof input === "string" ? input : input instanceof URL ? input.href : input.url;
-      const url = new URL(raw, win.location.href);
+      const url = new URL(raw, doc.baseURI);
       const method = init?.method ?? (typeof input === "object" && "method" in input ? input.method : "GET");
       if (url.origin === window.location.origin && url.pathname === `/api/guest/${encodeURIComponent(slug)}/announcements` && method.toUpperCase() === "GET") {
         return window.fetch(`/api/admin/tenants/${encodeURIComponent(tenantId)}/announcements`, { credentials: "include", signal: init?.signal });
@@ -21,7 +21,12 @@ export function usePreviewAnnouncements(iframe: HTMLIFrameElement | null, loadTi
       return original.call(win, input, init);
     };
     win.fetch = bridge;
-    return () => { if (win.fetch === bridge) win.fetch = original; };
+    return () => {
+      withPreviewFrame(iframe, window.location.origin, (current, currentDoc) => {
+        if (currentDoc === doc && current.fetch === bridge) current.fetch = original;
+      });
+    };
+    });
   }, [iframe, loadTick, tenantId, slug, enabled]);
 }
 
@@ -230,14 +235,8 @@ export function usePreviewEditBridge({
 
   useEffect(() => {
     if (!enabled || !iframe) return;
-    let doc: Document | null = null;
-    let win: Window | null = null;
-    try {
-      doc = iframe.contentDocument;
-      win = iframe.contentWindow;
-    } catch {
-      return; // not same-origin: nothing to attach
-    }
+    let active = true;
+    return withPreviewFrame(iframe, window.location.origin, (win, doc) => {
     if (!doc || !win || !doc.body) return;
     const overlay = ensureOverlay(doc);
     const cursorStyle = doc.createElement("style");
@@ -254,7 +253,7 @@ export function usePreviewEditBridge({
         '.lg2-photo-card, .lg2-utility-card, .lg2-hcard, .lg2-pcard, .lg2-sub2, .lg2-bottom-nav button',
       );
       const { nodes } = describeChain(tile ?? target);
-      const resolution = resolveRef.current(nodes, win!.location.pathname);
+      const resolution = resolveRef.current(nodes, new URL(doc.URL).pathname);
       // Nested SVG paths/text belong to the visible interactive tile/contact
       // row, not to an arbitrary React data-owner container.
       const el = tile ?? target.closest('[data-testid^="tile-"], a[href]')
@@ -264,6 +263,9 @@ export function usePreviewEditBridge({
     };
 
     const paint = () => {
+      if (!active) return;
+      withPreviewFrame(iframe, window.location.origin, (current, currentDoc) => {
+      if (currentDoc !== doc) return;
       const r = place(overlay.hover, hoverEl);
       if (r) {
         overlay.tip.style.display = "block";
@@ -286,10 +288,12 @@ export function usePreviewEditBridge({
         overlay.selected.style.display = "none";
       }
       frame = win!.requestAnimationFrame(paint);
+      });
     };
     frame = win.requestAnimationFrame(paint);
 
     const onMove = (event: Event) => {
+      if (!active) return;
       const target = event.target as Element | null;
       if (!target || target.nodeType !== 1 || overlay.root.contains(target)) return;
       if (target.closest(".guest-entry-splash")) { hoverEl = null; hoverResolution = null; return; }
@@ -312,21 +316,24 @@ export function usePreviewEditBridge({
     };
     // Block guest navigation/gestures before any guest handler runs.
     const block = (event: Event) => {
+      if (!active) return;
       event.preventDefault();
       event.stopPropagation();
       event.stopImmediatePropagation();
     };
     const onClick = (event: Event) => {
+      if (!active) return;
       block(event);
       const target = event.target as Element | null;
       if (target && target.nodeType === 1) choose(target);
     };
     const onKey = (event: KeyboardEvent) => {
+      if (!active) return;
       if (event.key !== "Enter" && event.key !== " ") return;
-      const active = doc!.activeElement;
-      if (!active || active === doc!.body) return;
+      const focused = doc!.activeElement;
+      if (!focused || focused === doc!.body) return;
       block(event);
-      choose(active);
+      choose(focused);
     };
     const blocked = ["pointerdown", "pointerup", "mousedown", "mouseup", "touchstart", "touchend", "dblclick", "submit", "auxclick", "contextmenu"];
     win.addEventListener("click", onClick, true);
@@ -336,6 +343,11 @@ export function usePreviewEditBridge({
     doc.addEventListener("mouseleave", onLeave, true);
 
     return () => {
+      // Revoke callbacks even when the old WindowProxy is no longer readable.
+      // BFCache may later restore that document with its old listeners intact.
+      active = false;
+      withPreviewFrame(iframe, window.location.origin, (current, currentDoc) => {
+      if (currentDoc !== doc) return;
       win!.cancelAnimationFrame(frame);
       win!.removeEventListener("click", onClick, true);
       win!.removeEventListener("keydown", onKey, true);
@@ -344,6 +356,8 @@ export function usePreviewEditBridge({
       doc!.removeEventListener("mouseleave", onLeave, true);
       overlay.root.remove();
       cursorStyle.remove();
+      });
     };
+    });
   }, [iframe, loadTick, enabled]);
 }

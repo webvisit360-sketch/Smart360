@@ -65,6 +65,7 @@ import { EmergencyContactsEditor } from "@/components/admin/emergency-contacts-e
 import { GuestDesignSetting } from "@/components/admin/guest-design-setting";
 import { PreviewEditToggle } from "@/components/admin/preview-edit-toggle";
 import { usePreviewEditBridge, usePreviewAnnouncements } from "@/components/admin/preview-edit-bridge";
+import { usePreviewNavigation } from "@/components/admin/preview-navigation";
 import { PreviewEditProvider } from "@/components/admin/preview-edit-context";
 import {
   buildContentIndex,
@@ -425,6 +426,8 @@ export default function AdminTenantEdit() {
   previewSelectionRef.current = previewSelection;
   const [previewFrame, setPreviewFrame] = useState<HTMLIFrameElement | null>(null);
   const [previewLoadTick, setPreviewLoadTick] = useState(0);
+  const [previewRecoveryKey, setPreviewRecoveryKey] = useState(0);
+  const previewUnavailable = usePreviewNavigation(previewFrame, previewLoadTick, previewEditMode);
   const [previewNotice, setPreviewNotice] = useState<string | null>(null);
 
   useEffect(() => {
@@ -1958,7 +1961,7 @@ export default function AdminTenantEdit() {
         )}
         <div className={`w-[289px] h-[629px] rounded-[32px] border-[7px] bg-black overflow-hidden shadow-xl mb-4 relative shrink-0 transition-colors ${previewEditMode ? "border-[#157347]" : "border-black"}`}>
           <iframe
-            key={`${previewKey}-${showStructure}`}
+            key={`${previewKey}-${showStructure}-${previewRecoveryKey}`}
             ref={setPreviewFrame}
             onLoad={() => setPreviewLoadTick((tick) => tick + 1)}
             data-testid="iframe-admin-preview"
@@ -1967,6 +1970,12 @@ export default function AdminTenantEdit() {
             style={{ transform: 'scale(0.684)' }}
             title="Predogled"
           />
+          {previewUnavailable && (
+            <div role="status" className="absolute inset-0 z-50 flex flex-col items-center justify-center gap-4 bg-white p-5 text-center text-[#14201F]" data-testid="preview-unavailable">
+              <p>Predogled je odprl zunanjo stran. Urejevalnik ostaja na voljo.</p>
+              <Button onClick={() => setPreviewRecoveryKey((key) => key + 1)}>Ponovno naloži predogled</Button>
+            </div>
+          )}
         </div>
         <p className="text-[14px] font-[650] text-[#14201F] mb-2">iPhone 17 Pro · 402 × 874</p>
         {!showStructure && (
