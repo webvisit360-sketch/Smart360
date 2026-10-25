@@ -66,7 +66,12 @@ export function ruleBulletTexts(
   const lines = body.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
   const marker = /^(?:[-*•]|\d+[.)])\s+/;
   if (lines.length && lines.every((line) => marker.test(line))) return lines.map((line) => line.replace(marker, "").trim());
-  const sanitized = sanitize(body);
+  // Rich-text editors append empty caret paragraphs after a list. These are
+  // editor scaffolding, not prose; ignore only empty blocks at the boundaries.
+  const emptyParagraph = String.raw`<p(?:\s[^>]*)?>(?:\s|&nbsp;|&#160;|<br\s*\/?>)*<\/p>`;
+  const sanitized = sanitize(body)
+    .replace(new RegExp(`^(?:\\s|${emptyParagraph})+`, "gi"), "")
+    .replace(new RegExp(`(?:\\s|${emptyParagraph})+$`, "gi"), "");
   if (!/^<ul(?:\s[^>]*)?>[\s\S]*<\/ul>$/i.test(sanitized)) return [];
   return Array.from(sanitized.matchAll(/<li(?:\s[^>]*)?>([\s\S]*?)<\/li>/gi))
     .map((m) => m[1].replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim()).filter(Boolean);

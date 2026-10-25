@@ -402,33 +402,7 @@ function distinctSubtitle(
 }
 
 function standaloneBodyBullets(body: unknown): string[] {
-  if (typeof body !== "string" || !body.trim()) return [];
-  const cleanBody = body.trim();
-  const lines = cleanBody
-    .split(/\r?\n/)
-    .map((line) => line.trim())
-    .filter(Boolean);
-
-  if (
-    lines.length > 0 &&
-    lines.every((line) => /^(?:[-*•]|\d+[.)])\s+/.test(line))
-  ) {
-    return lines.map((line) =>
-      line.replace(/^(?:[-*•]|\d+[.)])\s+/, "").trim(),
-    );
-  }
-
-  const sanitized = sanitizeHtml(cleanBody);
-  if (!/^<ul(?:\s[^>]*)?>[\s\S]*<\/ul>$/i.test(sanitized)) return [];
-  const items = Array.from(sanitized.matchAll(/<li(?:\s[^>]*)?>([\s\S]*?)<\/li>/gi))
-    .map((match) =>
-      match[1]
-        .replace(/<[^>]+>/g, " ")
-        .replace(/\s+/g, " ")
-        .trim(),
-    )
-    .filter(Boolean);
-  return items;
+  return ruleBulletTexts({ body }, sanitizeHtml);
 }
 
 function itemBullets(item: any, _category?: any): string[] {
