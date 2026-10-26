@@ -152,14 +152,14 @@ export const TILE_ICON_CATALOG = [
     "name": "Pohodi",
     "keywords": [],
     "stems": [],
-    "svg": "<svg viewBox=\"0 0 24 24\"><circle cx=\"14.6\" cy=\"4\" r=\"1.9\"/><path d=\"m13.2 6.6-3.4 3 2.6 2.7-4 7.9 2.3 1.1 3.6-7.1 2.9 1.9 1.7 5.1 2.2-.7-1.9-5.9-3.2-2.1 1.9-1.7 2.9 1.5.9-1.8-3.6-1.9z\"/></svg>"
+    "svg": "<svg viewBox=\"0 0 24 24\"><circle cx=\"12.4\" cy=\"2.9\" r=\"2.1\"/><path d=\"M12 5.8l.7 7\" stroke=\"currentColor\" stroke-width=\"3.4\" stroke-linecap=\"round\" fill=\"none\"/><rect x=\"8.5\" y=\"6.7\" width=\"2.8\" height=\"4.6\" rx=\"1.4\"/><path d=\"M12.7 12.6l2.7 3.5-.2 5.2M12.5 12.8l-2.4 3.6-1.7 4.4\" stroke=\"currentColor\" stroke-width=\"2.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\" fill=\"none\"/><path d=\"M12.1 7.1l3.6 2.8\" stroke=\"currentColor\" stroke-width=\"2.4\" stroke-linecap=\"round\" fill=\"none\"/><path d=\"M16.6 9.1v12.3\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" fill=\"none\"/></svg>"
   },
   {
     "id": "catalog:kolesarjenje",
     "name": "Kolesarjenje",
     "keywords": [],
     "stems": [],
-    "svg": "<svg viewBox=\"0 0 24 24\"><path d=\"M6.3 13.2a4.2 4.2 0 1 0 0 8.4 4.2 4.2 0 0 0 0-8.4zm0 6.7a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5zm11.4-6.7a4.2 4.2 0 1 0 0 8.4 4.2 4.2 0 0 0 0-8.4zm0 6.7a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5zM10.7 8.3 13 12l-1 1.8-2.9-4.6zm3.8-3.6 1.6 3h2.4v1.8h-3.4l-2-3.6z\"/><path d=\"M9.3 6.5h3.2L16 12.9l-1.5.9-3.6-5.6H9.3z\"/></svg>"
+    "svg": "<svg viewBox=\"0 0 24 24\"><path fill-rule=\"evenodd\" d=\"M5.5 10.9a4.9 4.9 0 1 0 0 9.8 4.9 4.9 0 0 0 0-9.8zm0 2a2.9 2.9 0 1 1 0 5.8 2.9 2.9 0 0 1 0-5.8zm13 -2a4.9 4.9 0 1 0 0 9.8 4.9 4.9 0 0 0 0-9.8zm0 2a2.9 2.9 0 1 1 0 5.8 2.9 2.9 0 0 1 0-5.8z\"/><circle cx=\"5.5\" cy=\"15.8\" r=\"1.1\"/><circle cx=\"18.5\" cy=\"15.8\" r=\"1.1\"/><path d=\"M5.5 15.8 8.8 8h6.4l3.3 7.8M8.8 8l3.5 7.8H5.5\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/><path d=\"M6.9 5.9h3.4M14.3 5.9l-.8 2.1 2.9.4\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/></svg>"
   },
   {
     "id": "catalog:posnemi-turo",
@@ -422,7 +422,7 @@ export const TILE_ICON_CATALOG = [
       "jesti",
       "hran"
     ],
-    "svg": "<svg viewBox=\"0 0 24 24\"><path fill-rule=\"evenodd\" d=\"M12 5.3a6.7 6.7 0 1 0 0 13.4A6.7 6.7 0 0 0 12 5.3zm0 2.4a4.3 4.3 0 1 1 0 8.6 4.3 4.3 0 0 1 0-8.6zM3.1 4.3h1.2v3.5h.8V4.3h1.2v3.5h.8V4.3h1.2v4.5a2.3 2.3 0 0 1-1.6 2.2v8.7H5.1v-8.7a2.3 2.3 0 0 1-1.6-2.2zm16.5 0c1.2 1.7 1.2 5.4 0 7.2v8.2h-1.4V4.6z\"/></svg>"
+    "svg": "<svg viewBox=\"0 0 24 24\"><path fill-rule=\"evenodd\" d=\"M12 4.9a7.1 7.1 0 1 0 0 14.2 7.1 7.1 0 0 0 0-14.2zm0 2.1a5 5 0 1 1 0 10 5 5 0 0 1 0-10zm0 2.1a2.9 2.9 0 1 1 0 5.8 2.9 2.9 0 0 1 0-5.8zM1.4 3.2h1.5v4h.9v-4h1.5v5.1a2 2 0 0 1-1.2 1.8v10.6H2.6V10.1a2 2 0 0 1-1.2-1.8zM18.9 3.3c2 1 3.1 3.6 2.4 6-.3 1-.9 1.8-1.6 2.2v9.2h-1.6V3.9c0-.5.4-.8.8-.6z\"/></svg>"
   },
   {
     "id": "catalog:nightlife",

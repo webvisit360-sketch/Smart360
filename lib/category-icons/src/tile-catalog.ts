@@ -28,6 +28,7 @@ export const LEGACY_TILE_CATALOG: Record<string, string> = {
 };
 
 export function catalogForTileKey(key: string): TileCatalogEntry | undefined {
+  if (key === "catalog:hiking") return tileCatalogEntry("catalog:pohodi");
   return tileCatalogEntry(key) ?? tileCatalogEntry(`catalog:${LEGACY_TILE_CATALOG[key]}`);
 }
 

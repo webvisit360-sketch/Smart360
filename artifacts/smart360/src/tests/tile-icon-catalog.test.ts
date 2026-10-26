@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { readFileSync } from "node:fs";
+import { createHash } from "node:crypto";
 import {
   AUTOMATIC_TILE_ICON, TILE_ICON_CATALOG, catalogForTileKey,
   matchTileCatalog, normalizeTileLabel, searchTileCatalog, tileKeyForCatalog,
@@ -12,7 +13,17 @@ test("all 61 catalog SVGs and stems are imported verbatim", () => {
   const decode = (s: string) => s.replace(/&quot;/g, '"').replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&");
   const source = [...html.matchAll(/<pre>([\s\S]*?)<\/pre>/g)].map(m => decode(m[1]));
   assert.equal(TILE_ICON_CATALOG.length, 61);
+  const renewed = readFileSync(new URL("../../../../attached_assets/ikone-gumbov-33_1793052889988.html", import.meta.url), "utf8");
+  for (const name of ["Pohodi", "Kolesarjenje", "Where to eat"]) {
+    const entry = TILE_ICON_CATALOG.find(e => e.name === name)!;
+    const block = renewed.slice(renewed.indexOf(`<div class="name">${name} `));
+    const svg = decode(block.match(/<pre>([\s\S]*?)<\/pre>/)![1]);
+    assert.equal(entry.svg, svg, name);
+    console.log(`SVG SHA-256 ${name}: ${createHash("sha256").update(svg).digest("hex")}`);
+    source[TILE_ICON_CATALOG.indexOf(entry)] = svg;
+  }
   assert.deepEqual(TILE_ICON_CATALOG.map(e => e.svg), source);
+  assert.equal(catalogForTileKey("catalog:hiking")!.svg, catalogForTileKey("hike")!.svg);
   assert.equal(new Set(TILE_ICON_CATALOG.map(e => e.id)).size, 61);
   const stemLines = [...html.matchAll(/<div class="kw"><b>Ključna debla \(stems\):<\/b>(.*?)<\/div>/g)]
     .map(m => m[1].split(/\s*\/\s*|\|/).map(s => s.trim()));
