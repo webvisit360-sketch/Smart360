@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { CHUNK_RETRY_KEY, isReloadSafe, requestSafeReload } from "@/lib/bundle-freshness";
 
 import { guideLanguage, type GuideLanguage } from "@workspace/guide-languages";
 import { extendCatalog } from "../../lib/guest-catalogs";
@@ -48,6 +49,7 @@ export function clearGuestLoadRetryGuard() {
 
 function claimAutomaticRetry(): boolean {
   try {
+    if (!isReloadSafe() || sessionStorage.getItem(CHUNK_RETRY_KEY)) return false;
     const key = retryKey();
     if (window.sessionStorage.getItem(key) === "1") return false;
     window.sessionStorage.setItem(key, "1");
@@ -64,13 +66,14 @@ export function GuestLoadRecovery({ lang }: { lang: string }) {
 
   useEffect(() => {
     if (!willReload) return;
-    const timer = window.setTimeout(() => window.location.reload(), RETRY_DELAY_MS);
+    const timer = window.setTimeout(() => requestSafeReload(), RETRY_DELAY_MS);
     return () => window.clearTimeout(timer);
   }, [willReload]);
 
   const retryManually = () => {
     clearGuestLoadRetryGuard();
-    window.location.reload();
+    if (!isReloadSafe() && !window.confirm("Opustim trenutno delo in ponovno naložim?")) return;
+    requestSafeReload(true);
   };
 
   return (

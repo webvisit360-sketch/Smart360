@@ -11,4 +11,8 @@ description: Why guest devices ran pre-publish frontends and the durable caching
 - **Verification protocol:** needs TWO owner publishes — after the FIRST, verify production headers (asset 1y immutable, index no-cache, reload picks up new build) and report actual values; after the SECOND, prove a held-open guest session self-reloads once, silently, preserving place, never mid-order/mid-message.
 - Missing files under /assets/ (and /version.json) must 404 loudly, never SPA-fallback to index.html — HTML handed to a `<script>` tag hides a broken deploy.
 - How to verify what prod actually serves: don't grep only the main bundle — guest shells load as LAZY chunks; resolve the chunk name from the served main bundle and grep that. Definitive proof: testing subagent exercises the real UI on the prod URL.
+- Chunk recovery must capture unsafe activity BEFORE React tears down the failed subtree. Effect cleanup removing a recording/message activity is not evidence that the user finished it; keep automatic recovery blocked for that failed document and offer explicit manual reload.
+  **Why:** Error boundaries unmount children, which otherwise turns an unsafe failure into an apparently safe reload and can lose work.
+- Clear a chunk retry marker only after the actual destination mounts, not a parent shell waiting for tenant data or authentication.
+  **Why:** The guest's nested lazy boundary allowed an outer success marker to clear on every loading screen, creating an infinite reload loop despite sessionStorage.
 - Maps intent rules are guarded by source-scan tests: living-guide pages must contain zero "directions" intents; legacy guest pages allow directions only at tenant level.

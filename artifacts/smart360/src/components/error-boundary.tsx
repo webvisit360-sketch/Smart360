@@ -1,4 +1,5 @@
 import React from "react";
+import { captureChunkFailure, ChunkFailureScreen, isChunkLoadError, recoverChunk } from "@/lib/chunk-recovery";
 
 interface Props {
   children: React.ReactNode;
@@ -18,7 +19,20 @@ export class ErrorBoundary extends React.Component<Props, State> {
   }
 
   static getDerivedStateFromError(error: Error): State {
+    captureChunkFailure(error);
     return { hasError: true, error };
+  }
+  componentDidMount() {
+    window.addEventListener("s360:chunk-error", this.onChunkError);
+  }
+  componentWillUnmount() {
+    window.removeEventListener("s360:chunk-error", this.onChunkError);
+  }
+  onChunkError = (event: Event) => {
+    this.setState({ hasError: true, error: (event as CustomEvent<Error>).detail });
+  };
+  componentDidCatch(error: Error) {
+    if (isChunkLoadError(error)) recoverChunk();
   }
 
   componentDidUpdate(prevProps: Props) {
@@ -29,6 +43,7 @@ export class ErrorBoundary extends React.Component<Props, State> {
 
   render() {
     if (this.state.hasError) {
+      if (isChunkLoadError(this.state.error)) return <ChunkFailureScreen />;
       if (this.props.fallback) return this.props.fallback;
       return (
         <div className="p-8 text-center text-red-500 font-medium bg-red-50 rounded-xl border border-red-200 m-4">

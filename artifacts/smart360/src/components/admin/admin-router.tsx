@@ -1,6 +1,7 @@
 import { Route, Switch, useLocation } from "wouter";
 import { lazy } from "react";
 import AdminLogin from "@/pages/admin/login";
+import { ChunkLoadSucceeded } from "@/lib/chunk-recovery";
 
 // Login must not wait for the content editor, preview bridge or onboarding.
 const AdminEnroll = lazy(() => import("@/pages/admin/enroll"));
@@ -15,15 +16,15 @@ export function AdminRouter() {
   const [location] = useLocation();
 
   if (location === "/admin/login") {
-    return <div data-surface="admin" className="admin-scope"><AdminLogin /></div>;
+    return <div data-surface="admin" className="admin-scope"><AdminLogin /><ChunkLoadSucceeded /></div>;
   }
 
   if (location === "/admin/enroll") {
-    return <div data-surface="admin" className="admin-scope"><AdminEnroll /></div>;
+    return <div data-surface="admin" className="admin-scope"><AdminEnroll /><ChunkLoadSucceeded /></div>;
   }
 
   if (location === "/admin/onboarding") {
-    return <div data-surface="admin" className="admin-scope"><HostOnboarding /></div>;
+    return <div data-surface="admin" className="admin-scope"><HostOnboarding /><ChunkLoadSucceeded /></div>;
   }
 
   return (
@@ -35,6 +36,7 @@ export function AdminRouter() {
           <Route path="/admin/enquiries" component={AdminEnquiriesPage} />
           <Route path="/admin/tenants/:id" component={AdminTenantEdit} />
         </Switch>
+        <ChunkLoadSucceeded />
       </AdminLayout>
     </div>
   );

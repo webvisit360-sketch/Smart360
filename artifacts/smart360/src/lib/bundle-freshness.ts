@@ -19,6 +19,16 @@ import { useEffect } from "react";
 declare const __BUILD_ID__: string;
 
 const activities = new Set<string>();
+export const CHUNK_RETRY_KEY = "s360:chunk-reload";
+let reloadClaimed = false;
+let recoveryBlocked = false;
+export function blockUnsafeRecovery(): void { recoveryBlocked = true; }
+export function requestSafeReload(manual = false): boolean {
+  if (reloadClaimed || (!manual && (!isReloadSafe() || recoveryBlocked))) return false;
+  reloadClaimed = true;
+  window.location.reload();
+  return true;
+}
 
 /** Mark a guest flow (open order sheet, sign-in, typed draft) as reload-unsafe. */
 export function beginGuestActivity(tag: string): void {
@@ -43,7 +53,7 @@ function hasTypedInput(): boolean {
 }
 
 export function isReloadSafe(): boolean {
-  return activities.size === 0 && !hasTypedInput();
+  return !recoveryBlocked && activities.size === 0 && !hasTypedInput();
 }
 
 /** Pure reload decision — unit-tested. */
@@ -75,6 +85,7 @@ export function useBundleFreshness(): void {
 
     const attempt = (latest: string) => {
       if (disposed) return;
+      try { if (sessionStorage.getItem(CHUNK_RETRY_KEY)) return; } catch { return; }
       let already: string | null = null;
       try {
         already = sessionStorage.getItem(RELOADED_KEY);
@@ -95,7 +106,7 @@ export function useBundleFreshness(): void {
         } catch {
           return; // cannot record the guard — do not risk a loop
         }
-        window.location.reload();
+        requestSafeReload();
         return;
       }
       // Outdated but unsafe right now (order open / draft typed): retry soon.

@@ -3,6 +3,7 @@ import { lazy, Suspense, type ReactNode, useCallback, useEffect, useRef, useStat
 import splashMarkSvg from './assets/tour-summary/smart360-kolobar-faceted.svg?raw';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ErrorBoundary } from '@/components/error-boundary';
+import { ChunkLoadSucceeded } from "@/lib/chunk-recovery";
 import { Toaster } from '@/components/ui/toaster';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import NotFound from '@/pages/not-found';
@@ -241,6 +242,7 @@ function GuestHost() {
             onLanguageChange={changeLivingGuideLanguage}
             onReady={signalGuestAppReady}
           />
+          <ChunkLoadSucceeded />
         </Suspense>
       </>
     );
@@ -253,6 +255,7 @@ function GuestHost() {
       <>
         <GuestEntrySplash ready={guestAppReady} />
         <GuestSwipe tenant={tenant} slug={slug} lang={lang} categoryId={categoryId} />
+        <ChunkLoadSucceeded />
       </>
     );
   }
@@ -262,6 +265,7 @@ function GuestHost() {
     <>
       <GuestEntrySplash ready={guestAppReady} />
       {isCategoryPath ? <GuestCategory /> : <GuestHome />}
+      {tenant && <ChunkLoadSucceeded />}
     </>
   );
 }
@@ -388,6 +392,7 @@ function Router() {
 
         <Route component={NotFound} />
       </Switch>
+      {(location === "/" || (location.split("/")[1] !== "admin" && RESERVED_SEGMENTS.has(location.split("/")[1]))) && <ChunkLoadSucceeded />}
       </Suspense>
     </RoutedErrorBoundary>
   );
