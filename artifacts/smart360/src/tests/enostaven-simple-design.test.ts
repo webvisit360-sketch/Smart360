@@ -138,9 +138,12 @@ test("host autosave carries the design fields", () => {
 });
 
 test("long labels shrink instead of clipping", () => {
-  assert.equal(simpleLabelSize("Wi-Fi"), 10);
-  assert.ok(simpleLabelSize("Zum Startbildschirm hinzufügen") < 10);
-  assert.equal(simpleLabelSize("Toevoegen aan beginscherm extra lang"), 8);
+  assert.equal(simpleLabelSize("Wi-Fi"), 12.5);
+  assert.equal(simpleLabelSize("KOLESARJENJE"), 10);
+  assert.equal(simpleLabelSize("ZNAMENITOSTI"), 10);
+  assert.equal(simpleLabelSize("DODAJ NA ZAČETNI ZASLON"), 12.5);
+  assert.equal(simpleLabelSize("WIDE", () => 83), 10);
+  assert.equal(simpleLabelSize("NARROW", () => 82), 12.5);
   const css = readFileSync(new URL("../pages/living-guide/simple/living-guide-simple.css", import.meta.url), "utf8");
   assert.doesNotMatch(css, /line-clamp/);
 });

@@ -325,9 +325,12 @@ body[data-t] .lgs-root .lg2-detail-hero--ambient {
 .lgs-root .lgs-sec { margin: 5.0505cqw 6.5657cqw 3.0303cqw !important; }
 .lgs-root .lgs-grid { column-gap: 7.5758cqw; row-gap: 4.798cqw; padding: 0 6.5657cqw; }
 .lgs-root .lgs-tile {
+  height: calc((100cqw - 2 * 6.5657cqw - 2 * 7.5758cqw) / 3);
+  min-height: 0;
   border-width: .5808cqw; border-radius: 4.798cqw;
   box-shadow: inset 0 0 0 .2525cqw var(--s-bg);
-  padding: 2.5253cqw 1.2626cqw 1.5152cqw;
+  padding: 2.2727cqw 1.0101cqw 1.5152cqw;
+  gap: 1.2626cqw;
 }
 .lgs-root .lgs-tile svg { width: 14.6465cqw; height: 14.6465cqw; margin-top: .2525cqw; }
 

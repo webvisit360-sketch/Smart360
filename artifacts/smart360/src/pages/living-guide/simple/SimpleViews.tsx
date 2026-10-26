@@ -1,5 +1,5 @@
 import { GuideBackCircle } from "./GuideHeaderControls";
-import { useState, type ReactNode } from "react";
+import { useState, useLayoutEffect, useRef, type ReactNode } from "react";
 import { usePullClose } from "./use-pull-close";
 import { virtualTourEmbedUrl } from "@/lib/virtual-tour";
 import { simpleCopy } from "./simple-copy";
@@ -42,10 +42,34 @@ export function SimpleCoverView({
 }
 
 function TileBody({ tile }: { tile: SimpleTile }) {
+  const labelRef = useRef<HTMLElement>(null);
+  const [size, setSize] = useState(() => simpleLabelSize(tile.label));
+  useLayoutEffect(() => {
+    const label = labelRef.current;
+    const button = label?.parentElement;
+    const home = button?.closest(".lgs-home");
+    if (!label || !button || !home) return;
+    let active = true;
+    const measure = () => {
+      if (!active) return;
+      const scale = home.getBoundingClientRect().width / 396;
+      const style = getComputedStyle(button);
+      const available = (button.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight)) / scale;
+      const context = document.createElement("canvas").getContext("2d");
+      if (!context) return;
+      context.font = `700 12.5px ${getComputedStyle(label).fontFamily}`;
+      setSize(simpleLabelSize(tile.label, word => context.measureText(word).width + word.length * 12.5 * .015, available));
+    };
+    measure();
+    void document.fonts.ready.then(measure);
+    const observer = new ResizeObserver(measure);
+    observer.observe(button);
+    return () => { active = false; observer.disconnect(); };
+  }, [tile.label]);
   return (
     <>
       <SimpleIcon icon={tile.icon} />
-      <b style={{ fontSize: `${simpleLabelSize(tile.label)}px` }}>{tile.label}</b>
+      <b ref={labelRef} style={{ fontSize: `${size / 3.96}cqw` }}>{tile.label}</b>
     </>
   );
 }

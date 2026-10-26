@@ -32,14 +32,12 @@ export type SimpleRuntime = {
 };
 
 /**
- * Label font size (px) so long labels in all 7 languages fit in at most three
- * lines without clipping: the icon shrinks (flex) and the text gets smaller.
+ * Variant B reference pixels. Browser supplies actual Lato word measurements;
+ * the deterministic initial estimate prevents large first-paint long words.
  */
-export function simpleLabelSize(label: string): number {
-  const longestWord = Math.max(0, ...label.split(/[\s/-]+/).map((w) => w.length));
-  if (label.length > 30 || longestWord > 13) return 8;
-  if (label.length > 20 || longestWord > 11) return 9;
-  return 10;
+export function simpleLabelSize(label: string, measure?: (word: string) => number, available = 82.06): number {
+  const words = label.toUpperCase().split(/\s+/).filter(Boolean);
+  return words.some(word => measure ? measure(word) > available : word.length >= 11) ? 10 : 12.5;
 }
 
 const vis = (rows: any[] | null | undefined) => (rows ?? []).filter((r) => r?.isVisible !== false);

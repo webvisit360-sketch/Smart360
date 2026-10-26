@@ -34,7 +34,9 @@ test("tile anatomy = master px scaled by phone width (v/3.96 cqw)", () => {
   const t = (p: string) => last((s) => s === ".lgs-root .lgs-tile", p);
   assert.equal(parseFloat(t("border-width")!), +(2.3 / 3.96).toFixed(4));
   assert.equal(parseFloat(t("border-radius")!), cq(19));
-  assert.deepEqual(num(t("padding")), [cq(10), cq(5), cq(6)]);
+  // Approved variant B changes only label space, not borders/icon/grid anatomy.
+  assert.deepEqual(num(t("padding")), [cq(9), cq(4), cq(6)]);
+  assert.equal(parseFloat(t("gap")!), cq(5));
   assert.equal(parseFloat(last((s) => s === ".lgs-root .lgs-tile svg", "width")!), cq(58));
   const g = (p: string) => last((s) => s === ".lgs-root .lgs-grid", p);
   assert.equal(parseFloat(g("column-gap")!), cq(30));

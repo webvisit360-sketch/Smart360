@@ -1,5 +1,9 @@
 # Smart360 trak
 
+## Enostaven — approved label variant B
+
+Second owner-approved deviation from the read-only master templates (first: outer shadow removal): **tile label 12.5px with 10px fallback for overlong single words, owner-approved.** The binding `0_pisava-primerjava_1793036307268.html` variant B supplies gap 5px and padding 9px 4px 6px at 396px, proportionally scaled. Fixed square dimensions remain unchanged; icons yield space to multiline labels. This supersedes the original label/padding values below for Enostaven home tiles only. Templates, Trend and landing remain unchanged.
+
 Smart360 trak = brand signature line. Allowed on brand/marketing surfaces: exported share images, sticker PDFs, e-mails. NEVER inside the guest or admin app UI, where colors carry semantic meaning.
 
 Trak uporablja iste barvne postaje kot izvoz ture: oranžna→modra→zelena→rumena→oranžna. Samostojen jantarni/oranžni okrasni trak ni dovoljen.
