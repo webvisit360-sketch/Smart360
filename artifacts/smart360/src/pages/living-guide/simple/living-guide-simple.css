@@ -226,6 +226,16 @@
 .lg2-app.lgs-root .v--det.on {
   transform:none; transition:none; opacity:1; pointer-events:auto;
 }
+.lg2-app.lgs-root .v--det[data-detail-transition="closing"] {
+  transform:translateY(100%);
+  transition:transform .34s cubic-bezier(.32, 0, .24, 1);
+  pointer-events:none;
+}
+.lg2-app.lgs-root .v--det[data-detail-transition="closing"] .lg2-detail-sheet {
+  /* Match the existing Trend sheet exit; the photo follows on the slower route. */
+  transform:translateY(100dvh);
+  transition:transform 180ms cubic-bezier(.4, 0, 1, 1);
+}
 .lgs-root .lgp-root, .lgs-root .lgs-sheet-panel, .lgs-root .lg2-ann-layer {
   touch-action:pan-y; overscroll-behavior-y:contain;
 }

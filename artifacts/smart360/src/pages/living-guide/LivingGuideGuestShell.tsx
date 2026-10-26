@@ -1259,7 +1259,6 @@ export default function LivingGuideGuestShell({
       let completed = false;
       const cleanup = () => {
         sheet?.removeEventListener("transitionend", onTransitionFinished);
-        sheet?.removeEventListener("transitioncancel", onTransitionFinished);
         if (zeroDurationFrame) window.cancelAnimationFrame(zeroDurationFrame);
         if (closeTransitionCleanupRef.current === cleanup) {
           closeTransitionCleanupRef.current = null;
@@ -1285,7 +1284,6 @@ export default function LivingGuideGuestShell({
       }
 
       sheet?.addEventListener("transitionend", onTransitionFinished);
-      sheet?.addEventListener("transitioncancel", onTransitionFinished);
       closeTransitionCleanupRef.current = cleanup;
       syncHeldViewStack(false);
       flushSync(() => setDetailTransitionPhase("closing"));

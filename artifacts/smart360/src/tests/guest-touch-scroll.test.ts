@@ -33,6 +33,9 @@ test("guest touch-scroll smoke — every main guest surface", { timeout: 600_000
     browser = await chromium.launch({executablePath:execFileSync("which",["chromium"],{encoding:"utf8"}).trim(), args:["--no-sandbox"]});
     const context = await browser.newContext({viewport:{width:390,height:844}, hasTouch:true, isMobile:true});
     const page = await context.newPage();
+    // TSX may retain named-function helpers when serializing nested browser
+    // callbacks for evaluate(); provide that harmless helper in the page realm.
+    await page.addInitScript("window.__name = (fn) => fn;");
     page.setDefaultTimeout(30_000);
     await page.route("**/api/**", route => route.fulfill({json: route.request().url().includes("/announcements") ? {
       announcements:[{id:"smoke-ann",titleSl:"Smoke notice",bodySl:"<p>Long notice text for touch scrolling.</p>".repeat(70),isVisible:true,validFrom:"2020-01-01T00:00:00Z",validTo:null,createdAt:"2020-01-01T00:00:00Z"}],
@@ -137,6 +140,341 @@ test("guest touch-scroll smoke — every main guest surface", { timeout: 600_000
       await page.setViewportSize({width:390,height:844});
     });
     await t.test("Trend home", async () => { await go("/home","trend"); await scrolled(".lg2-home-scroll-container"); });
+
+    // Browser-only published-data override: keep the real guest shell and swap
+    // just the selected item's media to exercise photo, no-photo and panorama
+    // detail geometry without changing application fixtures or source files.
+    type DetailMediaMode = "photo" | "none" | "panorama";
+    let detailMediaMode: DetailMediaMode = "photo";
+    await page.route("**/api/storage/img/**", route => route.fulfill({
+      status: 200,
+      contentType: "image/svg+xml",
+      body: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800"><rect width="1200" height="800" fill="#547b74"/></svg>',
+    }));
+    await page.route("**/verification-only/enostaven/meli-pu-en.json", async route => {
+      const response = await route.fetch();
+      const snapshot: any = await response.json();
+      const item = snapshot.sections.flatMap((s: any) => s.categories)
+        .flatMap((c: any) => c.items ?? [])
+        .find((entry: any) => entry.id === "8fba6248-2c10-43be-b337-519784a1ee3e");
+      assert.ok(item, "published fixture must contain the museum detail");
+      const original = item.media?.[0] ?? {
+        id: "touch-fixture-photo", itemId: item.id, tenantId: null,
+        url: "/api/storage/img/touch-fixture.svg", kind: "image",
+        width: 1200, height: 800, position: 0,
+      };
+      item.media = detailMediaMode === "none" ? [] : [{
+        ...original,
+        url: "/api/storage/img/touch-fixture.svg",
+        isPanorama: detailMediaMode === "panorama",
+      }];
+      await route.fulfill({ response, json: snapshot });
+    });
+
+    const categoryId = "6f4b5883-1171-41d0-b215-46285d12322c";
+    const itemId = "8fba6248-2c10-43be-b337-519784a1ee3e";
+    const sourceItemPath = `/__simple-fixture/c/${categoryId}/i/${itemId}`;
+    const sourceCategoryPath = `/__simple-fixture/c/${categoryId}`;
+    const sourceHomePath = "/__simple-fixture/home";
+    const openFixtureDetail = async (design: "trend" | "simple", media: DetailMediaMode) => {
+      detailMediaMode = media;
+      const palette = design === "trend" ? "trend" : "bordo";
+      await page.goto(`${base}${sourceItemPath}?tenant=melipu&palette=${palette}&source=published&lang=en`, {waitUntil:"domcontentloaded"});
+      await page.locator(".lg2-route-layer.v--det.on .lg2-detail-sheet").waitFor({timeout:90_000});
+      await page.locator(".lg2-detail-scroll").last().waitFor();
+    };
+    const startPullTrace = async () => page.evaluate(() => {
+      const w = window as any;
+      w.__pullTrace = { events: [], frames: [], running: true };
+      for (const type of ["touchstart", "touchmove", "touchend", "touchcancel"]) {
+        document.addEventListener(type, (event: any) => {
+          const touch = event.touches?.[0] ?? event.changedTouches?.[0];
+          w.__pullTrace?.events.push({
+            type, t: performance.now(), y: event.touches?.[0]?.clientY,
+            changedY: event.changedTouches?.[0]?.clientY,
+            cancelable: event.cancelable, prevented: event.defaultPrevented,
+            scrollTop: document.querySelector(".lg2-detail-scroll")?.scrollTop ?? null,
+          });
+        }, false);
+      }
+      window.addEventListener("resize", () => w.__pullTrace?.events.push({type:"resize", t:performance.now()}));
+      window.visualViewport?.addEventListener("resize", () => w.__pullTrace?.events.push({type:"visualViewport.resize", t:performance.now()}));
+      function sample() {
+        const trace = w.__pullTrace;
+        if (!trace?.running) return;
+        const sheet = document.querySelector(".lg2-route-layer.v--det .lg2-detail-sheet") as HTMLElement | null;
+        const route = document.querySelector(".lg2-route-layer.v--det") as HTMLElement | null;
+        const hero = document.querySelector(".lg2-hero-image-main") as HTMLElement | null;
+        function matrixY(element: HTMLElement | null) {
+          if (!element) return null;
+          const transform = getComputedStyle(element).transform;
+          return transform === "none" ? 0 : new DOMMatrixReadOnly(transform).m42;
+        }
+        function rect(element: HTMLElement | null) {
+          return element?.getBoundingClientRect();
+        }
+        trace.frames.push({
+          t: performance.now(), path: location.pathname,
+          phase: sheet?.dataset.lgSheetPhase ?? null,
+          offset: Number(sheet?.dataset.lgSheetOffset ?? 0),
+          sheetY: matrixY(sheet), sheetTop: rect(sheet)?.top ?? null,
+          heroTop: rect(hero)?.top ?? null, routeY: matrixY(route),
+          routePhase: route?.dataset.detailTransition ?? null,
+          routeTransition: route ? getComputedStyle(route).transition : null,
+          height: innerHeight,
+          scrollTop: document.querySelector(".lg2-detail-scroll")?.scrollTop ?? null,
+        });
+        requestAnimationFrame(sample);
+      }
+      w.__pullSample = sample;
+      requestAnimationFrame(sample);
+    });
+    const restartPullTrace = async () => page.evaluate(() => {
+      const w = window as any;
+      w.__pullTrace = {events:[], frames:[], running:true};
+      w.__pullSample?.();
+    });
+    const dispatchPull = async (startY: number, offsets: number[], id: number, interval = 40) => {
+      const x = 180;
+      await cdp.send("Input.dispatchTouchEvent", {type:"touchStart", touchPoints:[{x,y:startY,id}]});
+      for (const offset of offsets) {
+        await cdp.send("Input.dispatchTouchEvent", {type:"touchMove", touchPoints:[{x,y:startY+offset,id}]});
+        await page.waitForTimeout(interval);
+      }
+      await cdp.send("Input.dispatchTouchEvent", {type:"touchEnd", touchPoints:[]});
+    };
+
+    await t.test("detail pull capture — both designs × photo/no photo/panorama", async matrix => {
+      for (const design of ["trend", "simple"] as const) {
+        for (const media of ["photo", "none", "panorama"] as const) {
+          await matrix.test(`${design} / ${media}`, async () => {
+            await openFixtureDetail(design, media);
+            await startPullTrace();
+            const box = await page.locator(".v--det.on .lg2-detail-scroll").last().boundingBox();
+            assert.ok(box, "detail scroll region must be visible");
+            const startY = Math.round(Math.min(560, box.y + box.height - 70));
+            const startTarget = await page.evaluate(({x, y}) => document.elementFromPoint(x, y)?.className ?? null, {x:180,y:startY});
+            console.log("DETAIL_TOUCH_CASE", {design, media, startY, startTarget, box});
+
+            // Include the first few sub-threshold pixels in the same continuous
+            // finger sequence, then continue a slow 60px pull below close distance.
+            await dispatchPull(startY, [2,4,7,10,18,26,34,42,50,60], 91, 45);
+            await page.waitForTimeout(320);
+            const gentle = await page.evaluate(() => {
+              const trace = (window as any).__pullTrace;
+              trace.running = false;
+              const sheet = document.querySelector(".lg2-route-layer.v--det .lg2-detail-sheet") as HTMLElement | null;
+              const scroll = document.querySelector(".lg2-detail-scroll") as HTMLElement | null;
+              return {
+                url: location.pathname, phase: sheet?.dataset.lgSheetPhase ?? null,
+                offset: Number(sheet?.dataset.lgSheetOffset ?? 0),
+                scrollTop: scroll?.scrollTop ?? null, events: trace.events,
+                frames: trace.frames, resizeCount: trace.events.filter((e: any) => e.type.includes("resize")).length,
+              };
+            });
+            assert.equal(gentle.url, sourceItemPath, `${design}/${media}: sub-threshold pull must not close`);
+            assert.equal(gentle.scrollTop, 0, `${design}/${media}: gesture begins at detail top`);
+            const moves = gentle.events.filter((event: any) => event.type === "touchmove");
+            assert.ok(moves.length > 0, `${design}/${media}: browser must deliver touchmove`);
+            assert.equal(gentle.events.some((event: any) => event.type === "touchcancel"), false,
+              `${design}/${media}: no touchcancel during a slow downward pull`);
+            if (design === "trend") {
+              assert.ok(moves.some((event: any) => event.cancelable && event.prevented),
+                `${media}: Trend must cancel vertical touchmove to own the drag`);
+              assert.ok(gentle.frames.some((frame: any) => frame.phase === "dragging" && frame.sheetY > 0),
+                `${media}: Trend must expose intermediate sheet transforms`);
+              assert.ok(gentle.offset >= 0 && gentle.phase === "settling",
+                `${media}: Trend sub-threshold pull should settle without closing`);
+            } else {
+              assert.ok(moves.some((event: any) => !event.prevented),
+                `${media}: Enostaven must leave touchmove available to native scrolling`);
+              assert.equal(gentle.frames.some((frame: any) => frame.sheetY > 0), false,
+                `${media}: Enostaven touchmove must not translate the sheet`);
+            }
+            assert.equal(gentle.resizeCount, 0, `${design}/${media}: pull must not resize the viewport`);
+            const heroFrames = gentle.frames.filter((frame: any) => frame.heroTop !== null);
+            console.log("DETAIL_TOUCH_TRACE", {
+              design, media,
+              firstMoveDelta: moves[0]?.changedY - startY,
+              firstDragFrame: gentle.frames.find((frame: any) => frame.phase === "dragging") ?? null,
+              maxSheetY: Math.max(0, ...gentle.frames.map((frame: any) => frame.sheetY ?? 0)),
+              heroTopRange: heroFrames.length ? [Math.min(...heroFrames.map((f: any) => f.heroTop)), Math.max(...heroFrames.map((f: any) => f.heroTop))] : [],
+              moveCancellation: moves.map((event: any) => [event.cancelable,event.prevented]),
+              frames: gentle.frames.map((frame: any) => [
+                Math.round(frame.t), frame.phase, Number((frame.sheetY ?? 0).toFixed(1)),
+                Number((frame.heroTop ?? 0).toFixed(1)), Number((frame.routeY ?? 0).toFixed(1)),
+              ]),
+            });
+
+            // One qualifying pull must be sufficient to return to the browser
+            // back source. Capture every animation frame through that handoff.
+            await restartPullTrace();
+            await dispatchPull(startY, [12,30,55,80,105,130], 92, 40);
+            await page.waitForFunction(path => location.pathname !== path, sourceItemPath, {timeout:10_000});
+            const closed = await page.evaluate(() => {
+              const trace = (window as any).__pullTrace;
+              trace.running = false;
+              return {path:location.pathname, events:trace.events, frames:trace.frames};
+            });
+            assert.ok(!closed.path.includes(`/i/${itemId}`), `${design}/${media}: one pull must return to its source`);
+            const closeEnd = closed.events.find((event: any) => event.type === "touchend");
+            if (design === "simple") {
+              assert.ok(closeEnd?.prevented, `${media}: qualifying Enostaven touchend suppresses the synthetic click`);
+              assert.ok(closed.frames.some((frame: any) =>
+                frame.routePhase === "closing" && frame.routeY > 2 && frame.routeY < frame.height - 2),
+              `${media}: Enostaven close has intermediate route transforms`);
+              assert.ok(closed.frames.some((frame: any) =>
+                frame.routePhase === "closing" && frame.routeY > 2 && frame.sheetY > 2),
+              `${media}: content sheet exits ahead of the photo's route transform`);
+              const transition = closed.frames.find((frame: any) => frame.routePhase === "closing")?.routeTransition ?? "";
+              assert.match(transition, /0\.34s cubic-bezier\(0\.32, 0, 0\.24, 1\)/,
+                `${media}: Enostaven close uses the 340ms Trend close curve`);
+            } else {
+              assert.ok(closed.frames.some((frame: any) => frame.phase === "closing" && frame.sheetY > 0),
+                `${media}: Trend sheet reaches a closing transform on one pull`);
+              assert.ok(closed.frames.some((frame: any) =>
+                frame.routePhase === "closing" && frame.routeY > 2 && frame.routeY < frame.height - 2),
+              `${media}: Trend route moves through intermediate transforms before source`);
+            }
+            console.log("DETAIL_SINGLE_PULL_CLOSE", {
+              design, media, destination:closed.path,
+              closeTouchEndPrevented:closeEnd?.prevented,
+              closingFrames:closed.frames.filter((frame: any) =>
+                frame.phase === "closing" || frame.routePhase === "closing")
+                .map((frame: any) => [Math.round(frame.t), frame.phase, frame.sheetY, frame.routePhase, frame.routeY]),
+            });
+          });
+        }
+      }
+    });
+
+    await t.test("Trend close ignores route transitioncancel and waits for real close transition before back-source swap", async () => {
+      await openFixtureDetail("trend", "photo");
+      await page.evaluate(() => {
+        const w = window as any;
+        w.__LG2_TEST_HOLD_CLOSE_SWAP__ = true;
+        w.__closeRegression = { events: [], frames: [], running: true };
+        window.addEventListener("lg2:detail-close-animation-end", () => w.__closeRegression.events.push("animation-end"));
+        window.addEventListener("lg2:detail-close-handoff-frame", () => w.__closeRegression.events.push("handoff-frame"));
+        window.addEventListener("lg2:detail-close-swap", () => w.__closeRegression.events.push("swap"));
+        document.addEventListener("transitioncancel", (event: any) => {
+          if (event.target?.matches?.(".lg2-route-layer.v--det")) w.__closeRegression.events.push(`cancel:${event.propertyName}`);
+        }, true);
+        function sample() {
+          const trace = w.__closeRegression;
+          if (!trace.running) return;
+          const route = document.querySelector(".lg2-route-layer.v--det") as HTMLElement | null;
+          const transform = route ? getComputedStyle(route).transform : "none";
+          trace.frames.push({
+            t: performance.now(), path: location.pathname,
+            transition: route?.dataset.detailTransition ?? null,
+            y: transform === "none" ? 0 : new DOMMatrixReadOnly(transform).m42,
+            height: innerHeight,
+          });
+          requestAnimationFrame(sample);
+        }
+        requestAnimationFrame(sample);
+      });
+      const box = await page.locator(".v--det.on .lg2-detail-scroll").last().boundingBox();
+      assert.ok(box);
+      const startY = Math.round(Math.min(560, box.y + box.height - 70));
+      await dispatchPull(startY, [12,30,50,75,100,130], 92, 40);
+      const closingRoute = page.locator(`.lg2-route-layer.v--det[data-detail-transition="closing"]`);
+      await closingRoute.waitFor({state:"attached",timeout:10_000});
+      await page.waitForTimeout(30);
+      await page.evaluate(() => {
+        const route = document.querySelector(".lg2-route-layer.v--det")!;
+        route.dispatchEvent(new TransitionEvent("transitioncancel", {bubbles:true, propertyName:"transform", elapsedTime:0.08}));
+      });
+      await page.waitForTimeout(40);
+      const afterCancel = await page.evaluate(() => ({
+        path: location.pathname,
+        events: (window as any).__closeRegression.events,
+        phase: document.querySelector(".lg2-route-layer.v--det")?.getAttribute("data-detail-transition"),
+      }));
+      assert.ok(afterCancel.events.includes("cancel:transform"), "test must fire transitioncancel on the closing route");
+      assert.equal(afterCancel.events.includes("animation-end"), false,
+        "transitioncancel from interrupted opening/route motion must not complete the close");
+      assert.equal(afterCancel.path, sourceItemPath, "source detail remains until its closing transition ends");
+      await page.waitForFunction(() => (window as any).__closeRegression?.events.includes("animation-end"), {timeout:10_000});
+      await page.waitForFunction(() => (window as any).__closeRegression?.events.includes("handoff-frame"), {timeout:5_000});
+      const held = await page.evaluate(() => ({
+        path: location.pathname,
+        events: (window as any).__closeRegression.events,
+        frames: (window as any).__closeRegression.frames,
+      }));
+      assert.equal(held.path, sourceHomePath, "the browser back source is reached after the close transition");
+      assert.equal(held.events.includes("swap"), false);
+      assert.ok(held.frames.some((frame: any) =>
+        frame.transition === "closing" && frame.y > 2 && frame.y < frame.height - 2 && frame.path === sourceItemPath),
+      "an intermediate route transform must be painted before the destination is swapped in");
+      await page.evaluate(() => {
+        (window as any).__closeRegression.running = false;
+        window.dispatchEvent(new Event("lg2:test-release-close-swap"));
+      });
+      await page.waitForFunction(path => location.pathname === path, sourceHomePath, {timeout:10_000});
+      await page.waitForFunction(() => (window as any).__closeRegression?.events.includes("swap"), {timeout:5_000});
+      const final = await page.evaluate(() => (window as any).__closeRegression.events);
+      assert.ok(final.includes("swap"), "back-source route should be swapped in after the real transition");
+    });
+
+    await t.test("opening transition interruption does not prematurely complete close when it overlaps", async opening => {
+      detailMediaMode = "none";
+      await page.goto(`${base}${sourceCategoryPath}?tenant=melipu&palette=trend&source=published&lang=en`, {waitUntil:"domcontentloaded"});
+      await page.locator(".lg2-route-layer.v--det.on").waitFor({timeout:90_000});
+      await page.waitForFunction(() =>
+        Boolean(document.querySelector(".lg2-route-layer.v--det.on")?.hasAttribute("data-open-transition-end-ms")),
+      null, {timeout:5_000});
+      await page.evaluate(() => {
+        const w = window as any;
+        w.__openingInterrupt = [];
+        document.addEventListener("transitionrun", (event: any) => {
+          if (event.target?.matches?.(".lg2-route-layer.v--det")) {
+            w.__openingInterrupt.push({type:"run", property:event.propertyName, phase:event.target.dataset.detailTransition});
+          }
+        }, false);
+        document.addEventListener("transitioncancel", (event: any) => {
+          if (event.target?.matches?.(".lg2-route-layer.v--det")) {
+            w.__openingInterrupt.push({type:"cancel", property:event.propertyName, phase:event.target.dataset.detailTransition});
+          }
+        }, false);
+        window.addEventListener("lg2:detail-close-animation-end", () => w.__openingInterrupt.push({type:"close-end"}));
+      });
+      await page.locator(".lg2-route-layer.v--det.on .lg2-sub2")
+        .filter({hasText:/Izolana Museum/i}).first().click();
+      const interruptible = await page.waitForFunction(() => {
+        const route = document.querySelector(".lg2-route-layer.v--det.on") as HTMLElement | null;
+        const prose = document.querySelector(".lg2-route-layer.v--det.on .lg2-detail-prose");
+        const hit = document.elementFromPoint(180, 560);
+        if (!route || !prose || !prose.contains(hit)) return false;
+        const transform = getComputedStyle(route).transform;
+        const y = transform === "none" ? 0 : new DOMMatrixReadOnly(transform).m42;
+        return y > 8 && y < innerHeight - 8 &&
+          (window as any).__openingInterrupt.some((event: any) => event.type === "run");
+      }, null, {timeout:3_000}).then(() => true).catch(() => false);
+      if (!interruptible) {
+        opening.skip("the published item did not expose a touchable sheet while its opening transform was active");
+        return;
+      }
+      await dispatchPull(560, [15,40,70,100,130], 93, 20);
+      const interrupted = await page.waitForFunction(() =>
+        (window as any).__openingInterrupt.some((event: any) => event.type === "cancel"),
+      null, {timeout:3_000}).then(() => true).catch(() => false);
+      if (!interrupted) {
+        opening.skip("the real touch did not interrupt the opening route transition on this browser run");
+        return;
+      }
+      const afterInterrupt = await page.evaluate(() => (window as any).__openingInterrupt);
+      const cancelIndex = afterInterrupt.findIndex((event: any) => event.type === "cancel");
+      const closeEndIndex = afterInterrupt.findIndex((event: any) => event.type === "close-end");
+      assert.ok(closeEndIndex < 0 || closeEndIndex > cancelIndex,
+        "opening transitioncancel must not complete the close ahead of its closing transition");
+      await page.waitForFunction(() =>
+        (window as any).__openingInterrupt.some((event: any) => event.type === "close-end"),
+      null, {timeout:10_000});
+      await page.waitForFunction(path => location.pathname === path, sourceCategoryPath, {timeout:10_000});
+      console.log("INTERRUPTED_OPENING_TRACE", afterInterrupt);
+    });
   } finally {
     await browser?.close();
     vite.kill("SIGTERM");

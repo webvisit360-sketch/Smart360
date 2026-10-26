@@ -9,6 +9,12 @@ Trend detail text stays fixed on one continuous sheet; the entire sheet moves fr
 
 **How to apply:** Keep the motion controller shared across every detail template. Preserve intermediate positions, allow only short momentum, close below the initial position, and keep the Order dock fixed to the viewport.
 
+Opening and closing have different contracts: Enostaven's immediate destination paint must not disable its exit animation. A cancelled CSS transition is not evidence that a new close has finished; only the actual closing transition end may release the held source.
+
+**Why:** The no-flash destination override also suppressed Enostaven exits, while a shared cancellation listener could complete closing before its transform ended. Real touch tests did not reproduce the owner's unreliable first pull on iPhone; Chromium success is not physical-iOS proof.
+
+**How to apply:** Preserve the instant-open rule, scope animation to closing, and assert intermediate frames before route replacement. Do not diagnose gesture reliability from CSS changes or a synthetic cancellation event alone.
+
 Enostaven category lists must be tested with touch gestures STARTING ON CLICKABLE LOCATION ROWS, with enough rows to overflow. Never substitute mouse-wheel tests or individual-detail tests. Native scrolling owns upward, sideways and mid-scroll gestures. Closing may engage only from the true top with an initially downward drag; reversing an upward gesture must not turn it into a close.
 
 **Why:** The owner reproduced unreachable category rows after an earlier fix that only verified individual detail content. The old sheet controller ignored button-row touches while overflow prevented native scrolling.
