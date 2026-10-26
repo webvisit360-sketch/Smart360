@@ -15,6 +15,12 @@ Opening and closing have different contracts: Enostaven's immediate destination 
 
 **How to apply:** Preserve the instant-open rule, scope animation to closing, and assert intermediate frames before route replacement. Do not diagnose gesture reliability from CSS changes or a synthetic cancellation event alone.
 
+The owner's close interaction requires continuous 1:1 finger tracking in both designs, with the photo lagging; a top-down close that reverses must return to neutral without feeding momentum into content scrolling.
+
+**Why:** A release-only gesture and an animated exit are not interactive dragging. Equal stacking levels for a retained category and the later base route can also expose Home despite correctly preserving the category DOM.
+
+**How to apply:** Verify actual mid-drag geometry and exposed layer ordering, not just successful navigation. Keep native Enostaven content scrolling separate from top-down close ownership.
+
 Enostaven category lists must be tested with touch gestures STARTING ON CLICKABLE LOCATION ROWS, with enough rows to overflow. Never substitute mouse-wheel tests or individual-detail tests. Native scrolling owns upward, sideways and mid-scroll gestures. Closing may engage only from the true top with an initially downward drag; reversing an upward gesture must not turn it into a close.
 
 **Why:** The owner reproduced unreachable category rows after an earlier fix that only verified individual detail content. The old sheet controller ignored button-row touches while overflow prevented native scrolling.

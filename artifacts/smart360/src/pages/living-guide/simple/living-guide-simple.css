@@ -214,8 +214,10 @@
 .lgs-root .lg2-detail-sheet {
   position:relative; top:auto;
   margin-top:min(calc(var(--lg2-detail-hero-height) - 26px), var(--lg2-detail-photo-reveal));
-  transform:none; transition:none; will-change:auto;
+  transform:translateY(var(--lg2-sheet-translate-y, 0px));
+  transition:transform 260ms cubic-bezier(.2,.8,.2,1); will-change:auto;
 }
+.lgs-root .lg2-detail-sheet[data-lg-sheet-phase="dragging"] { transition:none; }
 .lgs-root .lg2-detail-sheet--full-height,
 .lgs-root .lg2-detail-sheet--solo { margin-top:0; }
 .lgs-root .lg2-sub2 { touch-action:pan-y; }

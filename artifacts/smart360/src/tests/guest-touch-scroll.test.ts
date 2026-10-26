@@ -146,6 +146,7 @@ test("guest touch-scroll smoke — every main guest surface", { timeout: 600_000
     // detail geometry without changing application fixtures or source files.
     type DetailMediaMode = "photo" | "none" | "panorama";
     let detailMediaMode: DetailMediaMode = "photo";
+    let overflowCategoryItems = false;
     await page.route("**/api/storage/img/**", route => route.fulfill({
       status: 200,
       contentType: "image/svg+xml",
@@ -168,6 +169,19 @@ test("guest touch-scroll smoke — every main guest surface", { timeout: 600_000
         url: "/api/storage/img/touch-fixture.svg",
         isPanorama: detailMediaMode === "panorama",
       }];
+      if (overflowCategoryItems) {
+        const category = snapshot.sections.flatMap((s: any) => s.categories)
+          .find((entry: any) => entry.id === "6f4b5883-1171-41d0-b215-46285d12322c");
+        assert.ok(category, "published fixture must contain the Heritage category");
+        category.items = [
+          ...(category.items ?? []),
+          ...Array.from({length:24}, (_, index) => ({
+            ...item,
+            id: `00000000-0000-4000-8000-${String(index + 1).padStart(12, "0")}`,
+            position: 1000 + index,
+          })),
+        ];
+      }
       await route.fulfill({ response, json: snapshot });
     });
 
@@ -182,13 +196,17 @@ test("guest touch-scroll smoke — every main guest surface", { timeout: 600_000
       await page.goto(`${base}${sourceItemPath}?tenant=melipu&palette=${palette}&source=published&lang=en`, {waitUntil:"domcontentloaded"});
       await page.locator(".lg2-route-layer.v--det.on .lg2-detail-sheet").waitFor({timeout:90_000});
       await page.locator(".lg2-detail-scroll").last().waitFor();
+      await page.locator(".lg2-route-layer.v--det").evaluate(async element => {
+        await Promise.all(element.getAnimations({subtree:true}).map(animation => animation.finished.catch(() => {})));
+      });
     };
-    const startPullTrace = async () => page.evaluate(() => {
+    const startPullTrace = async (startY: number) => page.evaluate((startY) => {
       const w = window as any;
-      w.__pullTrace = { events: [], frames: [], running: true };
+      w.__pullTrace = { events: [], frames: [], running: true, startY, lastY: startY };
       for (const type of ["touchstart", "touchmove", "touchend", "touchcancel"]) {
         document.addEventListener(type, (event: any) => {
           const touch = event.touches?.[0] ?? event.changedTouches?.[0];
+          if (touch?.clientY != null) w.__pullTrace.lastY = touch.clientY;
           w.__pullTrace?.events.push({
             type, t: performance.now(), y: event.touches?.[0]?.clientY,
             changedY: event.changedTouches?.[0]?.clientY,
@@ -205,6 +223,8 @@ test("guest touch-scroll smoke — every main guest surface", { timeout: 600_000
         const sheet = document.querySelector(".lg2-route-layer.v--det .lg2-detail-sheet") as HTMLElement | null;
         const route = document.querySelector(".lg2-route-layer.v--det") as HTMLElement | null;
         const hero = document.querySelector(".lg2-hero-image-main") as HTMLElement | null;
+        const held = document.querySelector(".lg2-held-stack") as HTMLElement | null;
+        const base = document.querySelector(".lg2-base-route-layer") as HTMLElement | null;
         function matrixY(element: HTMLElement | null) {
           if (!element) return null;
           const transform = getComputedStyle(element).transform;
@@ -217,21 +237,27 @@ test("guest touch-scroll smoke — every main guest surface", { timeout: 600_000
           t: performance.now(), path: location.pathname,
           phase: sheet?.dataset.lgSheetPhase ?? null,
           offset: Number(sheet?.dataset.lgSheetOffset ?? 0),
+          fingerOffset: trace.lastY - trace.startY,
           sheetY: matrixY(sheet), sheetTop: rect(sheet)?.top ?? null,
           heroTop: rect(hero)?.top ?? null, routeY: matrixY(route),
           routePhase: route?.dataset.detailTransition ?? null,
           routeTransition: route ? getComputedStyle(route).transition : null,
+          heldZ: held ? getComputedStyle(held).zIndex : null,
+          heldHeritage: held?.innerText.includes("Heritage") ?? false,
+          sourceScroll: held?.querySelector(".lg2-detail-scroll")?.scrollTop ?? null,
+          baseZ: base ? getComputedStyle(base).zIndex : null,
+          detailZ: route ? getComputedStyle(route).zIndex : null,
           height: innerHeight,
           scrollTop: document.querySelector(".lg2-detail-scroll")?.scrollTop ?? null,
         });
         requestAnimationFrame(sample);
       }
       w.__pullSample = sample;
-      requestAnimationFrame(sample);
-    });
+      sample();
+    }, startY);
     const restartPullTrace = async () => page.evaluate(() => {
       const w = window as any;
-      w.__pullTrace = {events:[], frames:[], running:true};
+      w.__pullTrace = {events:[], frames:[], running:true, startY:0, lastY:0};
       w.__pullSample?.();
     });
     const dispatchPull = async (startY: number, offsets: number[], id: number, interval = 40) => {
@@ -249,10 +275,10 @@ test("guest touch-scroll smoke — every main guest surface", { timeout: 600_000
         for (const media of ["photo", "none", "panorama"] as const) {
           await matrix.test(`${design} / ${media}`, async () => {
             await openFixtureDetail(design, media);
-            await startPullTrace();
             const box = await page.locator(".v--det.on .lg2-detail-scroll").last().boundingBox();
             assert.ok(box, "detail scroll region must be visible");
             const startY = Math.round(Math.min(560, box.y + box.height - 70));
+            await startPullTrace(startY);
             const startTarget = await page.evaluate(({x, y}) => document.elementFromPoint(x, y)?.className ?? null, {x:180,y:startY});
             console.log("DETAIL_TOUCH_CASE", {design, media, startY, startTarget, box});
 
@@ -278,19 +304,22 @@ test("guest touch-scroll smoke — every main guest surface", { timeout: 600_000
             assert.ok(moves.length > 0, `${design}/${media}: browser must deliver touchmove`);
             assert.equal(gentle.events.some((event: any) => event.type === "touchcancel"), false,
               `${design}/${media}: no touchcancel during a slow downward pull`);
-            if (design === "trend") {
-              assert.ok(moves.some((event: any) => event.cancelable && event.prevented),
-                `${media}: Trend must cancel vertical touchmove to own the drag`);
-              assert.ok(gentle.frames.some((frame: any) => frame.phase === "dragging" && frame.sheetY > 0),
-                `${media}: Trend must expose intermediate sheet transforms`);
-              assert.ok(gentle.offset >= 0 && gentle.phase === "settling",
-                `${media}: Trend sub-threshold pull should settle without closing`);
-            } else {
-              assert.ok(moves.some((event: any) => !event.prevented),
-                `${media}: Enostaven must leave touchmove available to native scrolling`);
-              assert.equal(gentle.frames.some((frame: any) => frame.sheetY > 0), false,
-                `${media}: Enostaven touchmove must not translate the sheet`);
+            assert.ok(moves.some((event: any) => event.cancelable && event.prevented),
+              `${design}/${media}: the shared detail controller must capture the downward pull`);
+            const baseline = gentle.frames.find((frame: any) => frame.fingerOffset === 0 && frame.sheetTop !== null);
+            const midpoint = gentle.frames.find((frame: any) =>
+              frame.fingerOffset >= 18 && frame.fingerOffset <= 55 && frame.sheetTop !== null);
+            assert.ok(baseline && midpoint, `${design}/${media}: sample an intermediate finger and sheet position`);
+            const sheetDelta = midpoint.sheetTop - baseline.sheetTop;
+            assert.ok(Math.abs(sheetDelta - midpoint.fingerOffset) <= 5,
+              `${design}/${media}: sheet must track the finger 1:1 mid-drag (${sheetDelta}px vs ${midpoint.fingerOffset}px)`);
+            if (media === "photo") {
+              const photoDelta = (midpoint.heroTop ?? baseline.heroTop) - baseline.heroTop;
+              assert.ok(photoDelta >= 0 && photoDelta < sheetDelta - 2,
+                `${design}: photo should lag the 1:1 sheet movement (${photoDelta}px vs ${sheetDelta}px)`);
             }
+            assert.ok(gentle.offset >= 0 && gentle.phase === "settling",
+              `${design}/${media}: sub-threshold release should settle without closing`);
             assert.equal(gentle.resizeCount, 0, `${design}/${media}: pull must not resize the viewport`);
             const heroFrames = gentle.frames.filter((frame: any) => frame.heroTop !== null);
             console.log("DETAIL_TOUCH_TRACE", {
@@ -343,6 +372,140 @@ test("guest touch-scroll smoke — every main guest surface", { timeout: 600_000
                 frame.phase === "closing" || frame.routePhase === "closing")
                 .map((frame: any) => [Math.round(frame.t), frame.phase, frame.sheetY, frame.routePhase, frame.routeY]),
             });
+          });
+        }
+      }
+    });
+
+    await t.test("category → entry preserves source scroll and held layer through cancel/reversal/close", async matrix => {
+      for (const design of ["trend", "simple"] as const) {
+        for (const media of ["photo", "none"] as const) {
+          await matrix.test(`${design} / ${media}`, async () => {
+            detailMediaMode = media;
+            const palette = design === "trend" ? "trend" : "bordo";
+            let sourceScrollBeforeOpen = 0;
+            overflowCategoryItems = true;
+            try {
+              await page.goto(`${base}${sourceCategoryPath}?tenant=melipu&palette=${palette}&source=published&lang=en`, {
+                waitUntil:"domcontentloaded",
+              });
+              await page.locator(".lg2-route-layer.v--det.on").waitFor({timeout:90_000});
+              const sourceScroller = page.locator(".v--det.on .lg2-detail-scroll").last();
+              await sourceScroller.waitFor();
+              const sourceBox = await sourceScroller.boundingBox();
+              assert.ok(sourceBox, `${design}/${media}: source list is visible`);
+              const sourceMetrics = await sourceScroller.evaluate(element => ({
+                scrollTop: element.scrollTop,
+                scrollHeight: element.scrollHeight,
+                clientHeight: element.clientHeight,
+              }));
+              if (design === "simple") {
+                assert.ok(sourceMetrics.scrollHeight > sourceMetrics.clientHeight,
+                  `${design}/${media}: duplicate browser fixture entries overflow the source list`);
+                const start = Math.round(Math.min(700, sourceBox.y + sourceBox.height - 70));
+                await cdp.send("Input.dispatchTouchEvent", {type:"touchStart", touchPoints:[{x:180,y:start,id:96}]});
+                for (const delta of [18,36,54,72,90]) {
+                  await cdp.send("Input.dispatchTouchEvent", {type:"touchMove", touchPoints:[{x:180,y:start-delta,id:96}]});
+                  await page.waitForTimeout(35);
+                }
+                await cdp.send("Input.dispatchTouchEvent", {type:"touchEnd", touchPoints:[]});
+                await page.waitForTimeout(180);
+                sourceScrollBeforeOpen = await sourceScroller.evaluate(element => element.scrollTop);
+                assert.ok(sourceScrollBeforeOpen > 0,
+                  `${design}/${media}: real touch scroll must seed a nonzero source position`);
+              } else {
+                sourceScrollBeforeOpen = sourceMetrics.scrollTop;
+              }
+            } finally {
+              overflowCategoryItems = false;
+            }
+            await page.locator(".v--det.on").getByRole("button", {name:/Izolana Museum — House of the Sea/}).first().click();
+            await page.locator(".lg2-route-layer.v--det.on .lg2-detail-sheet").waitFor();
+            await page.locator(".lg2-route-layer.v--det").evaluate(async element => {
+              await Promise.all(element.getAnimations({subtree:true}).map(animation => animation.finished.catch(() => {})));
+            });
+            const heldScrollOnOpen = await page.locator(".lg2-held-stack .lg2-detail-scroll")
+              .evaluate(element => element.scrollTop);
+            assert.equal(heldScrollOnOpen, sourceScrollBeforeOpen,
+              `${design}/${media}: opening entry must hold the source category at its current scroll position`);
+
+            const layers = await page.locator(".lg2-route-layer").evaluateAll(elements => elements.map(element => ({
+              z: getComputedStyle(element).zIndex,
+              text: (element as HTMLElement).innerText,
+              transition: element.getAttribute("data-detail-transition"),
+            })));
+            const heldStack = await page.locator(".lg2-held-stack").evaluate(element => ({
+              z: getComputedStyle(element).zIndex,
+              text: (element as HTMLElement).innerText,
+            }));
+            assert.ok(layers.some(layer => layer.z === "1"),
+              `${design}/${media}: base Home stays at stack z=1`);
+            assert.equal(heldStack.z, "2", `${design}/${media}: held stack uses z=2`);
+            assert.match(heldStack.text, /Heritage/,
+              `${design}/${media}: source Heritage category is held at stack z=2 behind the entry`);
+            assert.ok(layers.some(layer => layer.z === "3" && /Izolana Museum/i.test(layer.text)),
+              `${design}/${media}: entry detail is on top at stack z=3`);
+
+            const box = await page.locator(".v--det.on .lg2-detail-scroll").last().boundingBox();
+            assert.ok(box);
+            const startY = Math.round(Math.min(560, box.y + box.height - 70));
+            await startPullTrace(startY);
+            await cdp.send("Input.dispatchTouchEvent", {type:"touchStart", touchPoints:[{x:180,y:startY,id:94}]});
+            for (const offset of [4,10,18,28,38]) {
+              await cdp.send("Input.dispatchTouchEvent", {type:"touchMove", touchPoints:[{x:180,y:startY+offset,id:94}]});
+              await page.waitForTimeout(40);
+            }
+            await cdp.send("Input.dispatchTouchEvent", {type:"touchCancel", touchPoints:[]});
+            await page.waitForTimeout(350);
+            const canceled = await page.evaluate(() => {
+              const trace = (window as any).__pullTrace;
+              trace.running = false;
+              return {
+                path: location.pathname, events: trace.events, frames: trace.frames,
+                sheetTop: document.querySelector(".v--det.on .lg2-detail-sheet")?.getBoundingClientRect().top ?? null,
+              };
+            });
+            assert.equal(canceled.path, sourceItemPath, `${design}/${media}: cancel keeps the entry open`);
+            assert.ok(canceled.events.some((event: any) => event.type === "touchcancel"),
+              `${design}/${media}: browser delivers touchcancel`);
+            assert.ok(canceled.frames.some((frame: any) =>
+              frame.fingerOffset >= 18 && frame.fingerOffset <= 38 && frame.sheetTop !== null &&
+              Math.abs((frame.sheetTop - (canceled.frames[0]?.sheetTop ?? frame.sheetTop)) - frame.fingerOffset) <= 5),
+            `${design}/${media}: sheet tracks the finger 1:1 before cancellation`);
+
+            await restartPullTrace();
+            await dispatchPull(startY, [12,28,42,24,8,0], 95, 35);
+            await page.waitForTimeout(300);
+            const reversed = await page.evaluate(() => ({
+              path: location.pathname,
+              offset: Number(document.querySelector(".v--det.on .lg2-detail-sheet")?.getAttribute("data-lg-sheet-offset") ?? 0),
+            }));
+            assert.equal(reversed.path.endsWith(sourceItemPath), true,
+              `${design}/${media}: reversing before the release threshold must not close`);
+            assert.ok(Math.abs(reversed.offset) <= 1,
+              `${design}/${media}: reversed pull must settle back at neutral offset 0 (actual ${reversed.offset})`);
+
+            await restartPullTrace();
+            await dispatchPull(startY, [12,30,55,80,105,130], 96, 40);
+            await page.waitForFunction(path => location.pathname !== path, sourceItemPath, {timeout:10_000});
+            const closed = await page.evaluate(() => {
+              const trace = (window as any).__pullTrace;
+              trace.running = false;
+              return {path:location.pathname, frames:trace.frames};
+            });
+            assert.ok(closed.path.endsWith(sourceCategoryPath),
+              `${design}/${media}: qualifying pull returns to the source category`);
+            const closingFrames = closed.frames.filter((frame: any) =>
+              frame.phase === "closing" || frame.routePhase === "closing");
+            assert.ok(closingFrames.length > 0,
+              `${design}/${media}: source return includes sampled successful-close frames`);
+            assert.ok(closingFrames.every((frame: any) =>
+              frame.heldZ === "2" && frame.heldHeritage && frame.baseZ === "1" && frame.detailZ === "3"),
+            `${design}/${media}: Heritage stays held at z=2 above Home z=1 during close; it is not exposed as the base layer`);
+            const sourceScrollAfterClose = await page.locator(".v--det.on .lg2-detail-scroll").last()
+              .evaluate(element => element.scrollTop);
+            assert.equal(sourceScrollAfterClose, sourceScrollBeforeOpen,
+              `${design}/${media}: return preserves the source category scroll position`);
           });
         }
       }

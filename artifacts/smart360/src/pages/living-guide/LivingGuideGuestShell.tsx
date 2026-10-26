@@ -100,7 +100,6 @@ import { virtualTourEmbedUrl } from "@/lib/virtual-tour";
 import { WalkResetControl, hasLandingScreen } from "./simple/GuideHeaderControls";
 import { usePwaLaunch } from "@/hooks/use-pwa-launch";
 import { hasActiveTourView } from "@/lib/active-tour-views";
-import { usePullClose } from "./simple/use-pull-close";
 import { instagramLink, viberHref } from "@/lib/contact-links";
 import {
   bottomNavScreen,
@@ -3756,8 +3755,7 @@ function useDraggableDetailSheet(
 
   useLayoutEffect(() => {
     const root = rootRef.current;
-    // Enostaven uses native overflow scrolling, including touches on clickable rows.
-    if (root?.closest(".lgs-root")) return;
+    const nativeScroll = Boolean(root?.closest(".lgs-root"));
     const sheet = root?.querySelector<HTMLElement>(".lg2-detail-sheet");
     const sheetRoot = root?.querySelector<HTMLElement>(".lg2-detail-sheet-root");
     if (!root || !sheet || !sheetRoot) return;
@@ -3775,6 +3773,10 @@ function useDraggableDetailSheet(
     let velocity = 0;
     let minOffset = 0;
     let initialTop = 0;
+    const scroller = root.querySelector<HTMLElement>(".lg2-detail-scroll");
+    const route = root.closest<HTMLElement>(".lg2-route-layer");
+    let startedAtTop = false;
+    let initialDirection: "up" | "down" | null = null;
     let closeTimer: number | null = null;
     let resizeFrame: number | null = null;
 
@@ -3786,9 +3788,19 @@ function useDraggableDetailSheet(
       sheet.style.setProperty("--lg2-sheet-translate-y", `${offset}px`);
       sheet.dataset.lgSheetPhase = phase;
       sheet.dataset.lgSheetOffset = String(Math.round(offset));
+      // Move the route/photo more slowly than the sheet. Their combined
+      // translation is exactly the finger distance, not two added offsets.
+      const photoOffset = Math.max(0, offset) * 0.35;
+      if (route && route.dataset.detailTransition !== "closing") {
+        route.style.transform = photoOffset ? `translateY(${photoOffset}px)` : "";
+        route.style.transition = phase === "dragging" ? "none" : "";
+        sheet.style.setProperty("--lg2-sheet-translate-y", `${offset - photoOffset}px`);
+      }
     };
 
     const measure = () => {
+      if (activeGesture || sheet.dataset.lgSheetPhase === "closing") return;
+      if (nativeScroll) return;
       const startsAtTop =
         sheet.classList.contains("lg2-detail-sheet--full-height") ||
         sheet.classList.contains("lg2-detail-sheet--solo");
@@ -3858,6 +3870,8 @@ function useDraggableDetailSheet(
       lastClientY = y;
       lastMoveAt = time;
       velocity = 0;
+      startedAtTop = nativeScroll ? (scroller?.scrollTop ?? 0) <= 0 : currentOffset >= 0;
+      initialDirection = null;
     };
 
     const move = (
@@ -3875,6 +3889,8 @@ function useDraggableDetailSheet(
         return;
       }
       if (axis !== "vertical") return;
+      if (!initialDirection) initialDirection = y >= startClientY ? "down" : "up";
+      if (nativeScroll && (!startedAtTop || initialDirection !== "down")) return;
       if (!previousAxis) {
         writeOffset(currentOffset, "dragging");
         if (kind === "pointer" && event instanceof PointerEvent) {
@@ -3885,7 +3901,9 @@ function useDraggableDetailSheet(
       velocity = (y - lastClientY) / elapsed;
       lastClientY = y;
       lastMoveAt = time;
-      const rawOffset = startOffset + y - startClientY;
+      const rawOffset = nativeScroll || (startedAtTop && initialDirection === "down")
+        ? Math.max(0, y - startClientY)
+        : startOffset + y - startClientY;
       const resistedOffset =
         rawOffset < minOffset
           ? minOffset + (rawOffset - minOffset) * 0.16
@@ -3904,18 +3922,25 @@ function useDraggableDetailSheet(
       if (gesture.axis !== "vertical") return;
 
       const shouldClose =
-        !cancelled && (currentOffset >= DETAIL_SHEET_CLOSE_DISTANCE ||
+        !cancelled && startedAtTop && initialDirection === "down" &&
+        (currentOffset >= DETAIL_SHEET_CLOSE_DISTANCE ||
         (currentOffset > 0 && velocity >= DETAIL_SHEET_CLOSE_VELOCITY));
       if (shouldClose) {
-        writeOffset(sheetRoot.clientHeight + 32, "closing");
-        closeTimer = window.setTimeout(
-          () => onCloseRef.current(),
-          DETAIL_SHEET_MOMENTUM_MS,
-        );
+        // Continue from the actual drag position; do not finish an inner
+        // animation before starting the route animation.
+        if (route) {
+          route.style.transition = "";
+          void route.offsetHeight;
+          route.style.transform = "";
+        }
+        sheet.style.setProperty("--lg2-sheet-translate-y", `${sheetRoot.clientHeight + 32}px`);
+        sheet.dataset.lgSheetPhase = "closing";
+        onCloseRef.current();
         return;
       }
+      if (nativeScroll && (!startedAtTop || initialDirection !== "down")) return;
 
-      if (currentOffset > 0) {
+      if (currentOffset > 0 || (startedAtTop && initialDirection === "down")) {
         writeOffset(0, "settling");
         return;
       }
@@ -3954,6 +3979,9 @@ function useDraggableDetailSheet(
       if (touch) move("touch", touch.identifier, touch.clientX, touch.clientY, event.timeStamp, event);
     };
     const onTouchEnd = (event: TouchEvent) => {
+      if (activeGesture?.axis === "vertical" &&
+          (!nativeScroll || (startedAtTop && initialDirection === "down")) &&
+          event.cancelable) event.preventDefault();
       for (const touch of Array.from(event.changedTouches)) finish("touch", touch.identifier);
     };
     const onTouchCancel = (event: TouchEvent) => {
@@ -3990,7 +4018,6 @@ function useDraggableDetailSheet(
 
 function DetailView({ category, section, itemId, lang, t, galleryIndex, onGalleryIndex, onBack, tenant, onOpenItem, showHostContacts, onOrderClick, slug }: any) {
   const detailViewRef = useRef<HTMLElement>(null);
-  const pullClose = usePullClose(onBack, ".lg2-detail-scroll");
   useDraggableDetailSheet(detailViewRef, onBack);
   const items = visible(category.items);
   const activeItem = itemId ? items.find((i: any) => i.id === itemId) : null;
@@ -4048,7 +4075,6 @@ function DetailView({ category, section, itemId, lang, t, galleryIndex, onGaller
   return (
     <section
       ref={detailViewRef}
-      {...(resolveGuestDesign(tenant?.guestDesign) === "simple" ? pullClose : {})}
       className={`lg2-view lg2-detail-view${activeItem?.orderEnabled && layout !== "tabs" && !programDetailItem ? " has-order-dock" : ""}`}
       onClick={(event) => {
         const target = event.target;
