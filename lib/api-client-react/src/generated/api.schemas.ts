@@ -11,6 +11,7 @@ export type SmartxstayCleanupInputApprovalsItem = {
   /** @pattern ^[a-f0-9]{64}$ */
   token: string;
   legacyApproved: boolean;
+  keepAddressFields?: string[];
 };
 
 export interface SmartxstayCleanupInput {
@@ -23,6 +24,7 @@ export interface SmartxstayCleanupChange {
   lang: string;
   before: string;
   after: string;
+  afterKeepingAddress: string;
   operations: string[];
   warnings: string[];
 }

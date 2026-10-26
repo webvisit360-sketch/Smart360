@@ -3383,14 +3383,18 @@ components:
               id: { type: string, pattern: "^[a-fA-F0-9-]{36}$" }
               token: { type: string, pattern: "^[a-f0-9]{64}$" }
               legacyApproved: { type: boolean }
+              keepAddressFields:
+                type: array
+                items: { type: string }
     SmartxstayCleanupChange:
       type: object
-      required: [field, lang, before, after, operations, warnings]
+      required: [field, lang, before, after, afterKeepingAddress, operations, warnings]
       properties:
         field: { type: string }
         lang: { type: string }
         before: { type: string }
         after: { type: string }
+        afterKeepingAddress: { type: string }
         operations: { type: array, items: { type: string } }
         warnings: { type: array, items: { type: string } }
     SmartxstayCleanupEntry:

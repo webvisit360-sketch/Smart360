@@ -49,7 +49,7 @@ const labelGroups = [
 ];
 
 /** Conservative, line-local edits: never fetch/guess an address or rewrite other prose. */
-export function cleanupImportedBody(body: string, lang: string, category: string, mapQuery: string | null) {
+export function cleanupImportedBody(body: string, lang: string, category: string, mapQuery: string | null, removeAddress = true) {
   const operations: string[] = [], warnings: string[] = [];
   // Preserve authored HTML byte-for-byte outside the changed logical lines.
   const parts = body.split(/(<br\s*\/?>|<\/p>)/gi);
@@ -69,7 +69,7 @@ export function cleanupImportedBody(body: string, lang: string, category: string
     replace(first.index, ""); operations.push("Odstranjena podvojena začetna oznaka kategorije");
   }
   const addressIndex = lines.findIndex(x => /^naslov:?$/i.test(x.text));
-  if (addressIndex >= 0) {
+  if (addressIndex >= 0 && removeAddress) {
     const address = ownAddress(mapQuery);
     let matched = false;
     for (let count = 1; count <= 3 && addressIndex + count < lines.length; count++) {

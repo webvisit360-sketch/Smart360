@@ -11,6 +11,7 @@ export interface SmartxstayCleanupChange {
   lang: string;
   before: string;
   after: string;
+  afterKeepingAddress: string;
   operations: string[];
   warnings: string[];
 }

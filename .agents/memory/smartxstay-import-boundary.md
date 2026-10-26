@@ -15,8 +15,8 @@ Autoscale imports must be request-owned and resumable, not detached background p
 
 **How to apply:** Verify restart after every request, cancellation concurrent with a live step, failed cleanup retry, referenced-image protection and source-identity deduplication. Deploy the cancellation UI before asking the owner to cancel an old production run; never cancel or restart production imports automatically.
 
-Legacy draft cleanup may use separate per-entry manual approval after showing differences when the original import checksum is missing. Never label today's content as the original import or silently enroll legacy entries in checksum-protected cleanup.
+Draft cleanup includes working content of published imported entries; it must never write the guest's published snapshot. All proposed entries, including legacy imports and postal-address removals, default to selected and one “Potrdi vse” action approves them. Operators may exclude an entry or an individual address removal.
 
-**Why:** The owner explicitly approved this exception because older imports have neither original content hashes nor retained source checkpoints.
+**Why:** The owner explicitly replaced separate per-entry approval with bulk confirmation and clarified that published entries still have editable drafts. Older imports have neither original content hashes nor retained source checkpoints.
 
-**How to apply:** Keep the legacy warning and individual approval separate from unchanged, checksum-verified imports; revalidate the reviewed content before applying. The owner subsequently approved postal-pattern address removal without map proof, provided it is marked “preveri naslov” and individually confirmed after reviewing differences.
+**How to apply:** Keep the legacy warning; never label today's content as the original import. Revalidate reviewed content before applying, skip trash and changed checksum-protected entries, retain before-content, and prove published snapshots remain byte-identical. Postal-pattern removal needs no map proof, remains marked “preveri naslov”, and can be deselected independently. Guests receive changes only after the owner republishes.

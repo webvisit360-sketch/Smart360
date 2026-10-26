@@ -25,6 +25,7 @@ export const PreviewSmartxstayCleanupResponse = zod.object({
   "lang": zod.string(),
   "before": zod.string(),
   "after": zod.string(),
+  "afterKeepingAddress": zod.string(),
   "operations": zod.array(zod.string()),
   "warnings": zod.array(zod.string())
 }))
@@ -50,7 +51,8 @@ export const ApplySmartxstayCleanupBody = zod.object({
   "approvals": zod.array(zod.object({
   "id": zod.string().regex(applySmartxstayCleanupBodyApprovalsItemIdRegExp),
   "token": zod.string().regex(applySmartxstayCleanupBodyApprovalsItemTokenRegExp),
-  "legacyApproved": zod.boolean()
+  "legacyApproved": zod.boolean(),
+  "keepAddressFields": zod.array(zod.string()).optional()
 })).max(applySmartxstayCleanupBodyApprovalsMax)
 })
 
@@ -67,6 +69,7 @@ export const ApplySmartxstayCleanupResponse = zod.object({
   "lang": zod.string(),
   "before": zod.string(),
   "after": zod.string(),
+  "afterKeepingAddress": zod.string(),
   "operations": zod.array(zod.string()),
   "warnings": zod.array(zod.string())
 }))

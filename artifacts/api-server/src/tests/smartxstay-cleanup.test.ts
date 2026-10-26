@@ -39,7 +39,7 @@ test("remove only verified address lines, preserve other prose/links and English
   assert.match(cleanupImportedBody("<p>Restaurant review</p>", "sl", "Kulinarika", null).after, /Restaurant review/);
 });
 
-test("draft cleanup: immutable checksum, legacy approval, concurrent-edit token, publication exclusion and repeat=0", async () => {
+test("draft cleanup: published snapshot unchanged, bulk approval, opt-outs, trash, concurrency and repeat=0", async () => {
   const [tenant] = await db.insert(tenantsTable).values({ slug: `cleanup-fixture-${randomUUID()}`, name: "Synthetic cleanup test" }).returning();
   const ids: string[] = [];
   try {
@@ -60,19 +60,32 @@ test("draft cleanup: immutable checksum, legacy approval, concurrent-edit token,
     const published = await add("published");
     const stale = await add("edited-after-preview", true);
     const translated = await add("translated", true);
+    const excluded = await add("unselected");
+    const keepAddress = await add("keep-address");
+    const trash = await add("trash");
+    await db.update(itemsTable).set({ deletedAt: new Date() }).where(eq(itemsTable.id, trash.id));
     await db.insert(translationsTable).values({ model: "item", recordId: translated.id, field: "body", lang: "en", value: "<p>Monday: Closed</p><p></p><p></p>" });
     await db.update(runs).set({ checkpoint: { contentHashes: hashes, preservedKey: "keep" } }).where(eq(runs.id, run.id));
     await db.update(itemsTable).set({ body: "<p>Operator's curated copy</p>" }).where(eq(itemsTable.id, edited.id));
     await db.insert(publishedSnapshotsTable).values({ tenantId: tenant.id, content: { languages: { sl: { tree: { sections: [{ categories: [{ items: [{ id: published.id, body: prodnik.body }] }] }] } } } } });
+    const snapshotBefore = JSON.stringify(await db.select().from(publishedSnapshotsTable).where(eq(publishedSnapshotsTable.tenantId, tenant.id)));
     const preview = await cleanupSmartxstayDrafts(tenant.id);
     assert.equal(preview.entries.find(e => e.id === edited.id)?.status, "skipped");
-    assert.equal(preview.entries.find(e => e.id === published.id)?.status, "skipped");
+    assert.equal(preview.entries.find(e => e.id === published.id)?.status, "ready");
+    assert.equal(preview.entries.find(e => e.id === trash.id)?.status, "skipped");
     assert.equal(preview.entries.find(e => e.id === legacy.id)?.legacy, true);
     assert.equal((await db.select().from(itemsTable).where(eq(itemsTable.id, normal.id)))[0].body, prodnik.body, "preview is read-only");
     await db.update(itemsTable).set({ title: "Changed after preview" }).where(eq(itemsTable.id, stale.id));
-    const approvals = preview.entries.filter(e => e.status === "ready").map(e => ({ id: e.id, token: e.token, legacyApproved: e.id !== legacy.id }));
+    const approvals = preview.entries.filter(e => e.status === "ready" && e.id !== excluded.id).map(e => ({
+      id: e.id, token: e.token, legacyApproved: e.id !== legacy.id, keepAddressFields: e.id === keepAddress.id ? ["body"] : [],
+    }));
     const applied = await cleanupSmartxstayDrafts(tenant.id, approvals);
-    assert.equal(applied.changed, 2);
+    assert.equal(applied.changed, 4);
+    assert.equal(JSON.stringify(await db.select().from(publishedSnapshotsTable).where(eq(publishedSnapshotsTable.tenantId, tenant.id))), snapshotBefore, "entire published snapshot byte-identical");
+    assert.equal((await db.select().from(itemsTable).where(eq(itemsTable.id, excluded.id)))[0].body, prodnik.body, "unselected entry untouched");
+    const kept = (await db.select().from(itemsTable).where(eq(itemsTable.id, keepAddress.id)))[0].body!;
+    assert.match(kept, /Naslov|Juvanje/);
+    assert.doesNotMatch(kept, /Monday|Restaurant/);
     assert.equal(applied.entries.find(e => e.id === legacy.id)?.status, "skipped");
     assert.match(applied.entries.find(e => e.id === stale.id)!.reason, /po predogledu/);
     const legacyPreview = await cleanupSmartxstayDrafts(tenant.id);
@@ -82,7 +95,16 @@ test("draft cleanup: immutable checksum, legacy approval, concurrent-edit token,
     const stored = (await db.select().from(runs).where(eq(runs.id, run.id)))[0].checkpoint as any;
     assert.deepEqual(stored.contentHashes, hashes);
     assert.equal(stored.preservedKey, "keep");
-    assert.equal((await db.select().from(itemsTable).where(eq(itemsTable.id, published.id)))[0].body, prodnik.body);
+    assert.equal((await db.select().from(itemsTable).where(eq(itemsTable.id, published.id)))[0].body, cleanupImportedBody(prodnik.body, "sl", prodnik.category, prodnik.mapQuery).after);
+    assert.equal(stored.cleanupReceipts[published.id].history[0][0].before, prodnik.body, "original content retained");
+    // Accept every remaining proposed change in one operation; another preview has no work.
+    const remaining = await cleanupSmartxstayDrafts(tenant.id);
+    const bulk = remaining.entries.filter(e => e.status === "ready").map(e => ({ id: e.id, token: e.token, legacyApproved: true }));
+    assert.ok(bulk.length >= 2);
+    assert.equal((await cleanupSmartxstayDrafts(tenant.id, bulk)).changed, bulk.length);
+    assert.equal((await cleanupSmartxstayDrafts(tenant.id)).ready, 0);
+    assert.equal((await cleanupSmartxstayDrafts(tenant.id, bulk)).changed, 0);
+    assert.equal(JSON.stringify(await db.select().from(publishedSnapshotsTable).where(eq(publishedSnapshotsTable.tenantId, tenant.id))), snapshotBefore);
     assert.equal((await db.select().from(translationsTable).where(eq(translationsTable.recordId, translated.id)))[0].value, "<p>Monday: Closed</p><p></p>");
     // A post-cleanup edit must never be accepted as a fresh legacy entry.
     await db.update(itemsTable).set({ title: "Manually edited later" }).where(eq(itemsTable.id, normal.id));
