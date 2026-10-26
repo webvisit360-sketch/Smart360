@@ -5,9 +5,14 @@
  * Smart360 API - multi-tenant guest information PWA
  * OpenAPI spec version: 0.1.0
  */
+import type { SmartxstayCleanupInputAction } from './smartxstayCleanupInputAction';
 import type { SmartxstayCleanupInputApprovalsItem } from './smartxstayCleanupInputApprovalsItem';
 
+/**
+ * Cleanup drafts or restore addresses from preserved cleanup evidence.
+ */
 export interface SmartxstayCleanupInput {
+  action?: SmartxstayCleanupInputAction;
   /** @maxItems 1000 */
   approvals: SmartxstayCleanupInputApprovalsItem[];
 }

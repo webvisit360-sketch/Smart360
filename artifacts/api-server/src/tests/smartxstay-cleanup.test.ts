@@ -10,29 +10,32 @@ import { importedItemState } from "../lib/smartxstayFingerprint";
 import { cleanupSmartxstayDrafts } from "../lib/smartxstayCleanup";
 
 const prodnik = JSON.parse(readFileSync(new URL("./fixtures/smartxstay-prodnik.json", import.meta.url), "utf8"));
-test("exact Prodnik copy: postal address removal proposed for confirmation even with CID; idempotent", () => {
+test("exact Prodnik copy: only labels removed, actual address preserved; idempotent", () => {
   const result = cleanupImportedBody(prodnik.body, "sl", prodnik.category, prodnik.mapQuery);
   assert.doesNotMatch(result.after, /Restaurant|Monday|AM|PM/);
   assert.match(result.after, /Ponedeljek: zaprto/);
   assert.match(result.after, /Sobota: 09.00–22.00/);
-  assert.doesNotMatch(result.after, /Naslov|Juvanje 1/);
-  assert.ok(result.operations.includes("preveri naslov"));
+  assert.doesNotMatch(result.after, /Naslov/);
+  assert.match(result.after, /Juvanje 1, 3333 Ljubno ob Savinji, Slovenija/);
+  assert.ok(!result.operations.includes("preveri naslov"));
   assert.match(result.after, /href="http:\/\/www.prodnik.com\/"/);
-  assert.equal(result.warnings.length, 1);
+  assert.equal(result.warnings.length, 0);
   assert.equal(cleanupImportedBody(result.after, "sl", prodnik.category, prodnik.mapQuery).after, result.after);
 });
-test("non-address prose under Naslov is never proposed; three-line postal block is", () => {
+test("label-only cleanup preserves both non-address prose and multi-line postal blocks", () => {
   const negative = "<p>Naslov</p><p>Za več informacij vprašajte na recepciji.</p>";
-  assert.equal(cleanupImportedBody(negative, "sl", "Kulinarika", null).after, negative);
+  assert.equal(cleanupImportedBody(negative, "sl", "Kulinarika", null).after, "<p></p><p>Za več informacij vprašajte na recepciji.</p>");
   const positive = "<p>Naslov</p><p>Juvanje 1</p><p>3333 Ljubno ob Savinji</p><p>Slovenija</p><p>Kontakt</p>";
   const result = cleanupImportedBody(positive, "sl", "Kulinarika", null);
-  assert.doesNotMatch(result.after, /Naslov|Juvanje|3333|Slovenija/);
+  assert.doesNotMatch(result.after, /Naslov/);
+  assert.match(result.after, /<p>Juvanje 1<\/p><p>3333 Ljubno ob Savinji<\/p><p>Slovenija<\/p>/);
   assert.match(result.after, /Kontakt/);
 });
-test("remove only verified address lines, preserve other prose/links and English hours", () => {
+test("remove only bare address label, preserve address/prose/links and English hours", () => {
   const html = '<p>Restaurant</p><p>Naslov</p><p>Juvanje 1</p><p>3333 Ljubno</p><p>Monday: 12:00 AM – 12:00 PM</p><p><a href="/keep"><strong>Keep</strong></a></p>';
   const result = cleanupImportedBody(html, "sl", "Kulinarika", "Juvanje 1, 3333 Ljubno");
-  assert.doesNotMatch(result.after, /Naslov|Juvanje/);
+  assert.doesNotMatch(result.after, /Naslov/);
+  assert.match(result.after, /Juvanje/);
   assert.match(result.after, /Ponedeljek: 00.00–12.00/);
   assert.match(result.after, /<a href="\/keep"><strong>Keep<\/strong><\/a>/);
   assert.match(cleanupImportedBody(html, "en", "Kulinarika", null).after, /Monday: 12:00 AM/);
@@ -84,7 +87,7 @@ test("draft cleanup: published snapshot unchanged, bulk approval, opt-outs, tras
     assert.equal(JSON.stringify(await db.select().from(publishedSnapshotsTable).where(eq(publishedSnapshotsTable.tenantId, tenant.id))), snapshotBefore, "entire published snapshot byte-identical");
     assert.equal((await db.select().from(itemsTable).where(eq(itemsTable.id, excluded.id)))[0].body, prodnik.body, "unselected entry untouched");
     const kept = (await db.select().from(itemsTable).where(eq(itemsTable.id, keepAddress.id)))[0].body!;
-    assert.match(kept, /Naslov|Juvanje/);
+    assert.match(kept, /Juvanje/);
     assert.doesNotMatch(kept, /Monday|Restaurant/);
     assert.equal(applied.entries.find(e => e.id === legacy.id)?.status, "skipped");
     assert.match(applied.entries.find(e => e.id === stale.id)!.reason, /po predogledu/);
@@ -100,7 +103,7 @@ test("draft cleanup: published snapshot unchanged, bulk approval, opt-outs, tras
     // Accept every remaining proposed change in one operation; another preview has no work.
     const remaining = await cleanupSmartxstayDrafts(tenant.id);
     const bulk = remaining.entries.filter(e => e.status === "ready").map(e => ({ id: e.id, token: e.token, legacyApproved: true }));
-    assert.ok(bulk.length >= 2);
+    assert.ok(bulk.length >= 1);
     assert.equal((await cleanupSmartxstayDrafts(tenant.id, bulk)).changed, bulk.length);
     assert.equal((await cleanupSmartxstayDrafts(tenant.id)).ready, 0);
     assert.equal((await cleanupSmartxstayDrafts(tenant.id, bulk)).changed, 0);

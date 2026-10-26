@@ -301,6 +301,7 @@ export * from './slugCheckResponse';
 export * from './smartxstayCleanupChange';
 export * from './smartxstayCleanupEntry';
 export * from './smartxstayCleanupInput';
+export * from './smartxstayCleanupInputAction';
 export * from './smartxstayCleanupInputApprovalsItem';
 export * from './smartxstayCleanupReport';
 export * from './smartxstayImportInput';

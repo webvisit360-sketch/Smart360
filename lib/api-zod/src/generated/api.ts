@@ -48,13 +48,14 @@ export const applySmartxstayCleanupBodyApprovalsMax = 1000;
 
 
 export const ApplySmartxstayCleanupBody = zod.object({
+  "action": zod.enum(['cleanup', 'restoreAddresses']).optional(),
   "approvals": zod.array(zod.object({
   "id": zod.string().regex(applySmartxstayCleanupBodyApprovalsItemIdRegExp),
   "token": zod.string().regex(applySmartxstayCleanupBodyApprovalsItemTokenRegExp),
   "legacyApproved": zod.boolean(),
   "keepAddressFields": zod.array(zod.string()).optional()
 })).max(applySmartxstayCleanupBodyApprovalsMax)
-})
+}).describe('Cleanup drafts or restore addresses from preserved cleanup evidence.')
 
 export const ApplySmartxstayCleanupResponse = zod.object({
   "entries": zod.array(zod.object({

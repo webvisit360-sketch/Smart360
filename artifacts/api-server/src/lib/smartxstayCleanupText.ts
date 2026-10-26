@@ -25,22 +25,19 @@ function hours(line: string): string | null {
   return `${slovene[weekdays.findIndex(x => x.toLowerCase() === match[1].toLowerCase())]}: ${value}`;
 }
 
-function ownAddress(mapQuery: string | null): string {
-  if (!mapQuery) return "";
-  if (!/^https?:/i.test(mapQuery)) return mapQuery;
-  try {
-    const url = new URL(mapQuery);
-    const q = url.searchParams.get("query") || url.searchParams.get("q") || "";
-    return /^(?:place_id:|[-\d.]+,\s*[-\d.]+$)/.test(q) ? "" : q;
-  } catch { return ""; }
+/** Remove only bare label lines; preserve every address byte and its position. */
+export function removeAddressLabel(body: string): string {
+  return body.split(/(<br\s*\/?>|<\/p>)/gi).map((part, index) => {
+    if (index % 2 || !/^naslov:?$/i.test(load(part, null, false).text().trim()) || /<a\b/i.test(part)) return part;
+    return part.match(/^\s*<p\b[^>]*>/i)?.[0] || "";
+  }).join("");
 }
-const normalizedAddress = (s: string) => normalizedName(s).replace(/[^\p{L}\p{N}]/gu, "");
-const countries = /^(?:slovenija|slovenia|slovenien|hrvatska|croatia|avstrija|austria|italija|italy|italia)$/i;
-function postalAddress(lines: string[]): boolean {
-  const text = lines.join(", ");
-  // Require a street/locality with house number AND postal code with place.
-  // Anchored grammar deliberately rejects prose and opening-hours text.
-  return /^[\p{L}][\p{L}\s.'’/-]{1,80}\s+\d{1,4}[a-z]?\s*,?\s+(?:SI[- ]?)?\d{4,5}\s+[\p{L}][\p{L}\s.'’/-]{1,80}(?:,\s*[\p{L}\s]+)?$/iu.test(text);
+
+export function restoredAddressBody(change: { after: string; afterKeepingAddress?: string; operations: string[] }): string | null {
+  if (!change.operations.some(op => op === "preveri naslov" || op === "Odstranjena oznaka Naslov in potrjeno podvojen naslov")
+    || !change.afterKeepingAddress || change.after === change.afterKeepingAddress) return null;
+  // This evidence already contains every OTHER applied cleanup operation.
+  return collapseEmptyParagraphs(removeAddressLabel(change.afterKeepingAddress));
 }
 const labelGroups = [
   ["restaurant", "restavracija", "restavracije", "restaurants", "kulinarika"],
@@ -49,7 +46,7 @@ const labelGroups = [
 ];
 
 /** Conservative, line-local edits: never fetch/guess an address or rewrite other prose. */
-export function cleanupImportedBody(body: string, lang: string, category: string, mapQuery: string | null, removeAddress = true) {
+export function cleanupImportedBody(body: string, lang: string, category: string, _mapQuery: string | null, _removeAddress = true) {
   const operations: string[] = [], warnings: string[] = [];
   // Preserve authored HTML byte-for-byte outside the changed logical lines.
   const parts = body.split(/(<br\s*\/?>|<\/p>)/gi);
@@ -68,31 +65,8 @@ export function cleanupImportedBody(body: string, lang: string, category: string
   )) {
     replace(first.index, ""); operations.push("Odstranjena podvojena začetna oznaka kategorije");
   }
-  const addressIndex = lines.findIndex(x => /^naslov:?$/i.test(x.text));
-  if (addressIndex >= 0 && removeAddress) {
-    const address = ownAddress(mapQuery);
-    let matched = false;
-    for (let count = 1; count <= 3 && addressIndex + count < lines.length; count++) {
-      const candidates = lines.slice(addressIndex + 1, addressIndex + count + 1);
-      if (candidates.some(x => /<a\b/i.test(x.html)) || !postalAddress(candidates.map(x => x.text))) continue;
-      // Include a separate country line, but never swallow the next prose line.
-      const next = lines[addressIndex + count + 1];
-      if (count < 3 && next && countries.test(next.text)) candidates.push(next);
-      [lines[addressIndex], ...candidates].forEach(x => replace(x.index, ""));
-      operations.push("preveri naslov");
-      warnings.push("Preveri naslov: predlagana odstranitev poštnega bloka; potreben je pregled in potrditev tega vnosa.");
-      matched = true; break;
-    }
-    for (let count = 1; count <= 3 && addressIndex + count < lines.length; count++) {
-      if (matched) break;
-      const candidates = lines.slice(addressIndex + 1, addressIndex + count + 1);
-      if (address && normalizedAddress(candidates.map(x => x.text).join(" ")) === normalizedAddress(address)) {
-        [lines[addressIndex], ...candidates].forEach(x => replace(x.index, ""));
-        operations.push("Odstranjena oznaka Naslov in potrjeno podvojen naslov");
-        matched = true; break;
-      }
-    }
-    if (!matched) warnings.push("Naslov ohranjen: ujemanja z lastnim naslovom/zemljevidom ni mogoče dokazati.");
+  for (const line of lines) if (/^naslov:?$/i.test(line.text) && !/<a\b/i.test(line.html)) {
+    replace(line.index, ""); operations.push("Odstranjena samo oznaka Naslov; naslov ohranjen");
   }
   if (lang === "sl") for (const line of lines) {
     if (/<a\b/i.test(line.html)) continue;

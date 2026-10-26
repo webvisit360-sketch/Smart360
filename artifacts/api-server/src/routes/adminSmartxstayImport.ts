@@ -18,7 +18,7 @@ router.post("/admin/tenants/:id/smartxstay-cleanup", requireOperator, async (req
   const parsed = ApplySmartxstayCleanupBody.safeParse(req.body);
   if (!parsed.success) { res.status(400).json({ error: "Neveljavna potrditev. Ponovno preglejte razlike." }); return; }
   try {
-    res.json(ApplySmartxstayCleanupResponse.parse(await cleanupSmartxstayDrafts(String(req.params.id), parsed.data.approvals)));
+    res.json(ApplySmartxstayCleanupResponse.parse(await cleanupSmartxstayDrafts(String(req.params.id), parsed.data.approvals, parsed.data.action === "restoreAddresses")));
   } catch (error) {
     res.status(400).json({ error: error instanceof Error ? error.message : "Čiščenje ni uspelo. Ponovno preglejte razlike." });
   }

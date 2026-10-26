@@ -3371,8 +3371,10 @@ components:
   schemas:
     SmartxstayCleanupInput:
       type: object
+      description: Cleanup drafts or restore addresses from preserved cleanup evidence.
       required: [approvals]
       properties:
+        action: { type: string, enum: [cleanup, restoreAddresses] }
         approvals:
           type: array
           maxItems: 1000
