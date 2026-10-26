@@ -17,6 +17,31 @@ import { seedTenantContent } from "../lib/tenantSeeds";
 import publicTenantsRouter, { invalidateTenantCache } from "../routes/publicTenants";
 import ordersRouter from "../routes/orders";
 
+test("section visibility changes only the next snapshot and re-enable preserves content", async () => {
+  const [tenant] = await db.insert(tenantsTable).values({ slug: `visibility-${randomUUID()}`, name: "Synthetic visibility", isPublished: true }).returning();
+  try {
+    const [section] = await db.insert(sectionsTable).values({ tenantId: tenant.id, key: "guest-interaction", title: "Guest interaction", isVisible: true }).returning();
+    const [category] = await db.insert(categoriesTable).values({ sectionId: section.id, label: "Guest feedback", isVisible: true }).returning();
+    const [item] = await db.insert(itemsTable).values({ categoryId: category.id, title: "Leave feedback", body: "<p>Preserve exactly</p>", isVisible: true }).returning();
+    await replacePublishedSnapshot(tenant);
+    const before = JSON.stringify(await readPublishedContent(tenant.id));
+    await db.update(sectionsTable).set({ isVisible: false }).where(eq(sectionsTable.id, section.id));
+    assert.equal(JSON.stringify(await readPublishedContent(tenant.id)), before);
+    assert.equal((await db.select().from(tenantsTable).where(eq(tenantsTable.id, tenant.id)))[0].hasUnpublishedChanges, true);
+    await replacePublishedSnapshot(tenant);
+    const hidden = await readPublishedContent(tenant.id);
+    for (const lang of Object.values(hidden.languages)) assert.ok(!lang!.tree.sections.some(s => s.id === section.id));
+    assert.deepEqual((await db.select().from(itemsTable).where(eq(itemsTable.id, item.id)))[0], item);
+    await db.update(sectionsTable).set({ isVisible: true }).where(eq(sectionsTable.id, section.id));
+    assert.ok(!(await readPublishedContent(tenant.id)).languages.sl!.tree.sections.some(s => s.id === section.id));
+    await replacePublishedSnapshot(tenant);
+    assert.equal((await readPublishedContent(tenant.id)).languages.sl!.tree.sections.find(s => s.id === section.id)?.categories[0].items[0].body, item.body);
+  } finally {
+    await db.delete(tenantsTable).where(eq(tenantsTable.id, tenant.id));
+    assert.equal((await db.select().from(tenantsTable).where(eq(tenantsTable.id, tenant.id))).length, 0);
+  }
+});
+
 test("section tab order stays draft-only until publication and marks the tenant dirty", async () => {
   const [tenant] = await db.insert(tenantsTable).values({
     slug: `snapshot-tab-order-${randomUUID()}`,

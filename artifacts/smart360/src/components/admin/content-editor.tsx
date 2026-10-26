@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback, createContext, useContext, useMemo } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import { SectionVisibility } from "./section-visibility";
 import {
   createSection,
   updateSection,
@@ -2540,6 +2541,7 @@ function CategoryBlock({ category, tenantId, sectionKey, sectionCategories, isEx
 // ==========================================
 
 function SectionBlock({ section, tenantId, allCategories, operatorPlaceCreation }: { section: Section; tenantId: string; allCategories?: Category[]; operatorPlaceCreation: boolean }) {
+  const queryClient = useQueryClient();
   const [editOpen, setEditOpen] = useState(false);
   const [addCatOpen, setAddCatOpen] = useState(false);
   const preview = usePreviewEdit();
@@ -2582,7 +2584,7 @@ function SectionBlock({ section, tenantId, allCategories, operatorPlaceCreation 
                 {section.title}
                 {!section.isVisible && (
                   <span className="flex items-center gap-1 px-1.5 py-0.5 bg-white border border-[#E8EBE6] rounded text-[10px] text-[#66716A] font-medium align-middle">
-                    <EyeOff className="w-3 h-3" /> Skrito
+                    <EyeOff className="w-3 h-3" /> Skrito za goste
                   </span>
                 )}
               </h3>
@@ -2598,6 +2600,11 @@ function SectionBlock({ section, tenantId, allCategories, operatorPlaceCreation 
           </button>}
         </div>
 
+        {operatorPlaceCreation && <SectionVisibility id={section.id} visible={section.isVisible}
+          save={async isVisible => {
+            await updateSection(section.id, { isVisible });
+            await refreshTenantAfterAdminWrite(queryClient, tenantId);
+          }} />}
         <div className="space-y-3">
           {sortedCategories.map((cat) => (
             <CategoryBlock 

@@ -87,7 +87,7 @@ export function LivingGuideSearchSheet({
     const normalizedQuery = normalizedSearchText(query);
     if (!normalizedQuery) return [];
 
-    return sections
+    return visible(sections)
       .flatMap((section: any) =>
         visible(section.categories).flatMap((category: any) => {
           const categoryResult = {
