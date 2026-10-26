@@ -5,6 +5,7 @@ import { db, tenantsTable, tenantAliasesTable, sectionsTable, categoriesTable, i
   smartxstayImportRunsTable as runs, smartxstayImportSourcesTable as sources, changelogTable } from "@workspace/db";
 import { GUIDE_LANGUAGES } from "@workspace/guide-languages";
 import { fetchSmartxstay, smartxstayUrl } from "./smartxstayFetch";
+import { importedItemState } from "./smartxstayFingerprint";
 import { normalizedName, parseSmartxstay, type SourcePage } from "./smartxstayParse";
 import { admitImport, invalidateMediaUsage } from "./mediaUsage";
 import { storePhotoVariants, deletePhotoVariants, IMG_WIDTHS, JPEG_QUALITY } from "../routes/storage";
@@ -21,6 +22,7 @@ type Checkpoint = {
   version?: number; pages?: Record<string, { page: SourcePage; bytes: number }>;
   photos?: Record<string, Photo>; uploaded?: string[]; downloaded?: number; cancelling?: boolean;
   contentCursor?: number;
+  contentHashes?: Record<string, string>;
 };
 class YieldStep extends Error {}
 const defaultIO = { fetch: fetchSmartxstay, store: (slug: string, name: string, data: Buffer) => storePhotoVariants(slug, name, data, true), remove: (slug: string, name: string) => deletePhotoVariants(slug, name, undefined, true), admit: admitImport };
@@ -231,6 +233,8 @@ async function performSmartxstayImport(runId: string, tenantId: string, sourceUr
           await tx.insert(mediaTable).values({ tenantId, itemId: item.id, url: `/api/storage/img/${tenant.slug}/${photo.name}`,
             alt: entry.title, position: i, width: photo.width, height: photo.height });
         }
+        checkpoint.contentHashes ??= {};
+        checkpoint.contentHashes[item.id] = (await importedItemState(tx, item)).hash;
         report.entries++; const group = `${section.title} / ${category.label}`;
         report.groups[group] = (report.groups[group] || 0) + 1;
       }

@@ -3,8 +3,26 @@ import { and, desc, eq } from "drizzle-orm";
 import { db, smartxstayImportRunsTable } from "@workspace/db";
 import { requireOperator } from "../lib/actorGate";
 import { startSmartxstayImport, stepSmartxstayImport } from "../lib/smartxstayImport";
+import { cleanupSmartxstayDrafts } from "../lib/smartxstayCleanup";
+import { ApplySmartxstayCleanupBody, ApplySmartxstayCleanupResponse, PreviewSmartxstayCleanupResponse } from "@workspace/api-zod";
 
 const router = Router();
+router.get("/admin/tenants/:id/smartxstay-cleanup", requireOperator, async (req, res) => {
+  try {
+    res.json(PreviewSmartxstayCleanupResponse.parse(await cleanupSmartxstayDrafts(String(req.params.id))));
+  } catch (error) {
+    res.status(400).json({ error: error instanceof Error ? error.message : "Pregled ni uspel." });
+  }
+});
+router.post("/admin/tenants/:id/smartxstay-cleanup", requireOperator, async (req, res) => {
+  const parsed = ApplySmartxstayCleanupBody.safeParse(req.body);
+  if (!parsed.success) { res.status(400).json({ error: "Neveljavna potrditev. Ponovno preglejte razlike." }); return; }
+  try {
+    res.json(ApplySmartxstayCleanupResponse.parse(await cleanupSmartxstayDrafts(String(req.params.id), parsed.data.approvals)));
+  } catch (error) {
+    res.status(400).json({ error: error instanceof Error ? error.message : "Čiščenje ni uspelo. Ponovno preglejte razlike." });
+  }
+});
 for (const action of ["step", "cancel"]) {
   router.post(`/admin/tenants/:id/smartxstay-imports/:runId/${action}`, requireOperator, async (req, res) => {
     try {

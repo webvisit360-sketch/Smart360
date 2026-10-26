@@ -157,6 +157,8 @@ import type {
   SitePlanImage,
   SitePlanImageUpdate,
   SlugCheckResponse,
+  SmartxstayCleanupInput,
+  SmartxstayCleanupReport,
   SmartxstayImportInput,
   SmartxstayImportReceipt,
   SmartxstayImportRun,
@@ -213,6 +215,143 @@ const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKe
   }
   return result;
 };
+
+export const getPreviewSmartxstayCleanupUrl = (id: string,) => {
+
+
+
+
+  return `/api/admin/tenants/${id}/smartxstay-cleanup`
+}
+
+export const previewSmartxstayCleanup = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<SmartxstayCleanupReport> => {
+
+  return customFetch<SmartxstayCleanupReport>(getPreviewSmartxstayCleanupUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getPreviewSmartxstayCleanupQueryKey = (id: string,) => {
+    return [
+    `/api/admin/tenants/${id}/smartxstay-cleanup`
+    ] as const;
+    }
+
+
+export const getPreviewSmartxstayCleanupQueryOptions = <TData = Awaited<ReturnType<typeof previewSmartxstayCleanup>>, TError = ErrorType<unknown>>(id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof previewSmartxstayCleanup>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getPreviewSmartxstayCleanupQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof previewSmartxstayCleanup>>> = ({ signal }) => previewSmartxstayCleanup(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof previewSmartxstayCleanup>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type PreviewSmartxstayCleanupQueryResult = NonNullable<Awaited<ReturnType<typeof previewSmartxstayCleanup>>>
+export type PreviewSmartxstayCleanupQueryError = ErrorType<unknown>
+
+
+
+export function usePreviewSmartxstayCleanup<TData = Awaited<ReturnType<typeof previewSmartxstayCleanup>>, TError = ErrorType<unknown>>(
+ id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof previewSmartxstayCleanup>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getPreviewSmartxstayCleanupQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getApplySmartxstayCleanupUrl = (id: string,) => {
+
+
+
+
+  return `/api/admin/tenants/${id}/smartxstay-cleanup`
+}
+
+export const applySmartxstayCleanup = async (id: string,
+    smartxstayCleanupInput: SmartxstayCleanupInput, options?: Parameters<typeof customFetch>[1]): Promise<SmartxstayCleanupReport> => {
+
+  return customFetch<SmartxstayCleanupReport>(getApplySmartxstayCleanupUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(smartxstayCleanupInput)
+  }
+);}
+
+
+
+
+
+export const getApplySmartxstayCleanupMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof applySmartxstayCleanup>>, TError,{id: string;data: BodyType<SmartxstayCleanupInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof applySmartxstayCleanup>>, TError,{id: string;data: BodyType<SmartxstayCleanupInput>}, TContext> => {
+
+const mutationKey = ['applySmartxstayCleanup'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof applySmartxstayCleanup>>, {id: string;data: BodyType<SmartxstayCleanupInput>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  applySmartxstayCleanup(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ApplySmartxstayCleanupMutationResult = NonNullable<Awaited<ReturnType<typeof applySmartxstayCleanup>>>
+    export type ApplySmartxstayCleanupMutationBody = BodyType<SmartxstayCleanupInput>
+    export type ApplySmartxstayCleanupMutationError = ErrorType<unknown>
+
+    export const useApplySmartxstayCleanup = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof applySmartxstayCleanup>>, TError,{id: string;data: BodyType<SmartxstayCleanupInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof applySmartxstayCleanup>>,
+        TError,
+        {id: string;data: BodyType<SmartxstayCleanupInput>},
+        TContext
+      > => {
+      return useMutation(getApplySmartxstayCleanupMutationOptions(options));
+    }
 
 export const getStepSmartxstayImportUrl = (id: string,
     runId: string,) => {

@@ -4,6 +4,7 @@ import { useListSmartxstayImports, useStartSmartxstayImport, getListSmartxstayIm
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { SmartxstayCleanup } from "./smartxstay-cleanup";
 
 export function SmartxstayImport({ tenantId }: { tenantId: string }) {
   const [url, setUrl] = useState("");
@@ -73,6 +74,7 @@ export function SmartxstayImport({ tenantId }: { tenantId: string }) {
           } catch (error) { setStepError(error instanceof Error ? error.message : "Preklic ni uspel."); }
         }}>Prekliči obtičani uvoz</Button>
       </div>}
+      <SmartxstayCleanup key={tenantId} tenantId={tenantId} disabled={busy} />
       {history.data?.map(run => {
         const report = run.report;
         const numbers = ["sections", "categories", "entries", "images", "bytes", "sourceBytes"] as const;

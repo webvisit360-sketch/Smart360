@@ -1,8 +1,13 @@
 import DOMPurify from 'dompurify';
+import { collapseEmptyParagraphs } from "./content-spacing";
 
 export function sanitizeHtml(html: string | null | undefined): string {
   if (!html) return "";
   return DOMPurify.sanitize(html);
+}
+
+export function sanitizeDetailHtml(html: string | null | undefined): string {
+  return collapseEmptyParagraphs(sanitizeHtml(html));
 }
 
 /** Rule cards carry inline editor markup only; never nested content/media. */

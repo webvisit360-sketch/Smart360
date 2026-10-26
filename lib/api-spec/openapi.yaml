@@ -22,6 +22,34 @@ tags:
   - name: messages
   - name: site-plan
 paths:
+  /admin/tenants/{id}/smartxstay-cleanup:
+    get:
+      operationId: previewSmartxstayCleanup
+      tags: [tenants]
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        "200":
+          description: Read-only differences; legacy entries require individual approval
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SmartxstayCleanupReport" }
+    post:
+      operationId: applySmartxstayCleanup
+      tags: [tenants]
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/SmartxstayCleanupInput" }
+      responses:
+        "200":
+          description: Revalidated draft-only cleanup result
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SmartxstayCleanupReport" }
   /admin/tenants/{id}/smartxstay-imports/{runId}/step:
     post:
       operationId: stepSmartxstayImport
@@ -3341,6 +3369,54 @@ components:
       required: false
       schema: { type: string, enum: [large, small], default: large }
   schemas:
+    SmartxstayCleanupInput:
+      type: object
+      required: [approvals]
+      properties:
+        approvals:
+          type: array
+          maxItems: 1000
+          items:
+            type: object
+            required: [id, token, legacyApproved]
+            properties:
+              id: { type: string, pattern: "^[a-fA-F0-9-]{36}$" }
+              token: { type: string, pattern: "^[a-f0-9]{64}$" }
+              legacyApproved: { type: boolean }
+    SmartxstayCleanupChange:
+      type: object
+      required: [field, lang, before, after, operations, warnings]
+      properties:
+        field: { type: string }
+        lang: { type: string }
+        before: { type: string }
+        after: { type: string }
+        operations: { type: array, items: { type: string } }
+        warnings: { type: array, items: { type: string } }
+    SmartxstayCleanupEntry:
+      type: object
+      required: [id, title, status, reason, legacy, token, changes]
+      properties:
+        id: { type: string }
+        title: { type: string }
+        status: { type: string }
+        reason: { type: string }
+        legacy: { type: boolean }
+        token: { type: string }
+        changes:
+          type: array
+          items: { $ref: "#/components/schemas/SmartxstayCleanupChange" }
+    SmartxstayCleanupReport:
+      type: object
+      required: [entries, changed, skipped, untouched, ready]
+      properties:
+        entries:
+          type: array
+          items: { $ref: "#/components/schemas/SmartxstayCleanupEntry" }
+        changed: { type: number }
+        skipped: { type: number }
+        untouched: { type: number }
+        ready: { type: number }
     SmartxstayImportInput:
       type: object
       required: [url]

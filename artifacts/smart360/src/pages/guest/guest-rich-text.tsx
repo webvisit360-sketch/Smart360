@@ -1,4 +1,4 @@
-import { sanitizeHtml } from "@/lib/sanitize";
+import { sanitizeDetailHtml as sanitizeHtml } from "@/lib/sanitize";
 
 function richParts(value: unknown): string[] {
   if (typeof value !== "string" || !value.trim()) return [];

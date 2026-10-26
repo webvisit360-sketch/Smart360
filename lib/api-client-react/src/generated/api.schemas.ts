@@ -5,6 +5,46 @@
  * Smart360 API - multi-tenant guest information PWA
  * OpenAPI spec version: 0.1.0
  */
+export type SmartxstayCleanupInputApprovalsItem = {
+  /** @pattern ^[a-fA-F0-9-]{36}$ */
+  id: string;
+  /** @pattern ^[a-f0-9]{64}$ */
+  token: string;
+  legacyApproved: boolean;
+};
+
+export interface SmartxstayCleanupInput {
+  /** @maxItems 1000 */
+  approvals: SmartxstayCleanupInputApprovalsItem[];
+}
+
+export interface SmartxstayCleanupChange {
+  field: string;
+  lang: string;
+  before: string;
+  after: string;
+  operations: string[];
+  warnings: string[];
+}
+
+export interface SmartxstayCleanupEntry {
+  id: string;
+  title: string;
+  status: string;
+  reason: string;
+  legacy: boolean;
+  token: string;
+  changes: SmartxstayCleanupChange[];
+}
+
+export interface SmartxstayCleanupReport {
+  entries: SmartxstayCleanupEntry[];
+  changed: number;
+  skipped: number;
+  untouched: number;
+  ready: number;
+}
+
 export interface SmartxstayImportInput {
   /** @maxLength 2048 */
   url: string;

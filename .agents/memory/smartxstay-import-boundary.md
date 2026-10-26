@@ -14,3 +14,9 @@ Autoscale imports must be request-owned and resumable, not detached background p
 **Why:** A production incident reached photo storage while the report remained empty. Zero displayed counters did not mean no source fetch occurred; telemetry did not prove an instance kill. Progress must be persisted per step, not only at termination.
 
 **How to apply:** Verify restart after every request, cancellation concurrent with a live step, failed cleanup retry, referenced-image protection and source-identity deduplication. Deploy the cancellation UI before asking the owner to cancel an old production run; never cancel or restart production imports automatically.
+
+Legacy draft cleanup may use separate per-entry manual approval after showing differences when the original import checksum is missing. Never label today's content as the original import or silently enroll legacy entries in checksum-protected cleanup.
+
+**Why:** The owner explicitly approved this exception because older imports have neither original content hashes nor retained source checkpoints.
+
+**How to apply:** Keep the legacy warning and individual approval separate from unchanged, checksum-verified imports; revalidate the reviewed content before applying. Opaque Google Maps CID links do not prove a textual address match, so keep unverified address text.

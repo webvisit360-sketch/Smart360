@@ -8,6 +8,76 @@
 import * as zod from 'zod';
 
 
+export const PreviewSmartxstayCleanupParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const PreviewSmartxstayCleanupResponse = zod.object({
+  "entries": zod.array(zod.object({
+  "id": zod.string(),
+  "title": zod.string(),
+  "status": zod.string(),
+  "reason": zod.string(),
+  "legacy": zod.boolean(),
+  "token": zod.string(),
+  "changes": zod.array(zod.object({
+  "field": zod.string(),
+  "lang": zod.string(),
+  "before": zod.string(),
+  "after": zod.string(),
+  "operations": zod.array(zod.string()),
+  "warnings": zod.array(zod.string())
+}))
+})),
+  "changed": zod.number(),
+  "skipped": zod.number(),
+  "untouched": zod.number(),
+  "ready": zod.number()
+})
+
+
+export const ApplySmartxstayCleanupParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const applySmartxstayCleanupBodyApprovalsItemIdRegExp = new RegExp('^[a-fA-F0-9-]{36}$');
+export const applySmartxstayCleanupBodyApprovalsItemTokenRegExp = new RegExp('^[a-f0-9]{64}$');
+export const applySmartxstayCleanupBodyApprovalsMax = 1000;
+
+
+
+export const ApplySmartxstayCleanupBody = zod.object({
+  "approvals": zod.array(zod.object({
+  "id": zod.string().regex(applySmartxstayCleanupBodyApprovalsItemIdRegExp),
+  "token": zod.string().regex(applySmartxstayCleanupBodyApprovalsItemTokenRegExp),
+  "legacyApproved": zod.boolean()
+})).max(applySmartxstayCleanupBodyApprovalsMax)
+})
+
+export const ApplySmartxstayCleanupResponse = zod.object({
+  "entries": zod.array(zod.object({
+  "id": zod.string(),
+  "title": zod.string(),
+  "status": zod.string(),
+  "reason": zod.string(),
+  "legacy": zod.boolean(),
+  "token": zod.string(),
+  "changes": zod.array(zod.object({
+  "field": zod.string(),
+  "lang": zod.string(),
+  "before": zod.string(),
+  "after": zod.string(),
+  "operations": zod.array(zod.string()),
+  "warnings": zod.array(zod.string())
+}))
+})),
+  "changed": zod.number(),
+  "skipped": zod.number(),
+  "untouched": zod.number(),
+  "ready": zod.number()
+})
+
+
 export const StepSmartxstayImportParams = zod.object({
   "id": zod.coerce.string(),
   "runId": zod.coerce.string()

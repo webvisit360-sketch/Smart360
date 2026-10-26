@@ -26,6 +26,13 @@ test("real import HTTP routes: operator can cancel legacy run; host cannot step/
   const base = `http://127.0.0.1:${(server.address() as any).port}/api/admin/tenants/${tenant.id}/smartxstay-imports`;
   const post = (path: string, host = false, body?: object) => fetch(base + path, { method: "POST", headers: { "content-type": "application/json", "x-fixture-actor": host ? "host" : "owner" }, body: JSON.stringify(body || {}) });
   try {
+    const cleanupUrl = base.replace(/smartxstay-imports$/, "smartxstay-cleanup");
+    for (const method of ["GET", "POST"]) {
+      const denied = await fetch(cleanupUrl, { method, headers: { "content-type": "application/json", "x-fixture-actor": "host" }, ...(method === "POST" ? { body: JSON.stringify({ approvals: [] }) } : {}) });
+      assert.ok([403, 404].includes(denied.status), "cleanup is operator-only");
+    }
+    assert.equal((await fetch(cleanupUrl)).status, 200);
+    assert.equal((await fetch(cleanupUrl, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ approvals: [] }) })).status, 200);
     const [legacy] = await db.insert(runs).values({ tenantId: tenant.id, sourceUrl: "https://app.smartxstay.com/gen/s/fixture", status: "importing" }).returning();
     for (const action of ["step", "cancel"]) {
       const denied = await post(`/${legacy.id}/${action}`, true);

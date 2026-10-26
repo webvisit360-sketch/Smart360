@@ -22,7 +22,7 @@ import {
 } from "@workspace/api-client-react";
 import { useLocation } from "wouter";
 import { getOpenStatus } from "@/lib/hours";
-import { sanitizeHtml, ruleInlineHtml, ruleInlineText } from "@/lib/sanitize";
+import { sanitizeHtml, sanitizeDetailHtml, ruleInlineHtml, ruleInlineText } from "@/lib/sanitize";
 import { resolveTenantMapsUrl } from "@/lib/tenant-maps";
 import { itemMapsHref } from "@/lib/maps-href";
 import { beginGuestActivity, endGuestActivity, isReloadSafe } from "@/lib/bundle-freshness";
@@ -380,11 +380,11 @@ function bodyHtml(body: string | null | undefined): string {
     if (Array.isArray(parsed)) {
       return parsed
         .filter((part): part is string => typeof part === "string" && !!part.trim())
-        .map((part) => `<p>${sanitizeHtml(part)}</p>`)
+        .map((part) => `<p>${sanitizeDetailHtml(part)}</p>`)
         .join("");
     }
   } catch {}
-  return sanitizeHtml(body);
+  return sanitizeDetailHtml(body);
 }
 
 function normalizeDisplayText(value: unknown): string {
