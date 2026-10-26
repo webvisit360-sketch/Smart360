@@ -3448,6 +3448,7 @@ export const CategoryUpdateExploreGroup = {
 } as const;
 
 export interface CategoryUpdate {
+  sectionId?: string;
   label?: string;
   icon?: string;
   layout?: string;

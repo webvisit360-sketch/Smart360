@@ -8,6 +8,7 @@ import {
   restoreSection,
   createCategory,
   updateCategory,
+  useGetTenant,
   deleteCategory,
   createItem,
   updateItem,
@@ -799,6 +800,12 @@ type CategoryDialogProps =
 export function CategoryDialog({ mode, tenantId, sectionId, sectionKey, category, onDone }: CategoryDialogProps) {
   const queryClient = useQueryClient();
   const [busy, setBusy] = useState(false);
+  const { data: tenantContent } = useGetTenant(tenantId);
+  const originalSectionId = mode === "edit"
+    ? tenantContent?.sections?.find(section => section.categories?.some(entry => entry.id === category.id))?.id ?? ""
+    : sectionId;
+  const [chosenSectionId, setTargetSectionId] = useState("");
+  const targetSectionId = chosenSectionId || originalSectionId;
 
   // Ponudba/Nastanitev use their own group sets; everything else keeps the
   // Okolica groups. A stored value outside the section's set (e.g. the column
@@ -833,13 +840,14 @@ export function CategoryDialog({ mode, tenantId, sectionId, sectionKey, category
   const [isVisible, setIsVisible] = useState(category?.isVisible ?? true);
 
   const baseline = {
+    targetSectionId: originalSectionId,
     label: category?.label ?? "",
     icon: category?.icon ?? "catalog:auto",
     layout: category?.layout ?? "text",
     exploreGroup: initialGroup,
     isVisible: category?.isVisible ?? true,
   };
-  const current = { label, icon, layout, exploreGroup, isVisible };
+  const current = { label, icon, layout, exploreGroup, isVisible, targetSectionId };
   const { restored, clear, discardRestored } = useDraft(
     "category",
     mode === "edit" ? category.id : `new-${sectionId}`,
@@ -849,6 +857,7 @@ export function CategoryDialog({ mode, tenantId, sectionId, sectionKey, category
 
   useEffect(() => {
     if (restored) {
+      setTargetSectionId(restored.targetSectionId ?? "");
       setLabel(restored.label);
       setIcon(restored.icon);
       iconManuallyChosen.current = true;
@@ -892,6 +901,7 @@ export function CategoryDialog({ mode, tenantId, sectionId, sectionKey, category
         });
       } else {
         await updateCategory(category.id, {
+          ...(targetSectionId && targetSectionId !== originalSectionId ? { sectionId: targetSectionId } : {}),
           label: label.trim(),
           icon: icon.trim(),
           layout,
@@ -943,6 +953,18 @@ export function CategoryDialog({ mode, tenantId, sectionId, sectionKey, category
     <div className="flex min-h-0 flex-1 flex-col gap-4">
       <DialogScrollBody>
       {restored && <DraftNotice onDiscard={discardRestored} />}
+      {mode === "edit" && <div className="space-y-1">
+        <Label>Sekcija</Label>
+        <Select value={targetSectionId} onValueChange={setTargetSectionId} disabled={busy}>
+          <SelectTrigger aria-label="Sekcija"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            {tenantContent?.sections?.map(section => <SelectItem key={section.id} value={section.id}>
+              {section.title}{section.isVisible === false ? " — Skrito za goste" : ""}
+            </SelectItem>)}
+          </SelectContent>
+        </Select>
+        <p className="text-xs text-muted-foreground">Kategorija z vsemi vnosi bo na koncu izbrane sekcije. Sprememba velja za goste po ponovni objavi.</p>
+      </div>}
       <div className="space-y-1">
         <Label>Ime kategorije *</Label>
         <Input

@@ -8,6 +8,7 @@
 import type { CategoryUpdateExploreGroup } from './categoryUpdateExploreGroup';
 
 export interface CategoryUpdate {
+  sectionId?: string;
   label?: string;
   icon?: string;
   layout?: string;

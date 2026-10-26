@@ -5933,6 +5933,7 @@ components:
     CategoryUpdate:
       type: object
       properties:
+        sectionId: { type: string }
         label: { type: string }
         icon: { type: string }
         layout: { type: string }

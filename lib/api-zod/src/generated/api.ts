@@ -5711,6 +5711,7 @@ export const UpdateCategoryParams = zod.object({
 })
 
 export const UpdateCategoryBody = zod.object({
+  "sectionId": zod.string().optional(),
   "label": zod.string().optional(),
   "icon": zod.string().optional(),
   "layout": zod.string().optional(),

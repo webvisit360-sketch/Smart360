@@ -698,13 +698,32 @@ router.patch("/admin/categories/:id", async (req, res): Promise<void> => {
     res.status(404).json({ error: "Category not found in active section" });
     return;
   }
-  const [category] = await db
-    .update(categoriesTable)
-    .set(cleanContentFields(parsed.data))
-    .where(eq(categoriesTable.id, id))
-    .returning();
+  const category = await db.transaction(async tx => {
+    const [source] = await tx.select().from(sectionsTable)
+      .where(eq(sectionsTable.id, prevCategory.sectionId));
+    if (!source) return null;
+    // Serialize category moves within a tenant; never permit a cross-tenant move.
+    await tx.select({ id: tenantsTable.id }).from(tenantsTable)
+      .where(eq(tenantsTable.id, source.tenantId)).for("update");
+    const [current] = await tx.select().from(categoriesTable)
+      .where(and(eq(categoriesTable.id, id), isNull(categoriesTable.deletedAt))).for("update");
+    if (!current || current.sectionId !== prevCategory.sectionId) return null;
+    const changes = cleanContentFields(parsed.data);
+    if (parsed.data.sectionId && parsed.data.sectionId !== current.sectionId) {
+      const [target] = await tx.select().from(sectionsTable)
+        .where(and(eq(sectionsTable.id, parsed.data.sectionId),
+          eq(sectionsTable.tenantId, source.tenantId), isNull(sectionsTable.deletedAt))).for("update");
+      if (!target) return null;
+      const [last] = await tx.select({ position: sql<number>`coalesce(max(${categoriesTable.position}), -1)` })
+        .from(categoriesTable).where(and(eq(categoriesTable.sectionId, target.id), isNull(categoriesTable.deletedAt)));
+      changes.position = Number(last?.position ?? -1) + 1;
+    }
+    const [updated] = await tx.update(categoriesTable).set(changes)
+      .where(eq(categoriesTable.id, id)).returning();
+    return updated;
+  });
   if (!category) {
-    res.status(404).json({ error: "Not found" });
+    res.status(404).json({ error: "Category or target section unavailable" });
     return;
   }
   if (prevCategory) {

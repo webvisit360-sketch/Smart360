@@ -57,6 +57,63 @@ function send(base: string, method: string, path: string, body?: unknown) {
   });
 }
 
+test("category section move preserves descendants, translations and published snapshot", async () => {
+  if (process.env.NODE_ENV === "production" || process.env.REPLIT_DEPLOYMENT) throw new Error("Dev only");
+  const { ensureTenantPublication, readPublishedContent, replacePublishedSnapshot } = await import("../lib/publishedSnapshots");
+  const marker = randomUUID();
+  const [tenant] = await db.insert(tenantsTable).values({slug:`move-${marker}`,name:"Move test",isPublished:true}).returning();
+  const server = await listen({kind:"owner",requestIp:"127.0.0.1"});
+  const ids: string[] = [];
+  try {
+    const [source, target] = await db.insert(sectionsTable).values([
+      {tenantId:tenant.id,key:"explore",title:"Okolica"},
+      {tenantId:tenant.id,key:"services",title:"Storitve"},
+    ]).returning();
+    const [category] = await db.insert(categoriesTable).values({sectionId:source.id,label:"TIC",icon:"catalog:tic",isVisible:true}).returning();
+    const [existing] = await db.insert(categoriesTable).values({sectionId:target.id,label:"Existing",position:8}).returning();
+    const entries = await db.insert(itemsTable).values([1,2,3].map(n=>({categoryId:category.id,title:`Entry ${n}`,body:"<p>Unchanged</p>"}))).returning();
+    ids.push(category.id,...entries.map(e=>e.id));
+    await db.insert(mediaTable).values(entries.map(e=>({itemId:e.id,url:"https://example.invalid/photo.jpg",kind:"image" as const})));
+    await db.insert(translationsTable).values(["sl","en","de","it","fr","nl","hr"].map(lang=>({model:"item",recordId:entries[0]!.id,field:"title",lang,value:`Translation ${lang}`})));
+    const content = async () => JSON.stringify({
+      entries:await db.select().from(itemsTable).where(eq(itemsTable.categoryId,category.id)),
+      media:await db.select().from(mediaTable).where(inArray(mediaTable.itemId,entries.map(e=>e.id))),
+      translations:await db.select().from(translationsTable).where(inArray(translationsTable.recordId,ids)),
+    });
+    await ensureTenantPublication(tenant.id);
+    const snapshot = JSON.stringify(await readPublishedContent(tenant.id));
+    const before = await content();
+    const response = await send(server.base,"PATCH",`/admin/categories/${category.id}`,{sectionId:target.id});
+    assert.equal(response.status,200,await response.clone().text());
+    const moved = await response.json() as {sectionId:string;position:number;icon:string};
+    assert.equal(moved.sectionId,target.id);
+    assert.equal(moved.position,9);
+    assert.equal(moved.icon,category.icon);
+    assert.equal(await content(),before,"descendant and translation rows byte-identical");
+    assert.equal(JSON.stringify(await readPublishedContent(tenant.id)),snapshot);
+    assert.equal((await send(server.base,"PATCH",`/admin/categories/${category.id}`,{sectionId:randomUUID()})).status,404);
+    const reordered = await send(server.base,"POST","/admin/categories/reorder",{ids:[category.id,existing.id]});
+    assert.equal(reordered.status,200,await reordered.clone().text());
+    const [fresh] = await db.select().from(tenantsTable).where(eq(tenantsTable.id,tenant.id));
+    await replacePublishedSnapshot(fresh!);
+    const published = await readPublishedContent(tenant.id);
+    for (const lang of ["sl","en","de","it","fr","nl","hr"]) {
+      const sections = published.languages[lang]!.tree.sections;
+      assert.ok(sections.find(s=>s.id===target.id)?.categories.some(c=>c.id===category.id));
+      assert.ok(!sections.find(s=>s.id===source.id)?.categories.some(c=>c.id===category.id));
+    }
+    await db.update(sectionsTable).set({isVisible:false}).where(eq(sectionsTable.id,source.id));
+    assert.equal((await send(server.base,"PATCH",`/admin/categories/${category.id}`,{sectionId:source.id})).status,200);
+    assert.equal(await content(),before);
+  } finally {
+    await server.close();
+    if(ids.length) await db.delete(translationsTable).where(inArray(translationsTable.recordId,ids));
+    await db.delete(changelogTable).where(eq(changelogTable.tenantId,tenant.id));
+    await db.delete(tenantsTable).where(eq(tenantsTable.id,tenant.id));
+    assert.equal((await db.select().from(tenantsTable).where(eq(tenantsTable.id,tenant.id))).length,0);
+  }
+});
+
 test("phase2 permission fence: protected tenant fields are atomic; own operational settings and entries survive", async (t) => {
   if (process.env.NODE_ENV === "production" || process.env.REPLIT_DEPLOYMENT) throw new Error("Dev fixtures only");
   const marker = randomUUID();
