@@ -19,4 +19,4 @@ Legacy draft cleanup may use separate per-entry manual approval after showing di
 
 **Why:** The owner explicitly approved this exception because older imports have neither original content hashes nor retained source checkpoints.
 
-**How to apply:** Keep the legacy warning and individual approval separate from unchanged, checksum-verified imports; revalidate the reviewed content before applying. Opaque Google Maps CID links do not prove a textual address match, so keep unverified address text.
+**How to apply:** Keep the legacy warning and individual approval separate from unchanged, checksum-verified imports; revalidate the reviewed content before applying. The owner subsequently approved postal-pattern address removal without map proof, provided it is marked “preveri naslov” and individually confirmed after reviewing differences.

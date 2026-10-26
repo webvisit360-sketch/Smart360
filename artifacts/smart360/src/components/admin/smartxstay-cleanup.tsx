@@ -16,7 +16,7 @@ export function SmartxstayCleanup({ tenantId, disabled }: { tenantId: string; di
     try {
       const result = await previewSmartxstayCleanup(tenantId);
       setReport(result);
-      setSelected(result.entries.filter(e => e.status === "ready" && !e.legacy).map(e => e.id));
+      setSelected(result.entries.filter(e => e.status === "ready" && !e.legacy && !e.changes.some(c => c.operations.includes("preveri naslov"))).map(e => e.id));
     } catch (e) { setError(e instanceof Error ? e.message : "Pregled ni uspel."); }
     finally { setBusy(false); }
   };
@@ -28,6 +28,7 @@ export function SmartxstayCleanup({ tenantId, disabled }: { tenantId: string; di
       <p role="status">{applied ? "Rezultat" : "Predogled"}: spremenjeno {report.changed} · preskočeno {report.skipped} · nespremenjeno {report.untouched} · pripravljeno {report.ready}</p>
       {report.entries.map(entry => <details key={entry.id} className="rounded-lg border p-3">
         <summary className="cursor-pointer font-medium">{entry.title} — {entry.reason}</summary>
+        {entry.changes.some(c => c.operations.includes("preveri naslov")) && <strong className="inline-block rounded border-2 px-2 py-1 my-2 text-sm">preveri naslov</strong>}
         {entry.legacy && <p className="my-2 text-sm">Opozorilo: prvotni uvoz nima kontrolne vsote. Ni mogoče ugotoviti, ali je bila vsebina že ročno urejena. Preglejte vse razlike, preden posebej odobrite ta vnos.</p>}
         {entry.changes.map(change => <div key={`${change.field}-${change.lang}`} className="my-3 space-y-2">
           <p className="text-sm font-medium">{change.lang.toUpperCase()} · {change.operations.join("; ") || "Brez sprememb"}</p>

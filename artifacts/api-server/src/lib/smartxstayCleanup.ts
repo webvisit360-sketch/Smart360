@@ -50,7 +50,6 @@ export async function cleanupSmartxstayDrafts(tenantId: string, approvals?: Appr
       if ((receipt && current.hash !== receipt.hash) || (!receipt && baseline && current.hash !== baseline)) {
         skip("Vsebina je bila po uvozu/čiščenju spremenjena; ohranjena brez posega."); continue;
       }
-      if (receipt && current.hash === receipt.hash) { row.reason = "Že počiščeno."; continue; }
       const add = (body: string, lang: string, field: string) => {
         const result = cleanupImportedBody(body, lang, category.label, item.mapQuery);
         if (result.after !== body || result.warnings.length) row.changes.push({ ...result, field, lang });

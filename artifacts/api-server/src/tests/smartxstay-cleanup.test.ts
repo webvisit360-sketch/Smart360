@@ -10,15 +10,24 @@ import { importedItemState } from "../lib/smartxstayFingerprint";
 import { cleanupSmartxstayDrafts } from "../lib/smartxstayCleanup";
 
 const prodnik = JSON.parse(readFileSync(new URL("./fixtures/smartxstay-prodnik.json", import.meta.url), "utf8"));
-test("exact Prodnik copy: category, Slovenian hours, gaps; CID address is conservatively retained; idempotent", () => {
+test("exact Prodnik copy: postal address removal proposed for confirmation even with CID; idempotent", () => {
   const result = cleanupImportedBody(prodnik.body, "sl", prodnik.category, prodnik.mapQuery);
   assert.doesNotMatch(result.after, /Restaurant|Monday|AM|PM/);
   assert.match(result.after, /Ponedeljek: zaprto/);
   assert.match(result.after, /Sobota: 09.00–22.00/);
-  assert.match(result.after, /Juvanje 1/);
+  assert.doesNotMatch(result.after, /Naslov|Juvanje 1/);
+  assert.ok(result.operations.includes("preveri naslov"));
   assert.match(result.after, /href="http:\/\/www.prodnik.com\/"/);
   assert.equal(result.warnings.length, 1);
   assert.equal(cleanupImportedBody(result.after, "sl", prodnik.category, prodnik.mapQuery).after, result.after);
+});
+test("non-address prose under Naslov is never proposed; three-line postal block is", () => {
+  const negative = "<p>Naslov</p><p>Za več informacij vprašajte na recepciji.</p>";
+  assert.equal(cleanupImportedBody(negative, "sl", "Kulinarika", null).after, negative);
+  const positive = "<p>Naslov</p><p>Juvanje 1</p><p>3333 Ljubno ob Savinji</p><p>Slovenija</p><p>Kontakt</p>";
+  const result = cleanupImportedBody(positive, "sl", "Kulinarika", null);
+  assert.doesNotMatch(result.after, /Naslov|Juvanje|3333|Slovenija/);
+  assert.match(result.after, /Kontakt/);
 });
 test("remove only verified address lines, preserve other prose/links and English hours", () => {
   const html = '<p>Restaurant</p><p>Naslov</p><p>Juvanje 1</p><p>3333 Ljubno</p><p>Monday: 12:00 AM – 12:00 PM</p><p><a href="/keep"><strong>Keep</strong></a></p>';

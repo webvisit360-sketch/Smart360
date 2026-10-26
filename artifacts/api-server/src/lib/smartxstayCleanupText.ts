@@ -35,6 +35,13 @@ function ownAddress(mapQuery: string | null): string {
   } catch { return ""; }
 }
 const normalizedAddress = (s: string) => normalizedName(s).replace(/[^\p{L}\p{N}]/gu, "");
+const countries = /^(?:slovenija|slovenia|slovenien|hrvatska|croatia|avstrija|austria|italija|italy|italia)$/i;
+function postalAddress(lines: string[]): boolean {
+  const text = lines.join(", ");
+  // Require a street/locality with house number AND postal code with place.
+  // Anchored grammar deliberately rejects prose and opening-hours text.
+  return /^[\p{L}][\p{L}\s.'’/-]{1,80}\s+\d{1,4}[a-z]?\s*,?\s+(?:SI[- ]?)?\d{4,5}\s+[\p{L}][\p{L}\s.'’/-]{1,80}(?:,\s*[\p{L}\s]+)?$/iu.test(text);
+}
 const labelGroups = [
   ["restaurant", "restavracija", "restavracije", "restaurants", "kulinarika"],
   ["bar", "bari", "bars", "kulinarika"],
@@ -66,6 +73,18 @@ export function cleanupImportedBody(body: string, lang: string, category: string
     const address = ownAddress(mapQuery);
     let matched = false;
     for (let count = 1; count <= 3 && addressIndex + count < lines.length; count++) {
+      const candidates = lines.slice(addressIndex + 1, addressIndex + count + 1);
+      if (candidates.some(x => /<a\b/i.test(x.html)) || !postalAddress(candidates.map(x => x.text))) continue;
+      // Include a separate country line, but never swallow the next prose line.
+      const next = lines[addressIndex + count + 1];
+      if (count < 3 && next && countries.test(next.text)) candidates.push(next);
+      [lines[addressIndex], ...candidates].forEach(x => replace(x.index, ""));
+      operations.push("preveri naslov");
+      warnings.push("Preveri naslov: predlagana odstranitev poštnega bloka; potreben je pregled in potrditev tega vnosa.");
+      matched = true; break;
+    }
+    for (let count = 1; count <= 3 && addressIndex + count < lines.length; count++) {
+      if (matched) break;
       const candidates = lines.slice(addressIndex + 1, addressIndex + count + 1);
       if (address && normalizedAddress(candidates.map(x => x.text).join(" ")) === normalizedAddress(address)) {
         [lines[addressIndex], ...candidates].forEach(x => replace(x.index, ""));
