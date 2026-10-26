@@ -1,4 +1,10 @@
 ---
+
+Kuula's documented `postloaded` event was NOT emitted by the real Kamp Savinja collection during browser verification of command-assisted panorama navigation. Only `frameloaded` and `orientation` were observed; the panorama visibly changed.
+
+**Why:** A first-panorama-only reset-button implementation would have hidden the control on secondary panoramas too. That experiment was removed, not shipped.
+
+**How to apply:** Do not equate documented API support with verified events for this embed. Require genuine panorama-ID transitions before implementing conditional reset visibility; timers, focus and panning cannot distinguish panorama changes. A single-post browser fixture is not proof of a real single-panorama tenant.
 name: Kuula instruction overlay
 description: External viewer's instruction toggle and precedence, distinct from navigation chrome.
 ---
