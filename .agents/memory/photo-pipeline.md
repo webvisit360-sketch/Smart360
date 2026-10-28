@@ -9,6 +9,12 @@ description: How tenant photos are stored/served (object storage, two widths) an
 - Seed `scripts/seed-melipu-photos.mjs` is idempotent (deletes+reinserts media per item); matches categories by `categories.key` (added column) falling back to label; sections got `image_url` for mediterran big cards. Two labels differ from slike.json (`Kultura`→`Kulturna dediščina`, `Narava`→`Naravna dediščina`) — keys are already backfilled, future seeds match on key.
 - wifi/check/ice photos are intentional stand-ins — do not replace with stock.
 
+## Panorama compatibility
+
+Keep panorama gallery bytes behind the existing gallery-variant URL rather than adding an independently addressed fourth object.
+**Why:** offline manifests, storage cleanup, duplication and quota accounting already share the three-variant contract; a new width requires auditing all of those consumers together. Existing panorama uploads are not retroactively enlarged.
+**How to apply:** the gallery variant is a quality role, not a guarantee that its stored raster is exactly 1400 pixels wide; use actual decoded dimensions for viewing.
+
 ## Video pipeline (task 15)
 - media table: kind ('image'|'video'), poster_url, duration_sec.
 - Upload route accepts both; videos: ffprobe validate (≤180 s, ≤4K), ffmpeg →

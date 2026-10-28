@@ -39,6 +39,7 @@ import { SosEntryContext } from "./living-guide-sos-context";
 import { FreeTourRecorder, isTourRecordingEnabled } from "./living-guide-free-tour";
 import { TourSummaryContext } from "./living-guide-tour-summary";
 import { PanoramaStrip } from "./living-guide-panorama";
+import { usesPhotoEntryList } from "../../lib/category-photo-list";
 import { splitPanoramaMedia } from "@/lib/panorama-media";
 import { detailSheetClass } from "@/lib/detail-sheet-layout";
 import { WeatherCard, WeatherProvider } from "./living-guide-weather";
@@ -4053,7 +4054,9 @@ function DetailView({ category, section, itemId, lang, t, galleryIndex, onGaller
         content = <TemplateA category={category} items={[activeItem]} onOrderClick={onOrderClick} mediaOverride={normalizeGuestMedia(activeItem.media)} titleOverride={activeItem.title} tenant={tenant} lang={lang} t={t} onBack={onBack} galleryIndex={galleryIndex} onGalleryIndex={onGalleryIndex} />;
     }
   } else {
-    if (layout === "wifi") {
+    if (usesPhotoEntryList(layout, items)) {
+      content = <TemplateB category={category} items={items} t={t} onBack={onBack} onOpenItem={onOpenItem} onOrderClick={onOrderClick} fullHeight={layout === "apartments"} />;
+    } else if (layout === "wifi") {
       content = <TemplateE category={category} items={items} tenant={tenant} t={t} onBack={onBack} />;
     } else if (layout === "help") {
       content = <EmergencyHelpTemplate category={category} items={items} onBack={onBack} />;

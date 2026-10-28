@@ -1,6 +1,7 @@
 import { Router, type IRouter } from "express";
 import multer from "multer";
 import sharp from "sharp";
+import { inspectPhoto, photoVariant } from "../lib/photo-processing";
 import { randomUUID } from "node:crypto";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
@@ -82,24 +83,21 @@ export async function deletePhotoVariants(
 }
 
 /**
- * Resize one original into the two serving widths and upload both to the
- * public object dir under media/<slug>/<width>/<name>. Honours the EXIF
- * orientation flag (rotate) and strips metadata; never upscales.
+ * Store thumbnail/card/gallery variants under the existing variant keys.
+ * Panoramas use a bounded 8192×4096 raster for the gallery (1400) key;
+ * regular photos retain their existing sizes. EXIF is rotated then stripped.
  */
 export async function storePhotoVariants(
   slug: string,
   name: string,
   original: Buffer,
   bounded = false,
+  panorama = false,
 ): Promise<void> {
   const searchPath = storage.getPublicObjectSearchPaths()[0];
   if (!searchPath) throw new Error("PUBLIC_OBJECT_SEARCH_PATHS not set");
   for (const w of IMG_WIDTHS) {
-    const buf = await sharp(original)
-      .rotate()
-      .resize({ width: w, withoutEnlargement: true })
-      .jpeg({ quality: JPEG_QUALITY[w] ?? 70, mozjpeg: true })
-      .toBuffer();
+    const buf = await photoVariant(original, w, JPEG_QUALITY[w] ?? 70, panorama);
     const { bucketName, objectName } = parseObjectPath(
       `${searchPath}/media/${slug}/${w}/${name}`,
     );
@@ -468,11 +466,11 @@ router.post(
     } else {
       // Reject non-images / corrupt files with a 400 before touching storage.
       try {
-        const meta = await sharp(req.file.buffer).metadata();
+        const meta = await inspectPhoto(req.file.buffer, isPanorama);
         const dimensions = orientedImageDimensions(meta);
         if (
           !dimensions ||
-          dimensions.width * dimensions.height > 60_000_000
+          dimensions.width <= 0 || dimensions.height <= 0
         ) {
           res.status(400).json({ error: "Neveljavna ali prevelika slika." });
           return;
@@ -480,12 +478,14 @@ router.post(
         mediaWidth = dimensions.width;
         mediaHeight = dimensions.height;
       } catch {
-        res.status(400).json({ error: "Datoteka ni veljavna slika." });
+        res.status(400).json({ error: isPanorama
+          ? "Panorama ni veljavna slika ali presega 160 milijonov pik. Izvozite manjšo sliko (največ 100 MB)."
+          : "Slika ni veljavna ali presega 60 milijonov pik. Za panoramo uporabite Dodaj panoramo (največ 160 milijonov pik, 100 MB)." });
         return;
       }
       const name = `${base}.jpg`;
       try {
-        await storePhotoVariants(row.slug, name, req.file.buffer);
+        await storePhotoVariants(row.slug, name, req.file.buffer, false, isPanorama);
       } catch (err) {
         req.log.error({ err }, "photo upload failed");
         res.status(500).json({ error: "Upload failed" });
