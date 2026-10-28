@@ -234,9 +234,9 @@
   pointer-events:none;
 }
 .lg2-app.lgs-root .v--det[data-detail-transition="closing"] .lg2-detail-sheet {
-  /* Match the existing Trend sheet exit; the photo follows on the slower route. */
+  /* Keep the panel and photo in the same closing time envelope. */
   transform:translateY(100dvh);
-  transition:transform 180ms cubic-bezier(.4, 0, 1, 1);
+  transition:transform 340ms cubic-bezier(.32, 0, .24, 1);
 }
 .lgs-root .lgp-root, .lgs-root .lgs-sheet-panel, .lgs-root .lg2-ann-layer {
   touch-action:pan-y; overscroll-behavior-y:contain;

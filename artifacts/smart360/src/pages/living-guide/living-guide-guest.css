@@ -1380,8 +1380,8 @@ body[data-t="noc"] .lg2-detail-hero--ambient {
 }
 
 .lg2-detail-sheet[data-lg-sheet-phase="closing"] {
-  transition-duration: 180ms;
-  transition-timing-function: cubic-bezier(.4, 0, 1, 1);
+  transition-duration: 340ms;
+  transition-timing-function: cubic-bezier(.32, 0, .24, 1);
   pointer-events: none;
 }
 

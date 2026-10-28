@@ -1258,7 +1258,6 @@ export default function LivingGuideGuestShell({
       let zeroDurationFrame = 0;
       let completed = false;
       const cleanup = () => {
-        sheet?.removeEventListener("transitionend", onTransitionFinished);
         if (zeroDurationFrame) window.cancelAnimationFrame(zeroDurationFrame);
         if (closeTransitionCleanupRef.current === cleanup) {
           closeTransitionCleanupRef.current = null;
@@ -1273,40 +1272,27 @@ export default function LivingGuideGuestShell({
         flushSync(() => setDetailTransitionPhase("restoring"));
         afterAnimation();
       };
-      function onTransitionFinished(event: TransitionEvent) {
-        if (
-          event.target === sheet &&
-          (event.propertyName === "transform" ||
-            event.propertyName === "opacity")
-        ) {
-          complete();
-        }
-      }
-
-      sheet?.addEventListener("transitionend", onTransitionFinished);
       closeTransitionCleanupRef.current = cleanup;
       syncHeldViewStack(false);
       flushSync(() => setDetailTransitionPhase("closing"));
 
-      // A zero-duration transition has no transitionend event. Resolve that
-      // accessibility/test case on the next frame, never with a close timer.
-      zeroDurationFrame = window.requestAnimationFrame(() => {
-        if (!sheet) {
-          complete();
-          return;
-        }
-        const style = window.getComputedStyle(sheet);
-        const durations = style.transitionDuration
-          .split(",")
-          .map((value) =>
-            value.trim().endsWith("ms")
-              ? Number.parseFloat(value)
-              : Number.parseFloat(value) * 1000,
-          );
-        if (durations.every((duration) => !Number.isFinite(duration) || duration <= 0)) {
-          complete();
-        }
-      });
+      // Observe the entire closing composition, not the first transitionend.
+      // In particular a slower child/photo or the restoring source list must
+      // finish before navigation. Cancelled opening transitions are not a
+      // completion signal: the next frame observes their closing replacements.
+      const awaitComposition = () => {
+        const moving = [sheet, heldLayerRef.current].some(layer =>
+          layer?.getAnimations({ subtree: true }).some(animation =>
+            animation instanceof CSSTransition &&
+            ["transform", "translate", "opacity", "filter"].includes(animation.transitionProperty) &&
+            (animation.playState === "running" || animation.playState === "paused" || animation.pending),
+          ),
+        );
+        if (moving) zeroDurationFrame = window.requestAnimationFrame(awaitComposition);
+        else complete();
+      };
+      // Zero/reduced motion also completes here without a timer/event deadline.
+      zeroDurationFrame = window.requestAnimationFrame(awaitComposition);
     },
     [location, syncHeldViewStack],
   );

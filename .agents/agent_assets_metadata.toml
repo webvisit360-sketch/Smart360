@@ -3452,3 +3452,17 @@ mtime_ms = 1793217190114
 storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/5f2989d3-7ebb-4ba8-8cd3-8ee7a1403248/7f0ed222-9c97-47aa-a8fc-91a6950a6571"
 storage_version_token = "1793217221094517"
 content_type = "text/html"
+
+[[outputs]]
+id = "glVXA9Ap4MHp_5ceGCMv3"
+uri = "file://generated-artifacts/detail-close/final/gallery.html"
+type = "html"
+title = "Zapiranje podrobnosti — dokaz po sličicah"
+description = "390 × 844, Trend in Enostaven, s fotografijo in brez nje. Koraki od 0 do 340 ms ter končno stanje; izoliran razvojni preizkus."
+logical_id = "fe058428-e4da-40e1-ad98-a7b527ae296a"
+content_hash = "sha256:a62017d0a24c9447406dd529c56d9caa7b18d039e63afa5c33e36486386e0729"
+size = 3056737
+mtime_ms = 1793220189674
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/fe058428-e4da-40e1-ad98-a7b527ae296a/9af12a2c-860d-4c9d-b949-0ac1dc15d93c"
+storage_version_token = "1793220299172847"
+content_type = "text/html"

@@ -511,6 +511,35 @@ test("guest touch-scroll smoke — every main guest surface", { timeout: 600_000
       }
     });
 
+    for (const design of ["simple", "trend"] as const) {
+      await t.test(`${design} close waits for the longest child transition, not the route deadline`, async () => {
+        await openFixtureDetail(design, "photo");
+        const override = await page.addStyleTag({ content:
+          '.lg2-detail-sheet[data-lg-sheet-phase="closing"], .lgs-root .v--det[data-detail-transition="closing"] .lg2-detail-sheet { transition-duration: 700ms !important; }',
+        });
+        await page.evaluate(() => {
+          const w = window as any;
+          w.__longClose = { childEnded: false, completed: false, premature: false };
+          document.addEventListener("transitionend", (event: any) => {
+            if (event.target?.matches?.('.lg2-detail-sheet[data-lg-sheet-phase="closing"]') &&
+                event.propertyName === "transform") w.__longClose.childEnded = true;
+          }, { capture: true });
+          window.addEventListener("lg2:detail-close-animation-end", () => {
+            w.__longClose.completed = true;
+            w.__longClose.premature = !w.__longClose.childEnded;
+          }, { once: true });
+        });
+        const box = await page.locator(".v--det.on .lg2-detail-scroll").last().boundingBox();
+        assert.ok(box);
+        await dispatchPull(Math.round(Math.min(560, box.y + box.height - 70)), [12,30,55,80,105,130], 97, 40);
+        await page.waitForFunction(() => (window as any).__longClose.completed);
+        const trace = await page.evaluate(() => (window as any).__longClose);
+        assert.equal(trace.childEnded, true);
+        assert.equal(trace.premature, false, "route handoff must wait for the slower child");
+        await override.evaluate(element => element.remove());
+      });
+    }
+
     await t.test("Trend close ignores route transitioncancel and waits for real close transition before back-source swap", async () => {
       await openFixtureDetail("trend", "photo");
       await page.evaluate(() => {
