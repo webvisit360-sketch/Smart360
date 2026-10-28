@@ -35,6 +35,14 @@
   pointer-events:none; will-change:transform; transition:transform .28s cubic-bezier(.2,.8,.2,1);
 }
 .lg2-pano-stage.is-dragging img { transition:none; }
+.lg2-pano-sphere { position:absolute; inset:0; }
+/* Do not let the flat-image rules position Pannellum's preview or UI images. */
+.lg2-pano-sphere img { position:static; height:auto; width:auto; max-width:100%; transform:none; will-change:auto; transition:none; }
+.lg2-pano-sphere .pnlm-about-msg { display:none; }
+.lg2-pano-status { position:absolute; inset:0; display:grid; place-items:center; padding:64px 32px; text-align:center; background:#101317; color:white; }
+.lg2-pano-license { position:absolute; z-index:2; right:8px; bottom:calc(64px + env(safe-area-inset-bottom, 0px)); max-width:calc(100% - 32px); font:11px/1.4 sans-serif; color:white; background:#101317c9; border-radius:6px; padding:4px 6px; }
+.lg2-pano-license summary { cursor:pointer; }
+.lg2-pano-license pre { white-space:pre-wrap; max-height:40vh; overflow:auto; width:300px; max-width:100%; }
 .lg2-pano-close { z-index:2; }
 .lg2-pano-nav { position:absolute; z-index:2; top:50%; margin-top:-22px; }
 .lg2-pano-nav--prev { left:16px; }

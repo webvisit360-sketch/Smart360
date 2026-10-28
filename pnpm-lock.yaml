@@ -516,6 +516,9 @@ importers:
       dompurify:
         specifier: ^3.4.13
         version: 3.4.13
+      pannellum:
+        specifier: 2.5.7
+        version: 2.5.7
       qrcode.react:
         specifier: ^4.2.0
         version: 4.2.0(react@19.1.0)
@@ -628,6 +631,9 @@ importers:
       '@types/node':
         specifier: 'catalog:'
         version: 25.9.5
+      '@types/pannellum':
+        specifier: ^2.5.2
+        version: 2.5.2
       '@types/react':
         specifier: 'catalog:'
         version: 19.2.17
@@ -2352,6 +2358,9 @@ packages:
   '@types/node@25.9.5':
     resolution: {integrity: sha512-OScDchr2fwuUmWdf4kZ9h7PcJiYDVInhJizG/biAq3cAvqwYktuy/TYGGdZNMtNTFUP7rnb0NU4TUdm82kt4Rg==}
 
+  '@types/pannellum@2.5.2':
+    resolution: {integrity: sha512-ayEvUuiaGCzLMdCtWpEvbkqBVz/jPOiBcfxNerv38+Ty+d38YulQGzweZFINKSCiJHklBfZ+oZw066spUeKkYg==}
+
   '@types/pdfkit@0.17.6':
     resolution: {integrity: sha512-tIwzxk2uWKp0Cq9JIluQXJid77lYhF52EsIOwhsMF4iWLA6YneoBR1xVKYYdAysHuepUB0OX4tdwMiUDdGKmig==}
 
@@ -3723,6 +3732,9 @@ packages:
 
   pako@1.0.11:
     resolution: {integrity: sha512-4hLB8Py4zZce5s4yd9XzopqwVv/yGNhV1Bl8NTmCq1763HeK2+EwVTv+leGeL13Dnh2wfbqowVPXCIO0z4taYw==}
+
+  pannellum@2.5.7:
+    resolution: {integrity: sha512-AHMRYdLPxetwhBg4lO5EgoZ55C/e+wrJF2WaFQIQA18HSVcvLvsdXEjDL7WpD8MPIFwNnH9qoUDsUqP8cF4pgA==}
 
   parse-ms@4.0.0:
     resolution: {integrity: sha512-TXfryirbmq34y8QBwgqCVLi+8oA3oWx2eAnSn62ITyEhEYaWRlVZ2DvMM9eZbMs/RfxPu/PK/aBLyGj4IrqMHw==}
@@ -6365,6 +6377,8 @@ snapshots:
     dependencies:
       undici-types: 7.24.6
 
+  '@types/pannellum@2.5.2': {}
+
   '@types/pdfkit@0.17.6':
     dependencies:
       '@types/node': 25.9.5
@@ -7679,6 +7693,8 @@ snapshots:
   pako@0.2.9: {}
 
   pako@1.0.11: {}
+
+  pannellum@2.5.7: {}
 
   parse-ms@4.0.0: {}
 

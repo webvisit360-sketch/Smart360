@@ -54,6 +54,15 @@ function tenant(slug: string, lang = "sl") {
       media: [1, 2, 3].map(n => ({ id: `unviewed-${n}`, kind: "image", url: `/fixture-media/unviewed-gallery-${n}.svg` })),
     });
   }
+  if (slug.startsWith("offline-panorama")) {
+    Object.assign(base.sections[0]!.categories[0]!.items[0]!, {
+      media: [
+        { id: "sphere", kind: "image", isPanorama: true, width: 4096, height: 2048, url: "/api/storage/img/synthetic-panorama/alma.jpg" },
+        { id: "partial", kind: "image", isPanorama: true, width: 4096, height: 1024, url: "/api/storage/img/synthetic-panorama/partial.jpg" },
+      ],
+    });
+    Object.assign(base, { guestDesign: slug.endsWith("-simple") ? "simple" : "trend", simplePalette: "bordo" });
+  }
   return {
     ...base, id: `synthetic-${slug.replace(/-renamed$/, "")}`, slug,
     name: `OFFLINE SYNTHETIC ${slug} v${state(slug).revision}`,
@@ -139,6 +148,9 @@ self.addEventListener("fetch", (event) => {
       if (suffix === "/orders") return json([]);
       if (suffix === "/manifest.webmanifest") return json({ name: tenant(slug!).name, scope: `/${slug}/`, start_url: `/${slug}/` });
       return json({ error: "Unknown synthetic endpoint", path }, 404);
+    }
+    if (path === "/api/storage/img/synthetic-panorama/alma.jpg" || path === "/api/storage/img/synthetic-panorama/partial.jpg") {
+      return send(await readFile(resolve(root, "../../generated-artifacts/panorama-360", path.endsWith("partial.jpg") ? "partial.jpg" : "alma.jpg")), "image/jpeg");
     }
     if (path.startsWith("/fixture-media/") || path.startsWith("/api/storage/img/")) {
       const padding = Number(url.searchParams.get("bytes") ?? 500);

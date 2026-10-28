@@ -28,6 +28,7 @@
 - [Map provider policy](map-provider-policy.md) — OSM raster returned a production policy block; never restore it as a fallback or conflate tiles with OSRM.
 
 - [Smart360 photo pipeline](photo-pipeline.md) — two-width object-storage images, first media row = tile, idempotent seed, forced public cache header.
+- [Panorama projection](panorama-projection-policy.md) — near-2:1 spheres; partials stay flat without schema changes; explicit pitch bounds can hide the poles.
 
 - [Smart360 conventions](smart360-conventions.md) — multi-tenant guest PWA: contract quirks, seed pipeline, auth model, EU-region publish reminder.
 - [Orval codegen pitfalls](orval-codegen.md) — avoid `type: integer` (zod v3 lacks z.int) and path+query param name collisions; serialize Dates before zod response parse.

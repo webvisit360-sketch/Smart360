@@ -3438,3 +3438,17 @@ mtime_ms = 1792941599680
 storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/0570c4cb-2abb-4961-837f-9e47a8f99b56/1f821c77-bc6b-4891-8b2d-2b47c01280fa"
 storage_version_token = "1792941653501378"
 content_type = "text/html"
+
+[[outputs]]
+id = "EBMJ-C9GZhaSnZiVOwhYQ"
+uri = "file://generated-artifacts/panorama-360/dokazi-360.html"
+type = "html"
+title = "360° panorame — galerija dokazov"
+description = "Enostaven in Trend pri 390 × 844: zenit, nadir, delna panorama in dejanski offline prikaz; meritve in navedba licence."
+logical_id = "5f2989d3-7ebb-4ba8-8cd3-8ee7a1403248"
+content_hash = "sha256:cb30ea2524c0cacd41c1c7c97fd84f24ca34ff3d7c6205f15bcfc7ab2ccbe8c1"
+size = 5172229
+mtime_ms = 1793217190114
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/5f2989d3-7ebb-4ba8-8cd3-8ee7a1403248/7f0ed222-9c97-47aa-a8fc-91a6950a6571"
+storage_version_token = "1793217221094517"
+content_type = "text/html"

@@ -1,7 +1,8 @@
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { KeyboardEvent as ReactKeyboardEvent, PointerEvent as ReactPointerEvent, SyntheticEvent } from "react";
 import { createPortal } from "react-dom";
-import { mediaImgSrc, HERO_IMAGE_WIDTH } from "../guest/img";
+import { mediaImgSrc, HERO_IMAGE_WIDTH, CARD_IMAGE_WIDTH } from "../guest/img";
+import { isSphericalPanorama } from "@/lib/panorama-projection";
 import { GuideBackCircle } from "./simple/GuideHeaderControls";
 import { useTourSummaryContext } from "./living-guide-tour-summary";
 import {
@@ -12,6 +13,7 @@ import {
   stepPanoramaIndex,
 } from "@/lib/panorama-media";
 import "./living-guide-panorama.css";
+const SphericalPanorama = lazy(() => import("./living-guide-sphere"));
 
 // Same width/URL as the hero gallery so the offline worker serves one cached
 // asset — never introduce another width variant here.
@@ -105,6 +107,12 @@ export function PanoramaViewer({ media, initialIndex, lang, onClose }: {
   const dragRef = useRef<{ id: number; startX: number; startPan: number; raw: number } | null>(null);
   const count = media.length;
   const entry = media[index];
+  const src = panoSrc(entry);
+  const [decodedSize, setDecodedSize] = useState<{ src: string; width: number; height: number } | null>(null);
+  const sphere = isSphericalPanorama(
+    decodedSize?.src === src ? decodedSize.width : entry?.width,
+    decodedSize?.src === src ? decodedSize.height : entry?.height,
+  );
 
   const measure = useCallback(() => {
     const viewW = stageRef.current?.clientWidth ?? 0;
@@ -177,7 +185,7 @@ export function PanoramaViewer({ media, initialIndex, lang, onClose }: {
     e.stopPropagation();
     if (e.key === "Tab") {
       const focusables = Array.from(
-        dialogRef.current?.querySelectorAll<HTMLElement>("button:not([disabled])") ?? [],
+        dialogRef.current?.querySelectorAll<HTMLElement>("button:not([disabled]), summary") ?? [],
       );
       if (!focusables.length) { e.preventDefault(); return; }
       const first = focusables[0];
@@ -217,24 +225,29 @@ export function PanoramaViewer({ media, initialIndex, lang, onClose }: {
       <div
         ref={stageRef}
         className={`lg2-pano-stage${dragging ? " is-dragging" : ""}`}
-        onPointerDown={onPointerDown}
-        onPointerMove={onPointerMove}
-        onPointerUp={(e) => endDrag(e)}
-        onPointerCancel={(e) => endDrag(e, true)}
-        aria-label={panoramaLabel("pan", lang)}
+        onPointerDown={sphere ? undefined : onPointerDown}
+        onPointerMove={sphere ? undefined : onPointerMove}
+        onPointerUp={sphere ? undefined : (e) => endDrag(e)}
+        onPointerCancel={sphere ? undefined : (e) => endDrag(e, true)}
+        aria-label={panoramaLabel(sphere ? "lookAround" : "pan", lang)}
         aria-roledescription="panorama"
         data-testid="panorama-stage"
       >
-        <img
+        {sphere ? <Suspense fallback={<div className="lg2-pano-status" role="status">{panoramaLabel("loading", lang)}</div>}>
+          <SphericalPanorama key={src} src={src} preview={mediaImgSrc(entry, CARD_IMAGE_WIDTH)} lang={lang} />
+        </Suspense> : <img
           key={entry?.id ?? entry?.url}
           ref={imgRef}
           src={panoSrc(entry)}
           alt={entry?.alt || ""}
           draggable={false}
-          onLoad={recentre}
+          onLoad={(event) => {
+            setDecodedSize({ src, width: event.currentTarget.naturalWidth, height: event.currentTarget.naturalHeight });
+            recentre();
+          }}
           style={{ transform: `translate3d(${pan}px,0,0)` }}
           data-testid="panorama-image"
-        />
+        />}
       </div>
       <GuideBackCircle className="lg-back-circle--float lg2-pano-close" label={panoramaLabel("close", lang)} onClick={onClose} testId="button-panorama-close" />
       {count > 1 && (
