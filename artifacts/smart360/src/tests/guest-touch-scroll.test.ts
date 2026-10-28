@@ -551,6 +551,56 @@ test("guest touch-scroll smoke — every main guest surface", { timeout: 600_000
     });
 
     for (const design of ["simple", "trend"] as const) {
+      await t.test(`${design} closed entry stays offscreen until delayed history removal`, async () => {
+        detailMediaMode = "photo";
+        const palette = design === "trend" ? "trend" : "bordo";
+        await page.goto(`${base}${sourceCategoryPath}?tenant=melipu&palette=${palette}&source=published&lang=en`, {waitUntil:"domcontentloaded"});
+        await page.locator(".lg2-route-layer.v--det.on").waitFor({timeout:90_000});
+        await page.locator(".v--det.on").getByRole("button", {name:/Izolana Museum — House of the Sea/}).first().click();
+        await page.locator(".lg2-route-layer.v--det.on .lg2-detail-sheet").waitFor();
+        await page.locator(".lg2-route-layer.v--det").evaluate(async element => {
+          await Promise.all(element.getAnimations({subtree:true}).map(animation => animation.finished.catch(() => {})));
+        });
+        await page.evaluate(() => {
+          const w = window as any;
+          const outgoing = document.querySelector(".lg2-route-layer.v--det") as HTMLElement;
+          const originalGo = history.go.bind(history);
+          const originalBack = history.back.bind(history);
+          history.go = (delta?: number) => { setTimeout(() => originalGo(delta), 450); };
+          history.back = () => { setTimeout(originalBack, 450); };
+          w.__closedEnd = { ended: false, removed: false, frames: [] };
+          window.addEventListener("lg2:detail-close-animation-end", () => {
+            w.__closedEnd.ended = true;
+          }, { once: true });
+          const sample = () => {
+            if (!outgoing.isConnected) {
+              w.__closedEnd.removed = true;
+              return;
+            }
+            if (w.__closedEnd.ended) {
+              const style = getComputedStyle(outgoing);
+              w.__closedEnd.frames.push({
+                y: new DOMMatrixReadOnly(style.transform).m42,
+                height: outgoing.offsetHeight,
+                visibility: style.visibility,
+              });
+            }
+            requestAnimationFrame(sample);
+          };
+          requestAnimationFrame(sample);
+        });
+        const box = await page.locator(".v--det.on .lg2-detail-scroll").last().boundingBox();
+        assert.ok(box);
+        await dispatchPull(Math.round(Math.min(560, box.y + box.height - 70)), [12,30,55,80,105,130], 98, 40);
+        await page.waitForFunction(() => (window as any).__closedEnd.removed);
+        const trace = await page.evaluate(() => (window as any).__closedEnd);
+        assert.ok(trace.ended);
+        assert.ok(trace.frames.length >= 5, "sample delayed history traversal, not only the animation");
+        assert.ok(trace.frames.every((frame: any) =>
+          frame.y >= frame.height - 1 && frame.visibility === "hidden"),
+        "every post-animation frame must retain the closed transform until removal");
+      });
+
       await t.test(`${design} close waits for the longest child transition, not the route deadline`, async () => {
         await openFixtureDetail(design, "photo");
         const override = await page.addStyleTag({ content:

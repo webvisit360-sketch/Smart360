@@ -1276,6 +1276,16 @@ export default function LivingGuideGuestShell({
         if (completed) return;
         completed = true;
         cleanup();
+        // History traversal commits asynchronously (notably in Safari). Keep
+        // this outgoing entry offscreen even if restoring/reconciliation changes
+        // its classes before the location-keyed node is actually removed.
+        // Do not apply this latch to category -> home transitions.
+        if (sheet && screen === "detail" && routeItemId) {
+          sheet.style.setProperty("transition", "none", "important");
+          sheet.style.setProperty("transform", "translateY(100%)", "important");
+          sheet.style.setProperty("visibility", "hidden", "important");
+          sheet.dataset.closeEndLatched = "true";
+        }
         performance.mark("lg2-detail-close-animation-end");
         window.dispatchEvent(new CustomEvent("lg2:detail-close-animation-end"));
         flushSync(() => setDetailTransitionPhase("restoring"));
@@ -1303,7 +1313,7 @@ export default function LivingGuideGuestShell({
       // Zero/reduced motion also completes here without a timer/event deadline.
       zeroDurationFrame = window.requestAnimationFrame(awaitComposition);
     },
-    [location, syncHeldViewStack],
+    [location, screen, routeItemId, syncHeldViewStack],
   );
 
   const scheduleClosePaintHandoff = useCallback(

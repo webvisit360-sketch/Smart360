@@ -52,6 +52,12 @@ All guest-guide back controls in Enostaven AND Trend use the same 44×44 palette
 
 Native-scroll guards must use browser touch input, not wheel events or assigned scrollTop. Start inside actual scrollable content, above fixed action docks. A fixed-height landing is not itself a scroller: test its touch targeting and transition to the grid instead. Chromium history-back and a dispatched pageshow event are not evidence of actual iOS BFCache restoration.
 
+Close-handoff tests that delay browser history must open an entry from a real category navigation, not directly at the entry URL.
+
+**Why:** Direct-entry normalization can use replacement navigation instead of history traversal, so delaying `history.back/go` does not exercise the intended post-animation window.
+
+**How to apply:** Retain the outgoing DOM node and sample its computed end-state until removal, including an intentionally delayed history traversal. Chromium-only success is not acceptance for the owner's Safari-only reappearance report.
+
 **Why:** Repeated owner reports concern physical iPhone touch scrolling, which screenshots, mouse-wheel checks and synthetic restoration events cannot establish.
 
 **How to apply:** Report browser engine and whether pageshow.persisted was native. Do not call a device-only symptom fixed when it did not reproduce. Run browser-bearing Node test files serially in this workspace; unrestricted file concurrency exhausted process resources during Vite/Chromium startup.
