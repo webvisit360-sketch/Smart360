@@ -3466,3 +3466,17 @@ mtime_ms = 1793220189674
 storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/fe058428-e4da-40e1-ad98-a7b527ae296a/9af12a2c-860d-4c9d-b949-0ac1dc15d93c"
 storage_version_token = "1793220299172847"
 content_type = "text/html"
+
+[[outputs]]
+id = "9R8Fz-te8mNSI_e6fX-lN"
+uri = "file://generated-artifacts/static-detail-close/gallery.html"
+type = "html"
+title = "Statično ozadje pri zapiranju — primerjava po sličicah"
+description = "Enostaven in Trend pri 390 × 844: kategorija → Domov, vnos → seznam in vnos → Domov; s fotografijo, brez nje in galerija 3/5. Lokalni razvojni dokazi."
+logical_id = "c6f81be9-2d54-47c1-9ad7-2c815a9d4c79"
+content_hash = "sha256:40ca31dc5f9de63aa68d4e08409a2bf19b23dfebeb3b2043f6ba71e4bbc3fecd"
+size = 19713903
+mtime_ms = 1793227335790
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/c6f81be9-2d54-47c1-9ad7-2c815a9d4c79/d8b2d33d-d451-40d3-9b76-de76b3801c9a"
+storage_version_token = "1793227424922072"
+content_type = "text/html"

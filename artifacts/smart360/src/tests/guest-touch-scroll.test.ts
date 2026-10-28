@@ -426,6 +426,30 @@ test("guest touch-scroll smoke — every main guest surface", { timeout: 600_000
             });
             const heldScrollOnOpen = await page.locator(".lg2-held-stack .lg2-detail-scroll")
               .evaluate(element => element.scrollTop);
+            await page.evaluate(() => {
+              const w = window as any;
+              w.__staticSource = { running: true, frames: [] };
+              const sourcePath = location.pathname;
+              const sample = () => {
+                const trace = w.__staticSource;
+                if (!trace.running || location.pathname !== sourcePath) return;
+                const held = document.querySelector(".lg2-held-stack .lg2-held-view:last-of-type") as HTMLElement;
+                if (held) {
+                  const view = held.querySelector(".lg2-view")!;
+                  const scroller = held.querySelector(".lg2-detail-scroll")!;
+                  const rect = view.getBoundingClientRect();
+                  trace.frames.push({
+                    top: rect.top, height: rect.height, width: rect.width,
+                    scrollHeight: scroller.getBoundingClientRect().height,
+                    scrollTop: scroller.scrollTop,
+                    transform: getComputedStyle(held).transform,
+                    filter: getComputedStyle(held).filter,
+                  });
+                }
+                requestAnimationFrame(sample);
+              };
+              sample();
+            });
             assert.equal(heldScrollOnOpen, sourceScrollBeforeOpen,
               `${design}/${media}: opening entry must hold the source category at its current scroll position`);
 
@@ -495,6 +519,21 @@ test("guest touch-scroll smoke — every main guest surface", { timeout: 600_000
             });
             assert.ok(closed.path.endsWith(sourceCategoryPath),
               `${design}/${media}: qualifying pull returns to the source category`);
+            const sourceFrames = await page.evaluate(() => {
+              (window as any).__staticSource.running = false;
+              return (window as any).__staticSource.frames;
+            });
+            assert.ok(sourceFrames.length > 3);
+            const firstSource = sourceFrames[0];
+            assert.ok(firstSource.height >= 800, "source must have full viewport layout BEFORE closing");
+            for (const frame of sourceFrames) {
+              assert.equal(frame.transform, "none", "source must never scale or translate");
+              assert.equal(frame.filter, "none", "source must never animate brightness");
+              for (const key of ["top", "height", "width", "scrollHeight", "scrollTop"]) {
+                assert.ok(Math.abs(frame[key] - firstSource[key]) < 1,
+                  `${design}/${media}: source ${key} changes during close`);
+              }
+            }
             const closingFrames = closed.frames.filter((frame: any) =>
               frame.phase === "closing" || frame.routePhase === "closing");
             assert.ok(closingFrames.length > 0,

@@ -1059,6 +1059,15 @@ export default function LivingGuideGuestShell({
       }
 
       const clone = source.cloneNode(true) as HTMLElement;
+      // Nested details lose their route ancestor when held. Preserve its
+      // sizing inputs instead of re-measuring the clone under the next entry.
+      if (source.parentElement?.classList.contains("v--det")) {
+        const measured = getComputedStyle(source);
+        for (const property of ["--lg2-detail-hero-height", "--lg2-detail-photo-reveal"]) {
+          const value = measured.getPropertyValue(property);
+          if (value.trim()) clone.style.setProperty(property, value);
+        }
+      }
       if (!sanitizeHeldClone(source, clone)) {
         if (resetStack) heldViewStackRef.current = [];
         console.warn(
@@ -2048,6 +2057,11 @@ export default function LivingGuideGuestShell({
     <WeatherProvider slug={slug} lang={lang} override={import.meta.env.DEV ? devWeather : undefined}>
     <div
       ref={rootRef}
+      data-static-detail-source={
+        (screen === "detail" && Boolean(routeItemId)) ||
+        Boolean(closeSourceLocationRef.current?.includes("/i/"))
+          ? "true" : undefined
+      }
       className={isSimple ? "lg2-app lgs-root notranslate" : "lg2-app notranslate"}
       style={simpleStyle}
       data-guest-design={isSimple ? "simple" : undefined}

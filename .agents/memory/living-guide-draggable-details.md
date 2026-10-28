@@ -19,6 +19,12 @@ Do not equate an early disappearing panel with early route unmount: independentl
 
 **How to apply:** Keep the close composition's time envelope aligned, wait for all its actual motion (including the held source), and inspect intermediate frames as well as navigation timing. Preserve the separate opening and finger-tracking contracts.
 
+For entry closes, the underlying source must already be full-size and static before release, throughout closing and until the real source replaces its snapshot. Preserve source scroll and route-inherited sizing when cloning. Do not alter category→home mechanics to achieve this.
+
+**Why:** The owner explicitly designated category→home as the reference and rejected a moving/re-measured source underneath entry closes. Matching outgoing durations alone does not establish a stable background.
+
+**How to apply:** Compare source geometry before and during close, including nested category snapshots and gallery entries. Never infer stability just from a correct final frame.
+
 **How to apply:** Preserve the instant-open rule, scope animation to closing, and assert intermediate frames before route replacement. Do not diagnose gesture reliability from CSS changes or a synthetic cancellation event alone.
 
 The owner's close interaction requires continuous 1:1 finger tracking in both designs, with the photo lagging; a top-down close that reverses must return to neutral without feeding momentum into content scrolling.
