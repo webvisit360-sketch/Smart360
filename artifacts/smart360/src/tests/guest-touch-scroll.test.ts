@@ -629,6 +629,121 @@ test("guest touch-scroll smoke — every main guest surface", { timeout: 600_000
       });
     }
 
+    for (const destination of ["list", "home"] as const) {
+      await t.test(`entry → ${destination} keeps held copy through pending image decode and live-ready paint`, async matrix => {
+        for (const design of ["simple", "trend"] as const) {
+          await matrix.test(design, async () => {
+            detailMediaMode = "photo";
+            const palette = design === "trend" ? "trend" : "bordo";
+            if (destination === "list") {
+              await page.goto(`${base}${sourceCategoryPath}?tenant=melipu&palette=${palette}&source=published&lang=en`, {
+                waitUntil:"domcontentloaded",
+              });
+              await page.locator(".lg2-route-layer.v--det.on").waitFor({timeout:90_000});
+              await page.locator(".v--det.on")
+                .getByRole("button", {name:/Izolana Museum — House of the Sea/}).first().click();
+              await page.locator(".lg2-route-layer.v--det.on .lg2-detail-sheet").waitFor();
+              await page.locator(".lg2-route-layer.v--det").evaluate(async element => {
+                await Promise.all(element.getAnimations({subtree:true}).map(animation => animation.finished.catch(() => {})));
+              });
+            } else {
+              await openFixtureDetail(design, "photo");
+            }
+
+            await page.evaluate(() => {
+              const probe = (window as any).__handoffProbe = {
+                holdDecode:false, pending:[] as Array<() => void>, events:[], copyAtLiveReady:0,
+                frame:0, readyFrame:-1, swapFrame:-1,
+              };
+              const tick = () => {
+                probe.frame++;
+                if (probe.swapFrame < 0) requestAnimationFrame(tick);
+              };
+              requestAnimationFrame(tick);
+              const originalDecode = HTMLImageElement.prototype.decode;
+              HTMLImageElement.prototype.decode = function() {
+                if (probe.holdDecode) return new Promise<void>(resolve => probe.pending.push(resolve));
+                return originalDecode.call(this);
+              };
+              window.addEventListener("lg2:detail-close-handoff-frame", () => {
+                probe.events.push("handoff-frame");
+                probe.holdDecode = true;
+              }, {once:true});
+              window.addEventListener("lg2:detail-close-live-ready", () => {
+                probe.events.push("live-ready");
+                probe.readyFrame = probe.frame;
+                probe.copyAtLiveReady = document.querySelectorAll(".lg2-held-stack .lg2-held-view").length;
+              }, {once:true});
+              window.addEventListener("lg2:detail-close-swap", () => {
+                probe.events.push("swap");
+                probe.swapFrame = probe.frame;
+              }, {once:true});
+            });
+            const detailBox = await page.locator(".v--det.on .lg2-detail-scroll").last().boundingBox();
+            assert.ok(detailBox);
+            const startY = Math.round(Math.min(560, detailBox.y + detailBox.height - 70));
+            await dispatchPull(startY, [12,30,55,80,105,130], destination === "list" ? 81 : 82, 40);
+            const expectedPath = destination === "list" ? sourceCategoryPath : sourceHomePath;
+            await page.waitForFunction(path => location.pathname === path, expectedPath, {timeout:10_000});
+            await page.waitForFunction(() => (window as any).__handoffProbe?.pending.length > 0, {timeout:10_000});
+            const pending = await page.evaluate(() => {
+              const probe = (window as any).__handoffProbe;
+              const copy = document.querySelector(".lg2-held-stack .lg2-held-view");
+              const live = location.pathname.includes("/c/")
+                ? document.querySelector(".lg2-route-layer.v--det.on")
+                : document.querySelector(".lg2-base-route-layer");
+              return {
+                copyCount:document.querySelectorAll(".lg2-held-stack .lg2-held-view").length,
+                copyBackCount:copy?.querySelectorAll(".lg-back-circle").length ?? 0,
+                liveBackCount:live?.querySelectorAll(".lg-back-circle").length ?? 0,
+                pendingDecodes:probe.pending.length,
+                liveZ:live ? getComputedStyle(live).zIndex : null,
+                events:probe.events,
+              };
+            });
+            if (destination === "list") {
+              assert.ok(pending.copyCount > 0, `${design}/${destination}: copy remains while live decode is pending`);
+            }
+            assert.ok(pending.pendingDecodes > 0, `${design}/${destination}: at least one live image decode is gated`);
+            assert.equal(pending.liveZ, "1", `${design}/${destination}: live destination stays below the copy`);
+            assert.ok(pending.events.includes("handoff-frame"));
+            assert.equal(pending.events.includes("swap"), false, "no swap while visible images still await decoding");
+
+            await page.evaluate(() => {
+              const probe = (window as any).__handoffProbe;
+              probe.holdDecode = false;
+              probe.pending.splice(0).forEach((resolve: () => void) => resolve());
+            });
+            await page.waitForFunction(() => (window as any).__handoffProbe?.events.includes("live-ready"), {timeout:10_000});
+            const ready = await page.evaluate(() => {
+              const probe = (window as any).__handoffProbe;
+              return {events:probe.events,copyCount:probe.copyAtLiveReady};
+            });
+            if (destination === "list") {
+              assert.ok(ready.copyCount > 0, `${design}/${destination}: copy survives through live-ready paint`);
+            }
+            await page.waitForFunction((mustRemoveCopy: boolean) =>
+              (window as any).__handoffProbe?.events.includes("swap") &&
+              (!mustRemoveCopy ||
+                document.querySelectorAll(".lg2-held-stack .lg2-held-view").length === 0),
+            destination === "list", {timeout:10_000});
+            const finalEvents = await page.evaluate(() => (window as any).__handoffProbe.events);
+            assert.ok(finalEvents.indexOf("live-ready") < finalEvents.indexOf("swap"),
+              `${design}/${destination}: copy removal swap follows live-ready`);
+            const frames = await page.evaluate(() => {
+              const { readyFrame, swapFrame } = (window as any).__handoffProbe;
+              return { readyFrame, swapFrame };
+            });
+            assert.ok(frames.swapFrame > frames.readyFrame, "removal is in a later frame, allowing the ready live layer to paint");
+            if (destination === "list") {
+              assert.equal(pending.copyBackCount, pending.liveBackCount,
+                `${design}/${destination}: held copy includes the live route back control to avoid a swap flicker`);
+            }
+          });
+        }
+      });
+    }
+
     await t.test("Trend close ignores route transitioncancel and waits for real close transition before back-source swap", async () => {
       await openFixtureDetail("trend", "photo");
       await page.evaluate(() => {

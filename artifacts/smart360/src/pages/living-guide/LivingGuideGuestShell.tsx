@@ -1128,6 +1128,18 @@ export default function LivingGuideGuestShell({
       surface.setAttribute("aria-hidden", "true");
       surface.setAttribute("inert", "");
       surface.append(clone);
+      // The category's floating back control is a route sibling, not part of
+      // .lg2-view. Include that chrome in nested-entry snapshots as well.
+      if (source.parentElement?.classList.contains("v--det")) {
+        const routeStyle = getComputedStyle(source.parentElement);
+        surface.style.borderRadius = routeStyle.borderRadius;
+        surface.style.willChange = routeStyle.willChange;
+        source.parentElement.querySelectorAll<HTMLElement>(":scope > .lg-back-circle")
+          .forEach(control => {
+            const controlClone = control.cloneNode(true) as HTMLElement;
+            if (sanitizeHeldClone(control, controlClone)) surface.append(controlClone);
+          });
+      }
       heldViewStackRef.current = [
       ...(resetStack ? [] : heldViewStackRef.current),
       { surface, bottomNav: bottomNavClone ?? null },
@@ -1318,6 +1330,15 @@ export default function LivingGuideGuestShell({
 
   const scheduleClosePaintHandoff = useCallback(
     (targetHeldDepth: number, targetIsDetail: boolean) => {
+      const fromEntry = Boolean(closeSourceLocationRef.current?.includes("/i/"));
+      let cancelled = false;
+      const live = fromEntry ? rootRef.current?.querySelector<HTMLElement>(
+        targetIsDetail ? ".lg2-route-layer.v--det" : ".lg2-base-route-layer",
+      ) : null;
+      // Keep the already-painted copy above the destination while its fonts,
+      // images and saved scroll positions settle. Category close is unchanged.
+      const previousZ = live?.style.zIndex ?? "";
+      if (live) live.style.zIndex = "1";
       syncHeldViewStack(false);
       if (!targetIsDetail) {
         // The destination's real fixed nav is already mounted above the held
@@ -1336,6 +1357,8 @@ export default function LivingGuideGuestShell({
       let secondScrollRestoreFrame = 0;
       let releaseTestGate: (() => void) | null = null;
       const swapToRealRoute = () => {
+        if (cancelled) return;
+        if (live) live.style.zIndex = previousZ;
         performance.mark("lg2-detail-close-swap");
         performance.measure(
           "lg2-detail-close-end-to-swap",
@@ -1391,8 +1414,41 @@ export default function LivingGuideGuestShell({
           });
         }
       };
-      const scheduleSwap = () => {
-        secondFrame = window.requestAnimationFrame(swapToRealRoute);
+      const scheduleSwap = async () => {
+        if (live) {
+          const copy = heldViewStackRef.current.at(-1)?.surface;
+          const restore = () => {
+            if (!copy) return;
+            for (const [selector, property] of [
+              ["[data-lg-scroll]", "scrollTop"],
+              ["[data-lg-gallery],[data-lg-scroll-x]", "scrollLeft"],
+            ] as const) {
+              const sources = selfAndDescendants(copy, selector);
+              selfAndDescendants(live, selector).forEach((element, index) => {
+                if (sources[index]) element[property] = sources[index][property];
+              });
+            }
+            const source = detailSourceScrollRef.current;
+            if (!targetIsDetail && source?.element.isConnected) source.element.scrollTop = source.scrollTop;
+          };
+          restore();
+          await document.fonts.ready;
+          const images = [...live.querySelectorAll<HTMLImageElement>("img")].filter(image => {
+            const box = image.getBoundingClientRect();
+            return box.bottom > 0 && box.top < innerHeight && box.right > 0 && box.left < innerWidth;
+          });
+          await Promise.all(images.map(image => image.decode().catch(() => undefined)));
+          if (cancelled || !live.isConnected) return;
+          restore();
+          void live.offsetHeight;
+          // A frame callback runs BEFORE paint. Keep the copy for the full
+          // intervening paint opportunity, then retire it on the next frame.
+          await nextPaintFrame();
+          if (cancelled) return;
+          restore();
+          window.dispatchEvent(new CustomEvent("lg2:detail-close-live-ready"));
+        }
+        if (!cancelled) secondFrame = window.requestAnimationFrame(swapToRealRoute);
       };
       const firstFrame = window.requestAnimationFrame(() => {
         window.dispatchEvent(new CustomEvent("lg2:detail-close-handoff-frame"));
@@ -1414,6 +1470,8 @@ export default function LivingGuideGuestShell({
         scheduleSwap();
       });
       return () => {
+        cancelled = true;
+        if (live) live.style.zIndex = previousZ;
         window.cancelAnimationFrame(firstFrame);
         if (secondFrame) window.cancelAnimationFrame(secondFrame);
         if (firstScrollRestoreFrame) {

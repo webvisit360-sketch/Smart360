@@ -58,6 +58,12 @@ Close-handoff tests that delay browser history must open an entry from a real ca
 
 **How to apply:** Retain the outgoing DOM node and sample its computed end-state until removal, including an intentionally delayed history traversal. Chromium-only success is not acceptance for the owner's Safari-only reappearance report.
 
+Held-route fidelity includes sibling controls, clipping and compositor hints, not only the content subtree and layout dimensions.
+
+**Why:** The category back circle sat outside the cloned content; a clone-only corner radius and different layer promotion also changed pixels at handoff despite identical geometry.
+
+**How to apply:** Preserve measured source chrome and rendering properties for entry backgrounds. Prepare the live destination below the copy, restore scroll and await visible image decoding/fonts before allowing an intervening paint opportunity and removing the copy on a later frame. Keep category-to-home mechanics unchanged.
+
 **Why:** Repeated owner reports concern physical iPhone touch scrolling, which screenshots, mouse-wheel checks and synthetic restoration events cannot establish.
 
 **How to apply:** Report browser engine and whether pageshow.persisted was native. Do not call a device-only symptom fixed when it did not reproduce. Run browser-bearing Node test files serially in this workspace; unrestricted file concurrency exhausted process resources during Vite/Chromium startup.
